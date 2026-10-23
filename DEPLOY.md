@@ -83,10 +83,14 @@ Para que se publique solo con cada cambio, conectá el repo de GitHub en **Worke
 
 ## Sumar un recurso nuevo
 
-1. Creá la carpeta `nuevorecurso/` con su `index.html` (copiá el de `textoenredes/`) apuntando a su propio `.jsx`.
-2. Agregala en `vite.config.js`, en `input`.
-3. Sumala a `RESOURCES` en `src/hub.jsx` para que aparezca en la vitrina.
-4. Si necesita guardar datos, agregá una migración en `migrations/` y sus endpoints en `functions/api/`. La cuenta ya es la misma.
+El camino corto: diseñalo en Claude Design y pasá el handoff a una sesión de Claude Code con este repo. `CLAUDE.md` tiene la receta completa, y Claude la lee solo.
+
+Hay dos tipos de recurso:
+
+- **Página simple** (guía, checklist, diagnóstico, sin guardar datos): carpeta `nombre/index.html`, entrada en `vite.config.js` y tarjeta en `src/resources.jsx`.
+- **Herramienta con cuenta** (guarda avances del usuario): lo mismo, más una migración en `migrations/`, sus endpoints en `functions/api/<recurso>/` y una actualización de la página de privacidad.
+
+Siempre se prueba primero en una rama. Cloudflare la publica sola en `https://<rama>.relab-6su.pages.dev`, sin tocar el sitio real. Cuando está aprobada, se pasa a `main`.
 
 ## Probar en local
 

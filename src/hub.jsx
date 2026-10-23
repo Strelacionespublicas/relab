@@ -1,4 +1,4 @@
-// Vitrina de Relab: lista los recursos. Para sumar uno, agregalo a RESOURCES.
+// Vitrina de Relab. La lista de recursos está en src/resources.jsx.
 import { createRoot } from 'react-dom/client';
 import './ds/tokens/fonts.css';
 import './ds/tokens/colors.css';
@@ -7,15 +7,10 @@ import './ds/tokens/spacing.css';
 import './app.css';
 import { Logo } from './ds/components.jsx';
 import { Footer } from './Footer.jsx';
+import { RESOURCES } from './resources.jsx';
 
-const RESOURCES = [
-  {
-    href: '/textoenredes/',
-    name: <><span style={{ fontWeight: 800 }}>texto</span><span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>en</span><span style={{ fontWeight: 300 }}>redes</span></>,
-    desc: 'Negrita y cursiva que se ven en todas las redes, emojis, hashtags, vista previa del post y conteo de caracteres para 7 redes.',
-  },
-];
 
+const soon = { boxShadow: 'none', background: 'transparent', border: '1.5px dashed var(--border-default)' };
 const card = { background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 16, boxShadow: 'var(--shadow-sm)', padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 200 };
 
 function Hub() {
@@ -35,14 +30,20 @@ function Hub() {
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-          {RESOURCES.map(r => (
+          {RESOURCES.map(r => (r.status === 'proximamente' ? (
+            <div key={r.href} style={{ ...card, ...soon }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, letterSpacing: '-0.035em', color: 'var(--st-petroleo)' }}>{r.name}</span>
+              <span style={{ flex: 1, fontSize: 'var(--fs-sm)', lineHeight: 1.5, color: 'var(--text-muted)' }}>{r.desc}</span>
+              <span style={{ fontFamily: 'var(--font-data)', fontSize: 'var(--fs-3xs)', letterSpacing: 'var(--tracking-wider)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Próximamente</span>
+            </div>
+          ) : (
             <a key={r.href} href={r.href} className="hv-card" style={{ ...card, textDecoration: 'none', color: 'inherit' }}>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: '-0.035em', color: 'var(--st-petroleo)', display: 'flex', gap: 6, alignItems: 'baseline' }}>{r.name}</span>
               <span style={{ flex: 1, fontSize: 'var(--fs-md)', lineHeight: 1.5, color: 'var(--text-body)' }}>{r.desc}</span>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--st-coral)' }}>Abrir herramienta →</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--st-coral)' }}>{r.cta || 'Abrir herramienta'} →</span>
             </a>
-          ))}
-          <div style={{ ...card, boxShadow: 'none', background: 'transparent', border: '1.5px dashed var(--border-default)', justifyContent: 'center' }}>
+          )))}
+          <div style={{ ...card, ...soon, justifyContent: 'center' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-lg)', color: 'var(--st-petroleo)' }}>Próximamente</span>
             <span style={{ fontSize: 'var(--fs-sm)', lineHeight: 1.5, color: 'var(--text-muted)' }}>Estamos preparando nuevos recursos. Con tu cuenta de Relab vas a poder usarlos todos.</span>
           </div>
