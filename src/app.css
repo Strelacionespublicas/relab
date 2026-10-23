@@ -16,3 +16,5 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .re-editor strong { font-weight: 700; }
 .re-editor em { font-style: italic; }
 .re-editor:focus { outline: none; }
+.tr-tabs { scrollbar-width: none; }
+.tr-tabs::-webkit-scrollbar { display: none; }

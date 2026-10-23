@@ -14,14 +14,24 @@ export const applyStyle = (s, k) => { const chars = [...s]; const letters = char
   return [...plain.normalize('NFD')].map(c => styleChar(c, k)).join(''); };
 
 export const NETS = [
-  { id: 'ig', name: 'Instagram', limit: 2200, cut: 125, more: 'más', media: true, ratio: '1 / 1', handle: 'strelacionespublicas', meta: 'Publicación', inline: true, note: 'Instagram muestra ~125 caracteres antes de “más”. Límite: 2.200 y hasta 30 hashtags.' },
-  { id: 'fb', name: 'Facebook', limit: 63206, cut: 480, more: 'Ver más', media: true, ratio: '1.91 / 1', handle: 'ST Relaciones Públicas', meta: 'Ahora · Público', note: 'Facebook corta cerca de los 480 caracteres en el feed.' },
-  { id: 'tt', name: 'TikTok', limit: 4000, cut: 100, more: 'más', media: true, ratio: '9 / 10', handle: '@strelacionespublicas', meta: 'Descripción del video', note: 'TikTok muestra una o dos líneas sobre el video. Límite: 4.000.' },
-  { id: 'li', name: 'LinkedIn', limit: 3000, cut: 210, more: '…ver más', media: false, handle: 'ST Relaciones Públicas', meta: 'Agencia de comunicación · Ahora', note: 'LinkedIn corta a las ~3 líneas (≈210 caracteres). Límite: 3.000.' },
-  { id: 'x', name: 'X', limit: 280, cut: 280, more: 'Mostrar más', media: false, handle: 'ST Relaciones Públicas', meta: '@strelacionespub · ahora', weighted: true, note: 'En X las letras con formato y los emojis cuentan como 2 caracteres.' },
-  { id: 'th', name: 'Threads', limit: 500, cut: 500, more: 'más', media: false, handle: 'strelacionespublicas', meta: 'ahora', note: 'Threads permite 500 caracteres por publicación.' },
-  { id: 'wa', name: 'WhatsApp', limit: 700, cut: 700, more: 'Leer más', media: false, handle: 'ST Relaciones Públicas', meta: 'Estado / Canal', note: 'Estados de WhatsApp: 700 caracteres. Los mensajes admiten mucho más.' },
+  { id: 'ig', formats: ['post', 'square', 'reel'], name: 'Instagram', limit: 2200, cut: 125, more: 'más', media: true, ratio: '1 / 1', handle: 'strelacionespublicas', meta: 'Publicación', inline: true, note: 'Instagram muestra ~125 caracteres antes de “más”. Límite: 2.200 y hasta 30 hashtags.' },
+  { id: 'fb', formats: ['post', 'square', 'reel'], textFirst: true, name: 'Facebook', limit: 63206, cut: 480, more: 'Ver más', media: true, ratio: '1.91 / 1', handle: 'ST Relaciones Públicas', meta: 'Ahora · Público', note: 'Facebook corta cerca de los 480 caracteres en el feed.' },
+  { id: 'tt', formats: ['video'], cutReel: 70, name: 'TikTok', limit: 4000, cut: 100, more: 'más', media: true, ratio: '9 / 10', handle: '@strelacionespublicas', meta: 'Descripción del video', note: 'TikTok muestra una o dos líneas sobre el video. Límite: 4.000.' },
+  { id: 'li', formats: ['post', 'square', 'text'], textFirst: true, name: 'LinkedIn', limit: 3000, cut: 210, more: '…ver más', media: false, handle: 'ST Relaciones Públicas', meta: 'Agencia de comunicación · Ahora', note: 'LinkedIn corta a las ~3 líneas (≈210 caracteres). Límite: 3.000.' },
+  { id: 'x', formats: ['wide', 'text'], textFirst: true, name: 'X', limit: 280, cut: 280, more: 'Mostrar más', media: false, handle: 'ST Relaciones Públicas', meta: '@strelacionespub · ahora', weighted: true, note: 'En X las letras con formato y los emojis cuentan como 2 caracteres.' },
+  { id: 'th', formats: ['post', 'text'], textFirst: true, name: 'Threads', limit: 500, cut: 500, more: 'más', media: false, handle: 'strelacionespublicas', meta: 'ahora', note: 'Threads permite 500 caracteres por publicación.' },
+  { id: 'wa', formats: ['story'], name: 'WhatsApp', limit: 700, cut: 700, more: 'Leer más', media: false, handle: 'ST Relaciones Públicas', meta: 'Estado / Canal', note: 'Estados de WhatsApp: 700 caracteres. Los mensajes admiten mucho más.' },
 ];
+// Formatos de la vista previa. overlay = el texto va sobre la imagen (reel, video, estado).
+export const FORMATS = {
+  post: { label: 'Post 4:5', ratio: '4 / 5' },
+  square: { label: 'Cuadrado', ratio: '1 / 1' },
+  reel: { label: 'Reel 9:16', ratio: '9 / 16', overlay: true },
+  video: { label: 'Video 9:16', ratio: '9 / 16', overlay: true },
+  story: { label: 'Estado 9:16', ratio: '9 / 16', overlay: true },
+  wide: { label: 'Imagen 16:9', ratio: '16 / 9' },
+  text: { label: 'Solo texto', ratio: null },
+};
 export const EMOJI_DATA = {
   'Caras': '😀 feliz sonrisa alegre;😃 feliz contento;😄 risa alegre;😁 sonrisa dientes;😆 risa carcajada;😅 nervios sudor;😂 llorar de risa jaja;🤣 carcajada piso;😊 sonrisa tierno;😇 angel inocente;🙂 sonrisa leve;😉 guiño;😌 alivio tranquilo;😍 enamorado amor ojos corazon;🥰 amor cariño corazones;😘 beso;😋 rico delicioso;😛 lengua;😜 broma guiño lengua;🤪 loco;🤓 nerd estudio;😎 genial lentes cool;🥸 disfraz;🤩 estrellas wow fan;🥳 fiesta festejo cumpleaños;😏 picaro;😒 aburrido;😔 triste pensativo;😟 preocupado;😕 confundido;🙁 triste;😣 esfuerzo;😫 cansado;😩 agotado;🥺 suplica ojitos;😢 llorar triste lagrima;😭 llanto;😤 enojo bufido;😠 enojado;😡 furioso;🤯 cabeza explota sorpresa;😳 sonrojado verguenza;🥵 calor;🥶 frio;😱 miedo grito susto;😨 asustado;🤗 abrazo;🤔 pensar duda;🤭 risita ups;🤫 silencio secreto;🤥 mentira;😶 sin palabras;😐 neutral;😑 inexpresivo;😬 incomodo;🙄 ojos revoleados;😯 sorpresa;😮 asombro wow;😲 asombrado;🥱 bostezo sueño;😴 dormir;🤤 baba;😷 barbijo enfermo;🤒 fiebre;🤠 vaquero;🤡 payaso;👻 fantasma;💀 calavera;👽 alien;🤖 robot ia;💩 caca',
   'Gestos y personas': '👋 hola saludo chau;🤚 mano;✋ alto mano;🖐️ mano abierta;👌 ok perfecto;🤌 italiano;🤏 poquito;✌️ paz victoria;🤞 suerte dedos cruzados;🤟 te quiero;🤘 rock;🤙 llamame;👈 izquierda señalar;👉 derecha señalar;👆 arriba;👇 abajo;☝️ uno atencion;👍 me gusta bien ok pulgar;👎 no me gusta mal;✊ puño fuerza;👊 puño choque;👏 aplausos felicitaciones bravo;🙌 celebrar hurra;👐 manos abiertas;🤲 ofrenda;🤝 acuerdo trato alianza apreton;🙏 gracias por favor rezar;✍️ escribir firma;💅 uñas;💪 fuerza musculo poder;🧠 cerebro idea mente;👀 ojos mirar atencion;👁️ ojo;👄 boca;🗣️ hablar voz;👤 persona usuario;👥 personas equipo grupo;👶 bebe;🧒 niño;👦 chico;👧 chica;👩 mujer;👨 hombre;🧑 persona;👵 abuela;👴 abuelo;👩‍💼 mujer oficina profesional;👨‍💼 hombre oficina profesional;👩‍💻 mujer computadora tecnologia;👨‍💻 hombre computadora;👩‍🏫 docente profesora;👨‍🏫 docente profesor;👩‍⚕️ medica salud;👨‍⚕️ medico salud;👩‍🎓 graduada egresada;👨‍🎓 graduado;👩‍🍳 cocinera chef;🙋 levantar mano pregunta;🙆 ok;🤷 no se;🤦 facepalm;🧑‍🤝‍🧑 personas juntas comunidad;👪 familia;💃 bailar;🕺 baile',

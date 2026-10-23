@@ -1,4 +1,5 @@
 // Componentes del design system ST usados por TextoRedes, portados de _ds_bundle.js.
+import { useMemo } from 'react';
 import logoWhite from './assets/logo-white.png';
 
 const BTN_SIZES = {
@@ -56,5 +57,33 @@ export function Logo({ height = 48, style = {} }) {
     <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, ...style }}>
       <img src={logoWhite} alt="ST Relaciones Públicas" style={{ height, width: 'auto', display: 'block' }} />
     </span>
+  );
+}
+
+// Patrón de nodos y líneas de la marca (NetworkBackground del design system). Red determinista
+// por semilla, recoloreable con `color`. Pensado como capa decorativa de fondo.
+export function NetworkBackground({ color = 'var(--st-celeste)', density = 46, maxDist = 210, opacity = 0.5, seed = 7, width = 1200, height = 600, style = {} }) {
+  const { lines, dots } = useMemo(() => {
+    let a = seed >>> 0;
+    const rnd = () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const pts = [];
+    for (let i = 0; i < density; i++) pts.push({ x: rnd() * width, y: rnd() * height, r: 1.6 + rnd() * 3.2 });
+    const lines = [];
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+      const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+      if (d < maxDist) lines.push({ ...pts[i], x2: pts[j].x, y2: pts[j].y, o: (1 - d / maxDist) * 0.55 });
+    }
+    return { lines, dots: pts };
+  }, [seed, density, maxDist, width, height]);
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ color, opacity, display: 'block', width: '100%', height: '100%', ...style }}>
+      {lines.map((l, i) => <line key={i} x1={l.x} y1={l.y} x2={l.x2} y2={l.y2} stroke="currentColor" strokeWidth="1" opacity={l.o} />)}
+      {dots.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="currentColor" />)}
+    </svg>
   );
 }

@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button, Switch, Logo } from './ds/components.jsx';
 import { Footer } from './Footer.jsx';
 import RichEditor from './RichEditor.jsx';
+import HashtagPanel from './HashtagPanel.jsx';
+import Preview from './Preview.jsx';
 import { NET_ICONS } from './lib/icons.js';
 import { api, newId } from './lib/api.js';
 import {
@@ -15,7 +17,8 @@ const LOGIN_MSG = { denied: 'Esa cuenta no tiene acceso a TextoRedes', error: 'N
 const eyebrow = { fontFamily: 'var(--font-data)', fontSize: 'var(--fs-3xs)', letterSpacing: 'var(--tracking-wider)', textTransform: 'uppercase', color: 'var(--text-muted)' };
 const linkBtn = { border: 'none', background: 'none', color: 'var(--st-coral)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-xs)', cursor: 'pointer', padding: '4px 0' };
 const fmtBtn = { width: 40, height: 36, border: 'none', borderRadius: 8, background: 'var(--st-white)', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--st-petroleo)' };
-const panelBox = { padding: 12, borderBottom: '1px solid var(--border-subtle)', background: 'var(--st-neutral-50)' };
+const toolBtn = { height: 34, padding: '0 10px', borderRadius: 999, border: '1.5px solid var(--border-default)', background: 'transparent', color: 'var(--st-petroleo)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-xs)', cursor: 'pointer', whiteSpace: 'nowrap' };
+const panelBox = { borderBottom: '1px solid var(--border-subtle)', background: 'var(--st-neutral-50)' };
 const card = { background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 12, boxShadow: 'var(--shadow-sm)' };
 const deleteBtn = { border: 'none', background: 'none', color: 'var(--text-subtle)', fontSize: 16, cursor: 'pointer', padding: 4 };
 
@@ -45,6 +48,19 @@ function AppleEmoji({ ch }) {
   return <img src={appleUrl(ch, step === 1)} alt={ch} loading="lazy" onError={() => setStep(s => s + 1)} style={{ width: 26, height: 26, display: 'block' }} />;
 }
 
+// Contenedor de los paneles: compacto, con scroll propio y "Listo" para volver al texto.
+function PanelShell({ title, onClose, scroll = true, children }) {
+  return (
+    <div style={panelBox}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px 0' }}>
+        <span style={eyebrow}>{title}</span>
+        <button onMouseDown={e => e.preventDefault()} onClick={onClose} style={{ ...linkBtn, padding: '4px 2px' }}>Listo ✓</button>
+      </div>
+      <div style={{ padding: '8px 12px 12px', maxHeight: scroll ? 240 : undefined, overflowY: scroll ? 'auto' : undefined }}>{children}</div>
+    </div>
+  );
+}
+
 export default function App() {
   const [text, setTextState] = useState('');
   const [panel, setPanel] = useState(null);
@@ -62,6 +78,7 @@ export default function App() {
   const [undoLen, setUndoLen] = useState(0);
 
   const taRef = useRef(null);
+  const editorWrap = useRef(null);
   const textRef = useRef('');
   const userRef = useRef(null);
   const past = useRef([]);
@@ -188,11 +205,6 @@ export default function App() {
   DEFAULT_TAGS.forEach(t => sugg.push(t));
   const suggestedTags = [...new Set(sugg)].slice(0, 10);
 
-  const net = NETS.find(n => n.id === netId) || NETS[0];
-  const len = net.weighted ? weighted : cps.length;
-  const truncated = len > net.cut && net.cut < net.limit;
-  const previewText = truncated ? cps.slice(0, net.cut).join('').replace(/\s+\S*$/, '') : text;
-
   const lines = text ? text.split('\n').length : 0;
   const paras = text.split(/\n\s*\n/).filter(p => p.trim()).length;
   const mentions = (text.match(/@[\w.]+/g) || []).length;
@@ -212,12 +224,24 @@ export default function App() {
     save(LS.recent, next); setRecent(next);
   };
 
-  const saveTagSet = () => {
-    if (!tagsInText.length) { flash('Primero escribí hashtags en el texto'); return; }
-    const str = [...new Set(tagsInText)].join(' ');
-    if (tagSets.some(s => s.text === str)) { flash('Ese grupo ya está guardado'); return; }
-    const set = { id: newId(), text: str };
-    setTagSets([set, ...tagSets]); sync(api.addTagSet(set)); flash('Grupo de hashtags guardado');
+  const appendTags = list => appendTag(list.join(' '));
+  const saveSet = set => {
+    const full = { id: set.id || newId(), title: set.title, text: set.text };
+    setTagSets(set.id ? tagSets.map(x => (x.id === set.id ? full : x)) : [full, ...tagSets]);
+    sync(api.addTagSet(full)); flash(set.id ? 'Grupo actualizado' : 'Grupo guardado');
+  };
+  const deleteSet = id => { setTagSets(tagSets.filter(x => x.id !== id)); sync(api.deleteTagSet(id)); };
+  const closePanel = () => {
+    setPanel(null);
+    const el = editorWrap.current;
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    taRef.current?.focus();
+  };
+  const clearAll = () => {
+    if (!text) return;
+    if (!window.confirm('¿Borrar todo el texto?')) return;
+    setText('', null, true);
+    flash('Texto borrado. Tocá Deshacer para recuperarlo');
   };
   const saveDraft = () => {
     if (!text.trim()) { flash('No hay texto para guardar'); return; }
@@ -270,26 +294,26 @@ export default function App() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  <button onClick={undo} disabled={undoLen === 0} title="Deshacer" style={toolBtn}>↶ Deshacer</button>
+                  <button onClick={clearFormat} title="Quitar negrita y cursiva (de la selección o de todo)" style={toolBtn}>Sin formato</button>
+                  <button onClick={clearAll} disabled={!text} title="Borrar todo el texto" style={{ ...toolBtn, color: 'var(--st-coral-700)' }}>Borrar</button>
+                </div>
+
+                <div className="tr-tabs" style={{ display: 'flex', gap: 4, flexBasis: '100%', overflowX: 'auto', paddingBottom: 2 }}>
                   {panelTabs.map(([id, label]) => {
                     const on = panel === id;
                     return (
-                      <button key={id} onClick={() => setPanel(p => (p === id ? null : id))} style={{ height: 36, padding: '0 12px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--st-petroleo)' : 'var(--border-default)'}`, background: on ? 'var(--st-petroleo)' : 'transparent', color: on ? 'var(--st-white)' : 'var(--st-petroleo)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-xs)', cursor: 'pointer' }}>{label}</button>
+                      <button key={id} onClick={() => setPanel(p => (p === id ? null : id))} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--st-petroleo)' : 'var(--border-default)'}`, background: on ? 'var(--st-petroleo)' : 'transparent', color: on ? 'var(--st-white)' : 'var(--st-petroleo)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-xs)', cursor: 'pointer' }}>{label}</button>
                     );
                   })}
-                </div>
-
-                <div style={{ flex: 1 }} />
-
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <Button variant="outline" size="sm" disabled={undoLen === 0} onClick={undo}>↶ Deshacer</Button>
-                  <Button variant="outline" size="sm" onClick={clearFormat}>Quitar formato</Button>
                 </div>
               </div>
 
               {panel === 'emoji' && (
-                <div style={{ ...panelBox, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <PanelShell title="Emojis" onClose={closePanel} scroll={false}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 220px', display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 14px', background: 'var(--st-white)', border: '1.5px solid var(--border-default)', borderRadius: 999 }}>
+                    <div style={{ flex: '1 1 220px', display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', background: 'var(--st-white)', border: '1.5px solid var(--border-default)', borderRadius: 999 }}>
                       <span aria-hidden="true" style={{ fontSize: 14, color: 'var(--text-subtle)' }}>🔍</span>
                       <input value={emojiQ} onChange={e => setEmojiQ(e.target.value)} placeholder="Buscar emoji: corazón, fiesta, mate…" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'var(--font-body)', fontSize: 'var(--fs-sm)', color: 'var(--st-gris-oscuro)' }} />
                     </div>
@@ -302,7 +326,7 @@ export default function App() {
                     })}
                   </div>
                   <span style={eyebrow}>{emojiQ ? 'Resultados' : emojiCat}</span>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: 2, maxHeight: 240, overflowY: 'auto' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: 2, maxHeight: 160, overflowY: 'auto' }}>
                     {emojiList.map(ch => (
                       <button key={ch} className="hv-emoji" onMouseDown={preventBlur} onClick={() => pickEmoji(ch)} style={{ height: 40, border: 'none', background: 'transparent', borderRadius: 8, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                         {appleStyle ? <AppleEmoji ch={ch} /> : ch}
@@ -311,10 +335,12 @@ export default function App() {
                   </div>
                   {noEmojiResults && <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>No encontramos emojis con esa palabra. Probá con otra.</p>}
                 </div>
+                </PanelShell>
               )}
 
               {panel === 'templates' && (
-                <div style={{ ...panelBox, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+                <PanelShell title="Plantillas" onClose={closePanel}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
                   {TEMPLATES.map(t => (
                     <button key={t.name} className="hv-card" onClick={() => { setText(text ? text + '\n\n' + t.body : t.body, null, true); setPanel(null); flash('Plantilla agregada — reemplazá los [corchetes]'); }} style={{ textAlign: 'left', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-subtle)', background: 'var(--st-white)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--st-petroleo)' }}>{t.name}</span>
@@ -322,40 +348,18 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+                </PanelShell>
               )}
 
               {panel === 'hashtags' && (
-                <div style={{ ...panelBox, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <span style={eyebrow}>Sugeridos para tu texto</span>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {suggestedTags.map(tag => {
-                        const used = tagSetLower.has(tag.toLowerCase());
-                        return <button key={tag} onClick={used ? undefined : () => appendTag(tag)} style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${used ? 'var(--st-celeste-300)' : 'var(--border-default)'}`, background: used ? 'var(--st-celeste-100)' : 'var(--st-white)', color: used ? 'var(--st-celeste-700)' : 'var(--st-petroleo)', fontFamily: 'var(--font-body)', fontSize: 'var(--fs-sm)', cursor: 'pointer' }}>{used ? '✓ ' + tag : tag}</button>;
-                      })}
-                    </div>
-                  </div>
-                  <div style={{ height: 1, background: 'var(--border-subtle)' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={eyebrow}>Mis grupos de hashtags</span>
-                      {loggedIn && <button onClick={saveTagSet} disabled={!tagsInText.length} style={linkBtn}>+ Guardar los hashtags del texto</button>}
-                    </div>
-                    {!loggedIn && <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}><a href="#" onClick={e => { e.preventDefault(); setLoginOpen(true); }}>Ingresá</a> para guardar tus hashtags y reutilizarlos.</p>}
-                    {loggedIn && !tagSets.length && <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Todavía no guardaste grupos. Escribí hashtags en el texto y guardalos acá.</p>}
-                    {loggedIn && tagSets.map(s => (
-                      <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'var(--st-white)', border: '1px solid var(--border-subtle)', borderRadius: 10 }}>
-                        <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-sm)', color: 'var(--st-petroleo-600)', overflowWrap: 'anywhere' }}>{s.text}</span>
-                        <button onClick={() => appendTag(s.text)} style={{ border: 'none', background: 'var(--st-coral-100)', color: 'var(--st-coral-700)', borderRadius: 999, padding: '5px 12px', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-2xs)', cursor: 'pointer' }}>Insertar</button>
-                        <button onClick={() => { setTagSets(tagSets.filter(x => x.id !== s.id)); sync(api.deleteTagSet(s.id)); }} title="Eliminar" style={deleteBtn}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <PanelShell title="Hashtags" onClose={closePanel}>
+                  <HashtagPanel loggedIn={loggedIn} tagSets={tagSets} onSaveSet={saveSet} onDeleteSet={deleteSet} tagsInText={tagsInText} usedTags={tagSetLower} suggestedTags={suggestedTags} onAddTags={appendTags} onLogin={() => setLoginOpen(true)} flash={flash} />
+                </PanelShell>
               )}
 
               {panel === 'history' && (
-                <div style={{ ...panelBox, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <PanelShell title="Historial" onClose={closePanel}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {!loggedIn && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '4px 2px' }}>
                       <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-body)' }}>Ingresá para guardar borradores y retomarlos cuando quieras.</p>
@@ -379,9 +383,12 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                </PanelShell>
               )}
 
+              <div ref={editorWrap} style={{ scrollMarginTop: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
               <RichEditor ref={taRef} value={text} onChange={setText} placeholder="Escribí o pegá tu texto acá. Seleccioná una parte y tocá N, K o NK para darle formato." style={{ minHeight: 320, padding: 20, fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.6, color: 'var(--st-gris-oscuro)', background: 'var(--st-white)' }} />
+              </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderTop: '1px solid var(--border-subtle)', background: 'var(--st-neutral-50)' }}>
                 <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--font-data)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
@@ -396,37 +403,7 @@ export default function App() {
           </div>
 
           <aside style={{ flex: '1 1 340px', minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ ...card, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 16px 10px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-md)', color: 'var(--st-petroleo)' }}>Vista previa</span>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {NETS.map(n => (
-                    <button key={n.id} onClick={() => setNetId(n.id)} style={{ padding: '5px 10px', borderRadius: 999, border: 'none', background: netId === n.id ? 'var(--st-coral)' : 'var(--st-neutral-100)', color: netId === n.id ? 'var(--st-white)' : 'var(--st-neutral-600)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-2xs)', cursor: 'pointer' }}>{n.name}</button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ padding: '0 16px 16px' }}>
-                <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 12, background: 'var(--st-white)', overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 999, background: 'var(--st-petroleo)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Logo height={12} />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--st-gris-oscuro)' }}>{net.handle}</span>
-                      <span style={{ fontSize: 'var(--fs-2xs)', color: 'var(--text-muted)' }}>{net.meta}</span>
-                    </div>
-                  </div>
-                  {net.media && <div style={{ aspectRatio: net.ratio || '1 / 1', background: 'var(--st-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-subtle)', fontFamily: 'var(--font-data)', fontSize: 'var(--fs-2xs)', letterSpacing: 'var(--tracking-wide)', textTransform: 'uppercase' }}>Imagen o video</div>}
-                  <div style={{ padding: '10px 12px 14px', fontSize: 14, lineHeight: 1.45, color: 'var(--st-gris-oscuro)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                    {net.inline && !!text && <strong style={{ fontWeight: 700 }}>{net.handle} </strong>}
-                    {previewText}
-                    {truncated && <span style={{ color: 'var(--text-muted)' }}>… {net.more}</span>}
-                    {!text && <span style={{ color: 'var(--text-subtle)' }}>Tu texto aparecerá acá.</span>}
-                  </div>
-                </div>
-                <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.4 }}>{net.note}</p>
-              </div>
-            </div>
+            <Preview text={text} weighted={weighted} netId={netId} onNetChange={setNetId} />
 
             <div style={{ ...card, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-md)', color: 'var(--st-petroleo)' }}>Conteo por red social</span>
