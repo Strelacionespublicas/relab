@@ -7,7 +7,7 @@ const call = async (method, path, body) => {
     headers: body ? { 'content-type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${method} ${path}: ${res.status}`);
+  if (!res.ok) throw Object.assign(new Error(`${method} ${path}: ${res.status}`), { status: res.status });
   return res.status === 204 ? null : res.json();
 };
 
@@ -21,6 +21,7 @@ export const api = {
   deleteDraft: id => call('DELETE', `/drafts/${encodeURIComponent(id)}`),
   addTagSet: set => call('POST', '/tagsets', set),
   deleteTagSet: id => call('DELETE', `/tagsets/${encodeURIComponent(id)}`),
+  deleteAccount: () => call('DELETE', '/account'),
 };
 
 export const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));

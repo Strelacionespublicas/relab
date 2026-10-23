@@ -10,7 +10,8 @@ database_name = "relab"
 database_id = "27104637-1cf1-4bc0-a786-c845c359ea48"
 
 # GOOGLE_CLIENT_ID es público (viaja en cada login), por eso va acá.
-# GOOGLE_CLIENT_SECRET va SOLO en el panel de Cloudflare, como Secreto (ver DEPLOY.md).
+# GOOGLE_CLIENT_SECRET y TEXT_KEY van SOLO en el panel de Cloudflare, como Secretos (ver DEPLOY.md).
+# TEXT_KEY cifra los textos de los usuarios: si se pierde, lo guardado queda ilegible.
 # ALLOWED_EMAILS (opcional): lista separada por comas de emails o dominios (@empresa.com)
 # que pueden crear cuenta. Vacío = cualquier cuenta de Google.
 [vars]

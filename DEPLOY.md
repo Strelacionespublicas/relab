@@ -49,6 +49,7 @@ Pegá ese `database_id` en `wrangler.toml`, en lugar de `REEMPLAZAR_CON_EL_ID_DE
 npm run db:migrate                                     # crea las tablas
 npx wrangler pages project create relab --production-branch main
 npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name relab
+npx wrangler pages secret put TEXT_KEY --project-name relab   # frase larga de tu gestor de contraseñas
 npm run deploy
 ```
 

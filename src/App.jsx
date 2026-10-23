@@ -13,6 +13,8 @@ import {
 } from './lib/core.js';
 
 const DEFAULT_RECENT = ['✨', '🔥', '💡', '📌', '✅', '👉', '📣', '🚀', '💬', '📅', '📍', '🙌'];
+// 503 = falta TEXT_KEY en Cloudflare: el servidor no guarda nada sin cifrar.
+const saveError = err => (err?.status === 503 ? 'No se pudo guardar: falta configurar el cifrado' : 'No se pudo guardar. Revisá tu conexión');
 const LOGIN_MSG = { denied: 'Esa cuenta no tiene acceso a TextoRedes', error: 'No pudimos iniciar sesión. Probá de nuevo', config: 'El login todavía no está configurado' };
 
 const eyebrow = { fontFamily: 'var(--font-data)', fontSize: 'var(--fs-3xs)', letterSpacing: 'var(--tracking-wider)', textTransform: 'uppercase', color: 'var(--text-muted)' };
@@ -95,7 +97,7 @@ export default function App() {
     if (!userRef.current) return;
     clearTimeout(saveT.current);
     saveT.current = setTimeout(() => {
-      api.saveCurrent(next).then(() => setSavedAt(Date.now())).catch(() => flash('No se pudo guardar. Revisá tu conexión', false));
+      api.saveCurrent(next).then(() => setSavedAt(Date.now())).catch(err => flash(saveError(err), false));
     }, 600);
   };
 
@@ -189,7 +191,17 @@ export default function App() {
     setUser(null); userRef.current = null; setDrafts([]); setTagSets([]); setSavedAt(null);
     flash('Sesión cerrada');
   };
-  const sync = promise => promise.catch(() => flash('No se pudo guardar. Revisá tu conexión', false));
+  const sync = promise => promise.catch(err => flash(saveError(err), false));
+  const deleteAccount = async () => {
+    if (!window.confirm('¿Borrar tu cuenta? Se eliminan tus borradores, tus grupos de hashtags y el texto guardado.')) return;
+    if (!window.confirm('Esto no se puede deshacer. ¿Confirmás que querés borrar todo?')) return;
+    try {
+      await api.deleteAccount();
+      clearTimeout(saveT.current);
+      setUser(null); userRef.current = null; setDrafts([]); setTagSets([]); setSavedAt(null); setPanel(null);
+      flash('Tu cuenta y tus datos se borraron');
+    } catch (e) { flash('No se pudo borrar la cuenta. Probá de nuevo', false); }
+  };
 
   // ---- Datos derivados ----
   const loggedIn = !!user;
@@ -384,6 +396,9 @@ export default function App() {
                       <button onClick={() => { setDrafts(drafts.filter(x => x.id !== d.id)); sync(api.deleteDraft(d.id)); }} title="Eliminar" style={deleteBtn}>✕</button>
                     </div>
                   ))}
+                  {loggedIn && (
+                    <button onClick={deleteAccount} style={{ ...linkBtn, alignSelf: 'flex-start', marginTop: 8, color: 'var(--text-muted)', fontWeight: 500, textDecoration: 'underline' }}>Borrar mi cuenta y mis datos</button>
+                  )}
                 </div>
                 </PanelShell>
               )}

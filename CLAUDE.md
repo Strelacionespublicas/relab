@@ -35,6 +35,7 @@ Casi siempre llega como handoff de Claude Design. Leé su README y los chats ant
 
 ## No tocar
 - `GOOGLE_CLIENT_SECRET` vive solo en el panel de Cloudflare, como Secreto. Nunca va en el repo ni en el chat.
+- **Privacidad:** el contenido de los usuarios (texto en curso, borradores, grupos de hashtags y cualquier dato nuevo que escriban) se guarda cifrado con `encryptText`/`decryptText` de `server/crypto.js`. La clave es el Secreto `TEXT_KEY` (solo en Cloudflare y en el gestor de contraseñas de Stella). Sin la clave, guardar devuelve 503 `config` y nunca se escribe en texto plano. Stella no quiere poder leer lo que escriben: no agregues pantallas, exports ni logs con ese contenido. Nombre y email sí son visibles (login).
 - `GOOGLE_CLIENT_ID` y `database_id` están en `wrangler.toml` a propósito: con `[vars]` en el archivo, Cloudflare ignora las variables de texto del panel.
 - Una dirección nueva para el login (otro dominio) hay que agregarla en Google Cloud → Google Auth Platform → Clientes → "Relab web" → URIs de redireccionamiento.
 - TextoRedes: el texto se guarda y se copia como Unicode con formato. `RichEditor` solo cambia cómo se ve. No cambies `applyStyle`, `REV` ni `styleChar` sin probar que el texto copiado sigue igual.

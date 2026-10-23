@@ -19,10 +19,11 @@ const SECTIONS = [
       <li>lo que decidas guardar en cada recurso: el texto en curso, tus borradores y tus grupos de hashtags.</li>
     </ul>
     No accedemos a tus contactos, tus archivos, tu correo ni a ninguna otra información de tu cuenta de Google, y no publicamos nada en tu nombre.</>],
+  ['Tus textos son tuyos', <>Lo que escribís y guardás (el texto en curso, tus borradores y tus grupos de hashtags) se guarda <strong>cifrado</strong>: en nuestra base de datos es ilegible. No leemos, no revisamos y no analizamos tus textos, y no los usamos para nada más que mostrártelos a vos cuando volvés.</>],
   ['Para qué los usamos', <>Para identificarte cuando volvés y mostrarte lo que guardaste. Podemos usar tu email para avisarte novedades importantes de Relab. No vendemos ni compartimos tus datos con terceros para publicidad.</>],
   ['Sin cuenta', <>Si usás los recursos sin ingresar, lo que escribís queda solo en tu navegador y no se envía a nuestros servidores.</>],
   ['Dónde se guardan', <>En los servidores de Cloudflare, que usamos para alojar Relab. Usamos una cookie de sesión para mantenerte conectado durante 30 días. No usamos cookies publicitarias.</>],
-  ['Tus derechos', <>Podés pedir ver, corregir o borrar tus datos y tu cuenta escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Respondemos dentro de los 10 días hábiles, como indica la Ley 25.326 de Protección de Datos Personales. Si considerás que no respondimos como corresponde, podés presentar un reclamo ante la Agencia de Acceso a la Información Pública (AAIP).</>],
+  ['Tus derechos', <>Podés borrar tu cuenta y todos tus datos en cualquier momento, sin escribirnos, desde <strong>Historial → Borrar mi cuenta y mis datos</strong>. También podés pedir ver, corregir o borrar tus datos escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Respondemos dentro de los 10 días hábiles, como indica la Ley 25.326 de Protección de Datos Personales. Si considerás que no respondimos como corresponde, podés presentar un reclamo ante la Agencia de Acceso a la Información Pública (AAIP).</>],
   ['Cambios', <>Si cambiamos esta política, actualizamos la fecha de esta página. Si el cambio es importante, te avisamos por email.</>],
 ];
 
