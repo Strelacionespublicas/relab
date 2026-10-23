@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Guía práctica y gratuita para elegir entre GitHub, Netlify, Vercel, Codex y Claude Code al crear landings, calculadoras, cotizadores y otras herramientas digitales.">
+  <meta name="theme-color" content="#012C3D">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <title>Qué herramienta usar para crear productos digitales — ST Relaciones Públicas</title>
+</head>
+<body>
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="/" class="brand" aria-label="Relab, recursos de ST Relaciones Públicas"><img src="/src/ds/assets/logo-petrol.png" alt="ST Relaciones Públicas"><span>un recurso <b>relab</b></span></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú de secciones" aria-expanded="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <button class="pdf-btn" id="pdfBtn" type="button" aria-label="Descargar la guía en PDF">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M4 20h16"/></svg>
+    PDF
+  </button>
+</nav>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<nav class="side-drawer" id="sideDrawer" aria-label="Secciones de la guía">
+  <a href="#intro"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 9l9-7 9 7"/><path d="M5 10v10a1 1 0 001 1h4a1 1 0 001-1v-5h2v5a1 1 0 001 1h4a1 1 0 001-1V10"/></svg>Intro</a>
+  <a href="#sec-1"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Elegir</a>
+  <a href="#sec-github"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>GitHub</a>
+  <a href="#sec-github-tutorial"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>Crear repo</a>
+  <a href="#sec-netlify"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>Netlify</a>
+  <a href="#sec-netlify-tutorial"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Publicar en Netlify</a>
+  <a href="#sec-gh-netlify"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>GitHub+Netlify</a>
+  <a href="#sec-vercel"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 2L2 20h20L12 2z"/></svg>Vercel</a>
+  <a href="#sec-vercel-tutorial"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>Vercel+GitHub</a>
+  <a href="#sec-gh-vercel"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>GitHub→Vercel</a>
+  <a href="#sec-codex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Codex</a>
+  <a href="#sec-claude"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Claude Code</a>
+  <a href="#sec-ia-flujo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Trabajar con IA</a>
+  <a href="#sec-conectan"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Conexión</a>
+  <a href="#sec-flujos"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 009 9"/></svg>3 flujos</a>
+  <a href="#sec-crear"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Qué crear</a>
+  <a href="#sec-archivos"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Mis archivos</a>
+  <a href="#sec-checklist"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Checklist</a>
+  <a href="#sec-ejemplos"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Ejemplos</a>
+  <a href="#sec-mapa"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Mapa</a>
+  <a href="#sec-faq"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>FAQ</a>
+  <a href="#sec-conclusion"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Conclusión</a>
+</nav>
+
+<a href="#" class="scroll-top-btn" id="scrollTopBtn" aria-label="Volver arriba">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</a>
+
+<main class="doc">
+
+<p class="kicker">Guía práctica</p>
+<h1 style="font-size:34px;margin:6px 0 4px;line-height:1.15">Qué herramienta usar para crear productos digitales</h1>
+<p style="font-family:var(--font-data);font-size:13px;letter-spacing:.05em;color:var(--text-muted);margin:0 0 26px">GitHub · Netlify · Vercel · Codex · Claude Code</p>
+
+<nav class="quick" aria-label="Ir a" style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px">
+<a href="#sec-github" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>GitHub</a>
+<a href="#sec-netlify" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>Netlify</a>
+<a href="#sec-vercel" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 2L2 20h20L12 2z"/></svg>Vercel</a>
+<a href="#sec-codex" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Codex</a>
+<a href="#sec-claude" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Claude Code</a>
+<a href="#sec-ejemplos" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Ejemplos</a>
+<a href="#sec-faq" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-decoration:none;color:var(--st-petroleo);font-family:var(--font-display);font-weight:600;font-size:13.5px;background:var(--st-white)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>FAQ</a>
+</nav>
+
+<section id="intro">
+<h2 style="font-size:22px;margin:0 0 10px">Introducción</h2>
+<p>Hoy podés transformar una idea en una landing, una calculadora, un cotizador o una herramienta para un negocio sin tener que desarrollar todo desde cero.</p>
+<p>Pero para hacerlo necesitás entender qué hace cada herramienta y en qué momento utilizarla.</p>
+<p>Esta guía te ayuda a elegir qué usar según el proyecto que quieras crear, cómo conectar las herramientas y qué tener en cuenta antes de publicar.</p>
+<div class="callout"><p>La clave no es aprender todas las herramientas al mismo tiempo. Es entender qué problema resuelve cada una.</p></div>
+</section>
+
+<hr class="sep">
+
+<section id="sec-1">
+<h2 style="font-size:22px;margin:0 0 6px"><span class="toolnum">1</span>Antes de empezar: ¿qué querés crear?</h2>
+<p>El primer paso no es abrir una herramienta. Es definir qué necesitás construir.</p>
+<table>
+<thead><tr><th>Si querés crear...</th><th>Por dónde empezar</th></tr></thead>
+<tbody>
+<tr><td>Una página web simple</td><td>HTML, CSS y JavaScript</td></tr>
+<tr><td>Una landing para un servicio</td><td>HTML/CSS/JS o un constructor visual</td></tr>
+<tr><td>Una calculadora</td><td>HTML, CSS y JavaScript</td></tr>
+<tr><td>Un cotizador</td><td>HTML, CSS y JavaScript</td></tr>
+<tr><td>Un diagnóstico interactivo</td><td>HTML/JS y, si hace falta, una base de datos</td></tr>
+<tr><td>Una aplicación web</td><td>Un framework + GitHub + una plataforma de despliegue</td></tr>
+<tr><td>Un prototipo sin saber programar</td><td>Codex o Claude Code</td></tr>
+</tbody>
+</table>
+<h3 style="font-size:16px;margin:20px 0 8px">Preguntas que tenés que responder</h3>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>¿Qué problema quiero resolver?</li>
+<li>¿Quién va a utilizar el producto?</li>
+<li>¿Qué tiene que poder hacer?</li>
+<li>¿Necesita guardar datos?</li>
+<li>¿Necesita usuarios o inicio de sesión?</li>
+<li>¿Necesita conectarse con otras herramientas?</li>
+<li>¿Quiero crear un prototipo o un producto listo para usar?</li>
+</ul>
+<p>Cuanto más claro tengas el problema, más fácil va a ser elegir las herramientas.</p>
+</section>
+
+<section id="sec-github">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">2</span>GitHub</h2>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Qué es?</h3>
+<p>GitHub es una plataforma para alojar, gestionar y versionar proyectos de código.</p>
+<p>Permite guardar el historial de cambios, trabajar con otras personas y conectar el proyecto con plataformas de despliegue.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Cuándo usarlo?</h3>
+<p>Usalo cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Querés guardar tu proyecto.</li>
+<li>Vas a hacer cambios frecuentes.</li>
+<li>Trabajás con IA sobre el código.</li>
+<li>Necesitás recuperar una versión anterior.</li>
+<li>Querés colaborar con otra persona.</li>
+<li>Querés conectar tu proyecto con Netlify o Vercel.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Ejemplo</h3>
+<p>Tenés una calculadora que creaste con IA. Guardás los archivos en GitHub y, cada vez que hacés cambios, podés conservar el historial del proyecto.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">Lo que tenés que entender</h3>
+<p>GitHub no es necesariamente el lugar donde el usuario final ve tu página. Es el repositorio donde gestionás el código.</p>
+<div class="callout"><p>Pensalo como el historial y la biblioteca de tu proyecto.</p></div>
+</section>
+
+<section id="sec-github-tutorial">
+<span class="tutorial-tag">Tutorial</span>
+<h3 style="font-size:18px;margin:0 0 14px">Cómo crear tu primer repositorio en GitHub</h3>
+<div class="progress-row">
+<div class="progress-step"><span class="dot">1</span>Registrate</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">2</span>Creá el repo</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">3</span>Subí archivos</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">4</span>Verificá</div>
+</div>
+
+<div class="capture-grid">
+<div class="capture-block">
+<h4>Registrate o iniciá sesión</h4>
+<a class="shot step-shot" href="/guia/github-registro.webp" target="_blank" rel="noopener"><img src="/guia/github-registro.webp" alt="Pantalla de registro de GitHub" loading="lazy"></a>
+<p class="note">Hacé clic en "Inicia sesión" (si ya tenés cuenta) o registrate acá, completando correo, contraseña y nombre de usuario.</p>
+</div>
+
+<div class="capture-block">
+<h4>Creá tu repositorio</h4>
+<a class="shot mini-shot" href="/guia/github-new.webp" target="_blank" rel="noopener"><img src="/guia/github-new.webp" alt="Panel con botón New" loading="lazy"></a>
+<a class="shot step-shot" href="/guia/github-nuevo-repo.webp" target="_blank" rel="noopener"><img src="/guia/github-nuevo-repo.webp" alt="Formulario de nuevo repositorio" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">New</span> — desde tu panel, entrá a crear un nuevo repositorio.</span></li>
+<li><b>2</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Nombre del repositorio</span> — elegí un nombre corto y claro.</span></li>
+<li><b>3</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Visibilidad</span> — Público o Privado, según corresponda.</span></li>
+<li><b>4</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Create repository</span> — confirmá la creación.</span></li>
+</ul>
+</div>
+
+<div class="capture-block">
+<h4>Subí los archivos</h4>
+<a class="shot step-shot" href="/guia/github-subir.webp" target="_blank" rel="noopener"><img src="/guia/github-subir.webp" alt="Agregar archivo" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Agregar archivo</span> — abrí el menú desplegable.</span></li>
+<li><b>2</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Subir archivos</span> — elegí esta opción para cargar tu proyecto.</span></li>
+<li><b>3</b><span>Arrastrá los archivos del proyecto: <code>index.html</code>, <code>style.css</code>, <code>script.js</code>.</span></li>
+<li><b>4</b><span><span class="lbl" style="font-weight:700;color:var(--st-petroleo)">Commit changes</span> — guardá los cambios en el repositorio.</span></li>
+</ul>
+</div>
+
+<div class="capture-block" style="margin-bottom:6px">
+<h4>Verificá</h4>
+<p class="note">Comprobá que los archivos del proyecto aparezcan correctamente dentro del repositorio.</p>
+</div>
+</div>
+
+<div class="callout"><p>GitHub = donde guardás y versionás tu proyecto. Netlify/Vercel = donde lo publicás.</p></div>
+</section>
+
+<section id="sec-netlify">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">3</span>Netlify</h2>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Qué es?</h3>
+<p>Netlify es una plataforma que permite publicar sitios y aplicaciones web. Una de sus formas más sencillas de empezar es subir directamente los archivos de un proyecto web, como HTML, CSS y JavaScript.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Cuándo usarlo?</h3>
+<p>Es una buena opción cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Tenés una landing.</li>
+<li>Creaste una calculadora.</li>
+<li>Tenés un cotizador.</li>
+<li>Querés publicar un HTML.</li>
+<li>Estás empezando y necesitás un despliegue simple.</li>
+<li>Querés conectar un repositorio para automatizar actualizaciones.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Ejemplo</h3>
+<p>Tenés una carpeta con <code>index.html</code>, <code>style.css</code> y <code>script.js</code>. Podés subir el proyecto a Netlify y publicarlo como una web.</p>
+<div class="flow">HTML + CSS + JavaScript<br>↓<br><b>Netlify</b><br>↓<br>Web publicada</div>
+<h3 style="font-size:16px;margin:16px 0 6px">Lo que tenés que entender</h3>
+<p>No necesitás usar GitHub para publicar un HTML sencillo en Netlify. Podés empezar subiendo directamente los archivos. GitHub se vuelve más útil cuando querés guardar versiones, trabajar con IA sobre el proyecto o automatizar los despliegues.</p>
+<div class="callout"><p>Pensalo como la herramienta que te permite llevar tu proyecto a internet.</p></div>
+</section>
+
+<section id="sec-netlify-tutorial">
+<span class="tutorial-tag">Tutorial</span>
+<h3 style="font-size:18px;margin:0 0 8px">Cómo publicar un HTML directamente en Netlify</h3>
+<p style="margin:0 0 14px">Un proyecto HTML sencillo puede publicarse directamente en Netlify sin necesidad de utilizar GitHub.</p>
+<div class="progress-row">
+<div class="progress-step"><span class="dot">1</span>Entrá y creá</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">2</span>Subí</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">3</span>Publicá</div>
+</div>
+
+<div class="capture-grid">
+<div class="capture-block">
+<h4>Entrá y creá</h4>
+<a class="shot step-shot" href="/guia/netlify-panel.webp" target="_blank" rel="noopener"><img src="/guia/netlify-panel.webp" alt="Panel de Netlify" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Iniciar sesión / crear cuenta.</span></li>
+<li><b>2</b><span>Panel principal, donde vas a ver tus proyectos.</span></li>
+<li><b>3</b><span>Opción para agregar o crear un nuevo proyecto.</span></li>
+</ul>
+</div>
+
+<div class="capture-block">
+<h4>Subí</h4>
+<a class="shot step-shot" href="/guia/netlify-subir.webp" target="_blank" rel="noopener"><img src="/guia/netlify-subir.webp" alt="Subir el proyecto a Netlify" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Opción para desplegar/subir el proyecto.</span></li>
+<li><b>2</b><span>Arrastrá la carpeta del proyecto: <code>index.html</code>, <code>style.css</code>, <code>script.js</code>.</span></li>
+<li><b>3</b><span>Confirmá el despliegue.</span></li>
+</ul>
+</div>
+
+<div class="capture-block" style="margin-bottom:6px">
+<h4>Publicá</h4>
+<a class="shot step-shot" href="/guia/netlify-publicado.webp" target="_blank" rel="noopener"><img src="/guia/netlify-publicado.webp" alt="Proyecto desplegado con su URL" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Estado del deploy.</span></li>
+<li><b>2</b><span>URL pública: una vez finalizado, Netlify genera una dirección para acceder a tu web.</span></li>
+</ul>
+</div>
+</div>
+
+<div class="flow">Tu carpeta<br>index.html + style.css + script.js<br>↓<br><b>Netlify</b><br>↓<br>Web publicada</div>
+</section>
+
+<section id="sec-gh-netlify">
+<span class="tutorial-tag">Tutorial</span>
+<h3 style="font-size:18px;margin:0 0 8px">Cómo conectar GitHub con Netlify</h3>
+<p style="margin:0 0 14px">Útil cuando querés mantener tu proyecto en GitHub y que Netlify se encargue de publicar las actualizaciones.</p>
+<div class="progress-row">
+<div class="progress-step"><span class="dot">1</span>Conectá</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">2</span>Autorizá y elegí</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">3</span>Publicá</div>
+</div>
+
+<div class="capture-grid">
+<div class="capture-block">
+<h4>Conectá</h4>
+<a class="shot step-shot" href="/guia/netlify-importar.webp" target="_blank" rel="noopener"><img src="/guia/netlify-importar.webp" alt="Panel de Netlify, importar proyecto" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Agregar nuevo proyecto.</span></li>
+<li><b>2</b><span>Importar/conectar un proyecto existente.</span></li>
+<li><b>3</b><span>Elegir GitHub.</span></li>
+</ul>
+</div>
+
+<div class="capture-block">
+<h4>Autorizá y elegí</h4>
+<a class="shot step-shot" href="/guia/netlify-autorizar.webp" target="_blank" rel="noopener"><img src="/guia/netlify-autorizar.webp" alt="Autorización de Netlify a GitHub" loading="lazy"></a>
+<a class="shot step-shot" href="/guia/netlify-repos.webp" target="_blank" rel="noopener"><img src="/guia/netlify-repos.webp" alt="Selección de repositorios" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Autorizar el acceso.</span></li>
+<li><b>2</b><span>Seleccionar la cuenta o repositorio.</span></li>
+<li><b>3</b><span>Elegir el proyecto que querés publicar.</span></li>
+</ul>
+</div>
+
+<div class="capture-block" style="margin-bottom:6px">
+<h4>Publicá</h4>
+<a class="shot step-shot" href="/guia/netlify-deploy.webp" target="_blank" rel="noopener"><img src="/guia/netlify-deploy.webp" alt="Configuración, deploy y URL final" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Configuración del proyecto.</span></li>
+<li><b>2</b><span>Deploy.</span></li>
+<li><b>3</b><span>Estado del despliegue y URL final publicada.</span></li>
+</ul>
+</div>
+</div>
+
+<h4 style="font-size:15px;margin:8px 0 8px">¿Qué pasa cuando modificás el proyecto?</h4>
+<div class="flow">Modificás código<br>↓<br>GitHub<br>↓<br>Netlify detecta el cambio<br>↓<br>Nuevo deploy<br>↓<br><b>Web actualizada</b></div>
+</section>
+
+<section id="sec-vercel">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">4</span>Vercel</h2>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Qué es?</h3>
+<p>Vercel es una plataforma para desplegar sitios y aplicaciones web. Está especialmente orientada a proyectos modernos que utilizan frameworks como Next.js y React.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Cuándo usarlo?</h3>
+<p>Consideralo cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Trabajás con una aplicación web.</li>
+<li>Utilizás un framework compatible.</li>
+<li>Querés conectar GitHub con el despliegue.</li>
+<li>Necesitás un flujo de publicación automatizado.</li>
+<li>El proyecto va a crecer y tener varias funcionalidades.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Ejemplo</h3>
+<p>Creaste una aplicación web con ayuda de Claude Code. La conectás con GitHub y después con Vercel para que los cambios del proyecto puedan desplegarse automáticamente.</p>
+<div class="flow">Proyecto<br>↓<br>GitHub<br>↓<br><b>Vercel</b><br>↓<br>Aplicación publicada</div>
+<h3 style="font-size:16px;margin:16px 0 6px">Netlify o Vercel: ¿cuál uso?</h3>
+<p>No necesitás utilizar las dos.</p>
+<table>
+<thead><tr><th>Situación</th><th>Opción</th></tr></thead>
+<tbody>
+<tr><td>HTML/CSS/JS sencillo</td><td>Netlify puede ser suficiente</td></tr>
+<tr><td>Landing simple</td><td>Netlify puede ser suficiente</td></tr>
+<tr><td>Aplicación con framework</td><td>Vercel puede ser una opción adecuada</td></tr>
+<tr><td>Proyecto conectado a GitHub</td><td>Cualquiera de las dos puede servir</td></tr>
+<tr><td>Proyecto que necesita funciones de servidor</td><td>Evaluá las capacidades de cada plataforma</td></tr>
+</tbody>
+</table>
+<p>La elección depende del tipo de proyecto y de cómo lo estés desarrollando.</p>
+<div class="callout"><p>No hay una herramienta universalmente mejor.</p></div>
+</section>
+
+<section id="sec-vercel-tutorial">
+<span class="tutorial-tag">Tutorial</span>
+<h3 style="font-size:18px;margin:0 0 8px">Cómo conectar Vercel con GitHub</h3>
+<p style="margin:0 0 14px">Vercel permite conectar proyectos alojados en GitHub y desplegarlos directamente.</p>
+<div class="progress-row">
+<div class="progress-step"><span class="dot">1</span>Conectá cuenta</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">2</span>Importá</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">3</span>Configurá</div><div class="progress-line"></div>
+<div class="progress-step"><span class="dot">4</span>Publicá</div>
+</div>
+
+<div class="capture-block">
+<h4>Conectá tu cuenta</h4>
+<a class="shot step-shot" href="/guia/vercel-login.webp" target="_blank" rel="noopener"><img src="/guia/vercel-login.webp" alt="Login de Vercel con GitHub" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Continue with GitHub.</span></li>
+<li><b>2</b><span>Autorizar el acceso.</span></li>
+<li><b>3</b><span>Ingresar a Vercel.</span></li>
+</ul>
+</div>
+
+<div class="callout"><p>Ingresar a Vercel con tu cuenta de GitHub facilita la vinculación entre ambas plataformas. Esto NO significa que la base de datos quede conectada automáticamente.</p></div>
+<div class="flow">GitHub<br>Repositorio / código<br>↓<br><b>Vercel</b><br>Despliegue<br>↓<br>Aplicación publicada</div>
+<p style="margin:8px 0 0">La base de datos es una capa diferente y depende del proyecto.</p>
+
+<div class="capture-grid" style="margin-top:22px">
+<div class="capture-block">
+<h4>Importá tu proyecto</h4>
+<a class="shot step-shot" href="/guia/vercel-importar.webp" target="_blank" rel="noopener"><img src="/guia/vercel-importar.webp" alt="Panel de Vercel, importar proyecto" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Add New / Import Project.</span></li>
+<li><b>2</b><span>GitHub.</span></li>
+<li><b>3</b><span>Seleccionar repositorio.</span></li>
+</ul>
+</div>
+
+<div class="capture-block">
+<h4>Configurá y desplegá</h4>
+<a class="shot step-shot" href="/guia/vercel-config.webp" target="_blank" rel="noopener"><img src="/guia/vercel-config.webp" alt="Configuración y deploy" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Configuración.</span></li>
+<li><b>2</b><span>Variables o parámetros necesarios, si corresponde.</span></li>
+<li><b>3</b><span>Deploy — Vercel construye y despliega el proyecto.</span></li>
+</ul>
+</div>
+
+<div class="capture-block" style="margin-bottom:6px">
+<h4>Publicá</h4>
+<a class="shot step-shot" href="/guia/vercel-publicado.webp" target="_blank" rel="noopener"><img src="/guia/vercel-publicado.webp" alt="Aplicación desplegada con su URL" loading="lazy"></a>
+<ul class="annotate">
+<li><b>1</b><span>Estado del deployment.</span></li>
+<li><b>2</b><span>URL de la aplicación ya publicada.</span></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section id="sec-gh-vercel">
+<span class="tutorial-tag">Tutorial</span>
+<h3 style="font-size:18px;margin:0 0 12px">Cómo conectar GitHub con Vercel</h3>
+<p style="margin:0 0 10px">Una vez conectado el repositorio, el flujo puede ser mucho más automático.</p>
+<div class="flow">Código<br>↓<br>GitHub<br>↓<br><b>Vercel</b><br>↓<br>Deploy<br>↓<br>Aplicación publicada</div>
+<p style="margin:10px 0 0">Cuando actualizás el proyecto y subís los cambios a GitHub, Vercel puede realizar un nuevo despliegue automáticamente según la configuración del proyecto.</p>
+</section>
+
+<section id="sec-codex">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">5</span>Codex</h2>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Qué es?</h3>
+<p>Codex es una herramienta de IA para trabajar con código. Puede ayudarte a crear, modificar, entender y revisar proyectos de programación.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Cuándo usarlo?</h3>
+<p>Usalo cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Tenés una idea y no sabés cómo convertirla en código.</li>
+<li>Querés crear una primera versión de una web.</li>
+<li>Necesitás modificar una funcionalidad.</li>
+<li>Querés encontrar errores.</li>
+<li>Necesitás entender qué hace un archivo.</li>
+<li>Querés automatizar tareas de desarrollo.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Ejemplo</h3>
+<p>Le explicás a Codex:</p>
+<div class="callout"><p style="font-style:italic;font-weight:500">"Quiero una calculadora de precios para mis servicios. Necesito que el usuario ingrese horas, cantidad de personas y modalidad, y que el sistema calcule el presupuesto."</p></div>
+<p>A partir de esa indicación, podés trabajar sobre un primer prototipo y pedirle modificaciones.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">Lo que tenés que entender</h3>
+<p>La IA puede ayudarte a escribir código, pero no significa que todo lo que genere esté correcto. Tenés que probar, revisar y entender lo que estás construyendo.</p>
+<div class="callout"><p>La IA escribe. Vos dirigís.</p></div>
+</section>
+
+<section id="sec-claude">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">6</span>Claude Code</h2>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Qué es?</h3>
+<p>Claude Code es una herramienta de IA para trabajar directamente sobre proyectos de código. Permite utilizar IA para desarrollar, modificar, revisar y corregir archivos de un proyecto.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">¿Cuándo usarlo?</h3>
+<p>Es especialmente útil cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Ya tenés un proyecto con varios archivos.</li>
+<li>Querés modificar funcionalidades.</li>
+<li>Necesitás crear componentes.</li>
+<li>Querés corregir errores.</li>
+<li>Vas a trabajar sobre un proyecto existente.</li>
+<li>Necesitás que la IA analice distintas partes del código.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Ejemplo</h3>
+<p>Tenés una landing que ya funciona y querés agregarle un formulario de contacto. Podés trabajar con Claude Code para modificar el proyecto, incorporar la funcionalidad y revisar los cambios.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">Lo que tenés que entender</h3>
+<p>No es solamente conversar sobre programación. Es una forma de trabajar con IA sobre el proyecto.</p>
+<div class="callout"><p>No reemplaza tu criterio. Te ayuda a desarrollar.</p></div>
+</section>
+
+<section id="sec-ia-flujo">
+<span class="tutorial-tag">Guía práctica</span>
+<h3 style="font-size:18px;margin:0 0 14px">Cómo trabajar con IA para crear un proyecto</h3>
+<div class="step"><div class="step-num">1</div><div class="step-body"><h4>Explicás qué querés crear</h4><p>Por ejemplo: "Quiero una calculadora que permita..."</p></div></div>
+<div class="step"><div class="step-num">2</div><div class="step-body"><h4>La IA genera una primera versión</h4><p>Obtenés un primer resultado funcional.</p></div></div>
+<div class="step"><div class="step-num">3</div><div class="step-body"><h4>Probás</h4><p>Revisás que funcione como esperabas.</p></div></div>
+<div class="step"><div class="step-num">4</div><div class="step-body"><h4>Detectás qué querés cambiar</h4><p>Identificás ajustes o mejoras necesarias.</p></div></div>
+<div class="step"><div class="step-num">5</div><div class="step-body"><h4>Le pedís la modificación</h4><p>Volvés a conversar con la IA para ajustar el resultado.</p></div></div>
+<div class="step"><div class="step-num">6</div><div class="step-body"><h4>Guardás la versión actualizada</h4><p>Conservás el proyecto en GitHub si vas a seguir trabajándolo.</p></div></div>
+<div class="step" style="margin-bottom:6px"><div class="step-num">7</div><div class="step-body"><h4>Publicás</h4><p>Desplegás en Netlify o Vercel según el proyecto.</p><a class="shot step-shot" href="/guia/ia-proceso.webp" target="_blank" rel="noopener"><img src="/guia/ia-proceso.webp" alt="Proceso real de trabajo con IA" loading="lazy"></a></div></div>
+<div class="callout"><p>La IA escribe. Vos dirigís.</p></div>
+</section>
+
+<section>
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">7</span>¿Codex o Claude Code?</h2>
+<p>Ambos pueden ayudarte a trabajar con código mediante IA. No tenés que elegir uno para siempre.</p>
+<table>
+<thead><tr><th>Si necesitás...</th><th>Podés utilizar</th></tr></thead>
+<tbody>
+<tr><td>Generar código</td><td>Codex o Claude Code</td></tr>
+<tr><td>Modificar funcionalidades</td><td>Codex o Claude Code</td></tr>
+<tr><td>Entender código</td><td>Codex o Claude Code</td></tr>
+<tr><td>Corregir errores</td><td>Codex o Claude Code</td></tr>
+<tr><td>Trabajar sobre un proyecto existente</td><td>Claude Code puede ser especialmente útil</td></tr>
+<tr><td>Desarrollar con asistencia de IA</td><td>Cualquiera de las dos</td></tr>
+</tbody>
+</table>
+<p>La diferencia práctica depende del entorno en el que trabajes, las funciones que necesites y el proyecto.</p>
+<div class="callout"><p>Elegí según tu flujo de trabajo.</p></div>
+</section>
+
+<section id="sec-conectan">
+<h2 style="font-size:24px;margin:26px 0 6px"><span class="toolnum">8</span>¿Cómo se conectan todas?</h2>
+<p>Ahora que entendés qué hace cada herramienta, podés pensar el proceso completo.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Paso 1: Tenés una idea</h3>
+<p>Querés crear una calculadora, una landing o un cotizador.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Paso 2: Desarrollás</h3>
+<p>Utilizás Codex o Claude Code para crear el código y modificarlo.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Paso 3: Guardás</h3>
+<p>Podés guardar el proyecto en GitHub para conservar versiones y organizar el trabajo.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Paso 4: Publicás</h3>
+<p>Elegís Netlify o Vercel según el tipo de proyecto y tu flujo de trabajo.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Paso 5: Mejorás</h3>
+<p>Volvés a la IA para agregar funcionalidades, corregir errores y seguir desarrollando.</p>
+<div class="flow">IDEA<br>↓<br>CODEX / CLAUDE CODE<br>↓<br>CÓDIGO<br>↓<br>GITHUB<br>↓<br>NETLIFY / VERCEL<br>↓<br><b>PRODUCTO DIGITAL PUBLICADO</b></div>
+<h3 style="font-size:16px;margin:16px 0 6px">Importante</h3>
+<p>No todos los proyectos necesitan pasar por las cinco herramientas. Por ejemplo, si tenés un HTML sencillo, podés empezar directamente con Netlify. Si trabajás con una aplicación más compleja, probablemente necesites un repositorio y una plataforma de despliegue.</p>
+</section>
+
+<section id="sec-flujos">
+<h3 style="font-size:18px;margin:26px 0 6px"><span class="toolnum">8.1</span>Tres formas de trabajar</h3>
+<h4 style="font-size:15px;margin:16px 0 6px">Flujo 1 — Lo más simple</h4>
+<div class="flow">HTML<br>↓<br><b>Netlify</b><br>↓<br>Web publicada</div>
+<p>Para landing, calculadora, cotizador o herramienta sencilla.</p>
+<h4 style="font-size:15px;margin:20px 0 6px">Flujo 2 — Proyecto que querés conservar y actualizar</h4>
+<div class="flow">HTML/Código<br>↓<br>GitHub<br>↓<br><b>Netlify</b><br>↓<br>Web</div>
+<p>Cada vez que actualizás el proyecto en GitHub, Netlify puede detectar el cambio y volver a desplegarlo.</p>
+<h4 style="font-size:15px;margin:20px 0 6px">Flujo 3 — Aplicación desarrollada con IA</h4>
+<div class="flow">Idea<br>↓<br>Claude Code / Codex<br>↓<br>GitHub<br>↓<br><b>Vercel</b><br>↓<br>Aplicación</div>
+<p>Este es el recorrido del ejemplo del cotizador que ya viste en esta guía.</p>
+</section>
+
+<section id="sec-crear">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">9</span>¿Qué podés crear?</h2>
+<p>Estas herramientas pueden ayudarte a desarrollar diferentes tipos de productos digitales.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Landing pages</h3>
+<p>Una página para presentar un servicio, curso o negocio.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Calculadoras</h3>
+<p>Una herramienta que procesa datos y devuelve un resultado.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Cotizadores</h3>
+<p>Un sistema que calcula precios según variables que ingresa el usuario.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Diagnósticos interactivos</h3>
+<p>Un formulario que permite responder preguntas y obtener una devolución.</p>
+<h3 style="font-size:16px;margin:16px 0 4px">Herramientas para negocios</h3>
+<p>Soluciones digitales para resolver tareas específicas.</p>
+<h3 style="font-size:16px;margin:16px 0 6px">Lo importante</h3>
+<p>No necesitás empezar con una aplicación enorme. Podés construir una primera versión pequeña, probarla y después agregar funcionalidades.</p>
+</section>
+
+<section id="sec-archivos">
+<h2 style="font-size:24px;margin:26px 0 10px">¿Dónde están mis archivos?</h2>
+<p>Cuando empezás, aparecen varios lugares distintos. Conviene tenerlos claros:</p>
+<div class="concept-row">
+<div class="item"><span class="toolnum" style="margin:0">1</span><div><b>Mi computadora</b><p>Donde trabajo con los archivos del proyecto.</p></div></div>
+<div class="item"><span class="toolnum" style="margin:0">2</span><div><b>GitHub</b><p>Donde guardo y versiono el proyecto.</p></div></div>
+<div class="item"><span class="toolnum" style="margin:0">3</span><div><b>Netlify / Vercel</b><p>Donde se despliega y publica.</p></div></div>
+<div class="item"><span class="toolnum" style="margin:0">4</span><div><b>Base de datos</b><p>Si la aplicación necesita almacenar información, es otra capa aparte.</p></div></div>
+</div>
+</section>
+
+<section>
+<h2 style="font-size:24px;margin:26px 0 6px"><span class="toolnum">10</span>¿GitHub es obligatorio?</h2>
+<p><strong>No.</strong> Si tenés un HTML y querés publicarlo rápidamente, podés empezar directamente con Netlify.</p>
+<p>Pero GitHub es muy útil cuando:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>El proyecto crece.</li>
+<li>Vas haciendo cambios.</li>
+<li>Trabajás con IA.</li>
+<li>Querés mantener historial.</li>
+<li>Necesitás colaborar.</li>
+<li>Querés automatizar despliegues.</li>
+</ul>
+<div class="callout"><p>Proyecto pequeño: podés empezar sin GitHub.<br>Proyecto que evoluciona: GitHub empieza a tener mucho más sentido.</p></div>
+</section>
+
+<section>
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">11</span>¿Qué necesito para empezar?</h2>
+<p>No necesitás dominar todas las herramientas. Podés comenzar con:</p>
+<ul style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Una idea concreta.</li>
+<li>Una computadora.</li>
+<li>Una herramienta de IA para ayudarte con el código.</li>
+<li>Un proyecto pequeño.</li>
+<li>Una plataforma para publicarlo.</li>
+</ul>
+<h3 style="font-size:16px;margin:16px 0 6px">Recorrido recomendado</h3>
+<ol style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8">
+<li>Definí qué querés crear.</li>
+<li>Pedile a la IA que te ayude a construir una primera versión.</li>
+<li>Probá que funcione.</li>
+<li>Guardá el proyecto si vas a seguir desarrollándolo.</li>
+<li>Publicalo en Netlify o Vercel.</li>
+<li>Mejoralo a partir de lo que aprendiste.</li>
+</ol>
+</section>
+
+<section id="sec-checklist">
+<h2 style="font-size:24px;margin:26px 0 10px"><span class="toolnum">12</span>Checklist antes de construir</h2>
+<ul class="checklist">
+<li>¿Qué problema resuelve?</li>
+<li>¿Quién lo va a utilizar?</li>
+<li>¿Qué funcionalidades necesito?</li>
+<li>¿Es una web o una aplicación?</li>
+<li>¿Necesita guardar datos?</li>
+<li>¿Necesita usuarios o login?</li>
+<li>¿Necesita una base de datos?</li>
+<li>¿Qué parte puede ayudarme a construir la IA?</li>
+<li>¿Dónde voy a guardar el proyecto?</li>
+<li>¿Dónde lo voy a publicar?</li>
+<li>¿Cómo voy a probar que funciona?</li>
+</ul>
+</section>
+
+<section id="sec-ejemplos">
+<h2 style="font-size:24px;margin:30px 0 6px"><span class="toolnum">13</span>Ejemplos reales</h2>
+<p>Acá te mostramos algunos proyectos reales que trabajamos con estas herramientas.</p>
+
+<h3 style="font-size:17px;margin:22px 0 8px">Ejemplo 1: Texto en Redes</h3>
+<div class="example">
+<a class="shot example-shot" href="/guia/ej-textoenredes.webp" target="_blank" rel="noopener"><img src="/guia/ej-textoenredes.webp" alt="Texto en Redes" loading="lazy"></a>
+<div class="lbl">¿Qué problema resolvía?</div><p>Poder aplicar negrita, cursiva o negrita+cursiva a los textos y, a la vez, saber la cantidad de caracteres usados al escribir los copys para redes sociales.</p>
+<div class="lbl">¿Qué construimos?</div><p>Una herramienta de edición de copys que funciona en la computadora y también se puede descargar como app en el celular.</p>
+<div class="lbl">¿Qué herramientas utilizaste?</div><p>Claude Code para construirla, GitHub para guardar el proyecto y Cloudflare Pages para publicarla. Hoy forma parte de Relab, con ingreso con Google para guardar borradores.</p>
+<div class="lbl">¿Cómo fue el proceso?</div><p>Fue una conversación con la IA: le expliqué qué necesitaba y el resultado surgió de ese ida y vuelta.</p>
+<div class="lbl">¿Qué aprendiste?</div><p>Que puedo crear mis propias herramientas a medida de lo que necesito.</p>
+<a class="try" href="/textoenredes/">Probá Texto en Redes →</a>
+</div>
+
+<h3 style="font-size:17px;margin:22px 0 8px">Ejemplo 2: Encuesta dinámica para Expo</h3>
+<div class="example">
+<a class="shot example-shot" href="/guia/ej-encuesta.webp" target="_blank" rel="noopener"><img src="/guia/ej-encuesta.webp" alt="La encuesta" loading="lazy"></a>
+<div class="lbl">¿Qué problema resolvía?</div><p>Reemplazar un formulario tipo Google Forms por una experiencia más dinámica para relevar respuestas en una Expo.</p>
+<div class="lbl">¿Qué construimos?</div><p>Un HTML con formato de encuesta: la persona iba respondiendo y al final recibía una mini auditoría según sus respuestas.</p>
+<div class="lbl">¿Qué herramientas utilizaste?</div><p>Claude Code.</p>
+<div class="lbl">¿Cómo fue el proceso?</div><p>Se construyó directamente con Claude Code, definiendo el recorrido de la encuesta y la devolución final.</p>
+<div class="lbl">¿Qué aprendiste?</div><p>Que una encuesta puede convertirse en una experiencia de valor para quien la responde, no solo en un formulario.</p>
+</div>
+
+<h3 style="font-size:17px;margin:22px 0 8px">Ejemplo 3: Cotizador para Community/Social Media Manager</h3>
+<div class="example">
+<a class="shot example-shot" href="/guia/ej-cotizador.webp" target="_blank" rel="noopener"><img src="/guia/ej-cotizador.webp" alt="Captura del cotizador" loading="lazy"></a>
+<div class="lbl">¿Qué problema resolvía?</div><p>Cotizar servicios de Community Manager y Social Media Manager de forma automática.</p>
+<div class="lbl">¿Qué construimos?</div><p>Un cotizador web para ese tipo de servicios.</p>
+<div class="lbl">¿Qué herramientas utilizaste?</div><p>Claude Code para el HTML y Vercel para el despliegue, con un subdominio conectado.</p>
+<div class="lbl">¿Cómo fue el proceso?</div><p>Se desarrolló completamente en Claude Code y se publicó en Vercel, conectando además el subdominio correspondiente.</p>
+<div class="lbl">¿Qué aprendiste?</div><p>Que una herramienta puede ir de la idea al despliegue publicado en un solo flujo, con dominio propio.</p>
+</div>
+</section>
+
+<section id="sec-mapa">
+<h2 style="font-size:24px;margin:30px 0 10px"><span class="toolnum">14</span>Mini mapa para guardar</h2>
+<table>
+<thead><tr><th>Necesitás...</th><th>Herramienta</th></tr></thead>
+<tbody>
+<tr><td>Crear o modificar código con IA</td><td>Codex / Claude Code</td></tr>
+<tr><td>Guardar y versionar el proyecto</td><td>GitHub</td></tr>
+<tr><td>Publicar rápidamente un HTML</td><td>Netlify</td></tr>
+<tr><td>Desplegar una aplicación web moderna</td><td>Vercel</td></tr>
+<tr><td>Mejorar el proyecto</td><td>Codex / Claude Code</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="sec-faq">
+<h2 style="font-size:24px;margin:0 0 10px">Preguntas frecuentes</h2>
+<details class="faq-item"><summary>¿Necesito GitHub para publicar una página?</summary><p>No necesariamente. Un HTML sencillo puede publicarse directamente en Netlify.</p></details>
+<details class="faq-item"><summary>¿Necesito usar Netlify y Vercel?</summary><p>No. Son alternativas de despliegue. El proyecto determina cuál tiene sentido.</p></details>
+<details class="faq-item"><summary>¿Necesito GitHub para usar Vercel?</summary><p>No necesariamente en todos los escenarios, pero GitHub es especialmente útil para trabajar con repositorios y despliegues conectados.</p></details>
+<details class="faq-item"><summary>¿Si entro a Vercel con GitHub ya tengo una base de datos?</summary><p>No. GitHub y la base de datos cumplen funciones diferentes.</p></details>
+<details class="faq-item"><summary>¿Dónde está publicada mi página?</summary><p>En la plataforma de despliegue que hayas elegido: Netlify, Vercel u otra.</p></details>
+<details class="faq-item"><summary>¿Dónde está guardado mi código?</summary><p>Puede estar en tu computadora y/o en GitHub.</p></details>
+<details class="faq-item"><summary>¿Puedo crear todo con IA?</summary><p>La IA puede ayudarte muchísimo a construir código, pero necesitás definir qué querés crear, probarlo y revisar el resultado.</p></details>
+<details class="faq-item"><summary>¿Codex y Claude Code hacen lo mismo?</summary><p>Tienen capacidades que se superponen, pero funcionan dentro de entornos y flujos diferentes.</p></details>
+<details class="faq-item"><summary>¿Puedo empezar sin saber programar?</summary><p>Sí. Podés comenzar con proyectos pequeños y utilizar IA como asistencia.</p></details>
+<details class="faq-item"><summary>¿Qué pasa si mi proyecto necesita usuarios, pagos o una base de datos?</summary><p>Ahí ya no estás solamente ante un HTML estático. Vas a necesitar considerar backend, autenticación, base de datos, APIs u otros servicios según lo que quieras construir.</p></details>
+</section>
+
+<hr class="sep">
+<section id="sec-conclusion">
+<h2 style="font-size:24px;margin:0 0 10px">Conclusión</h2>
+<p>No necesitás aprender a programar todo desde cero para empezar a crear productos digitales.</p>
+<p>Pero sí necesitás entender qué hace cada herramienta y cómo utilizarla.</p>
+<p>La tecnología te permite transformar una idea en algo que funciona.</p>
+<p>Una propuesta puede ser un PDF. Pero también puede ser una landing, una calculadora, un cotizador o una herramienta personalizada.</p>
+<div class="callout"><p>La clave es saber qué construir, con qué herramienta y cómo dirigir el proceso.</p></div>
+
+<div style="background:var(--st-petroleo);border-radius:var(--radius-lg);padding:28px 32px;margin-top:26px">
+<h3 style="font-size:18px;margin:0 0 8px;color:var(--st-white)">¿Querés seguir aprendiendo?</h3>
+<p style="color:rgba(255,255,255,.85);margin:0 0 6px">Si esta guía te ayudó a entender el ecosistema, el próximo paso es elegir una idea pequeña y empezar a construir.</p>
+<p style="color:rgba(255,255,255,.85);margin:0 0 10px">No hace falta esperar a saberlo todo.</p>
+<p style="margin:0;font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--st-coral)">Empezá por un problema concreto.</p>
+</div>
+</section>
+
+<p class="legal">© ST Relaciones Públicas. Todos los derechos reservados. Prohibida su venta.</p>
+</main>
+<div id="footer"></div>
+<script type="module" src="/src/guia.js"></script>
+</body>
+</html>
