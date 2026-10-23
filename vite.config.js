@@ -1,0 +1,8 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+// En desarrollo, /api va a `wrangler pages dev` (npm run dev:api) en el puerto 8788.
+export default defineConfig({
+  plugins: [react()],
+  server: { proxy: { '/api': 'http://localhost:8788' } },
+});

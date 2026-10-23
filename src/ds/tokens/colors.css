@@ -1,0 +1,94 @@
+/* ============================================================
+   ST Relaciones Públicas — COLOR TOKENS
+   Paleta cromática oficial + neutrales derivados + alias semánticos
+   ============================================================ */
+:root {
+  /* ---- Marca: colores oficiales ---- */
+  --st-petroleo:      #012C3D; /* Azul Petróleo — principal. Autoridad, profesionalismo, confianza */
+  --st-celeste:       #78BDC4; /* Celeste Tecnológico — innovación, tecnología, comunicación */
+  --st-coral:         #F8444F; /* Coral Estratégico — energía, acción, liderazgo (CTA) */
+  --st-gris-claro:    #F7F8F3; /* Gris Claro Corporativo — fondos, claridad */
+  --st-gris-oscuro:   #1C2429; /* Gris Oscuro — texto de cuerpo, fondos profundos */
+  --st-white:         #FFFFFF;
+
+  /* ---- Variantes de marca (tints / shades derivados) ---- */
+  --st-petroleo-900:  #001E2A;
+  --st-petroleo-800:  #012C3D; /* base */
+  --st-petroleo-700:  #073F53;
+  --st-petroleo-600:  #14566D;
+  --st-petroleo-500:  #2A6F88;
+
+  --st-celeste-700:   #3F949C;
+  --st-celeste-600:   #5CA8AF;
+  --st-celeste-500:   #78BDC4; /* base */
+  --st-celeste-300:   #A7D5DA;
+  --st-celeste-100:   #DCEEF0;
+
+  --st-coral-700:     #D32B36;
+  --st-coral-600:     #E83641;
+  --st-coral-500:     #F8444F; /* base */
+  --st-coral-300:     #FB8990;
+  --st-coral-100:     #FEE0E2;
+
+  /* ---- Neutrales (escala fría-petróleo, cálida en el extremo claro) ---- */
+  --st-neutral-0:     #FFFFFF;
+  --st-neutral-50:    #F7F8F3; /* gris claro corporativo */
+  --st-neutral-100:   #EDEFE8;
+  --st-neutral-200:   #DDE1DB;
+  --st-neutral-300:   #C3C9C4;
+  --st-neutral-400:   #9AA3A2;
+  --st-neutral-500:   #6F7A7C;
+  --st-neutral-600:   #4D5759;
+  --st-neutral-700:   #333C3F;
+  --st-neutral-800:   #1C2429;
+  --st-neutral-900:   #0C161B;
+
+  /* ---- Estados semánticos ---- */
+  --st-success:       #1F8A5B;
+  --st-success-bg:    #E4F3EC;
+  --st-warning:       #E0A33A;
+  --st-warning-bg:    #FBF1DD;
+  --st-danger:        #D32B36;
+  --st-danger-bg:     #FEE0E2;
+  --st-info:          #2A6F88;
+  --st-info-bg:       #DCEEF0;
+
+  /* ============================================================
+     ALIAS SEMÁNTICOS — usar estos en componentes
+     ============================================================ */
+  /* Superficies / fondos */
+  --surface-page:        var(--st-gris-claro);
+  --surface-card:        var(--st-white);
+  --surface-raised:      var(--st-white);
+  --surface-sunken:      var(--st-neutral-100);
+  --surface-inverse:     var(--st-petroleo);
+  --surface-inverse-2:   var(--st-petroleo-700);
+  --surface-accent-soft: var(--st-celeste-100);
+
+  /* Texto */
+  --text-strong:    var(--st-petroleo);     /* títulos */
+  --text-body:      var(--st-neutral-700);   /* cuerpo */
+  --text-muted:     var(--st-neutral-500);   /* secundario */
+  --text-subtle:    var(--st-neutral-400);   /* terciario / placeholders */
+  --text-on-dark:   var(--st-white);
+  --text-on-accent: var(--st-white);
+  --text-link:      var(--st-coral);
+
+  /* Marca / acentos */
+  --accent-primary:   var(--st-coral);       /* CTA, acción */
+  --accent-secondary: var(--st-celeste);     /* tecnología, conexión */
+  --accent-brand:     var(--st-petroleo);    /* institucional */
+
+  /* Bordes / divisores */
+  --border-subtle:  var(--st-neutral-200);
+  --border-default: var(--st-neutral-300);
+  --border-strong:  var(--st-neutral-400);
+  --border-inverse: rgba(255,255,255,0.16);
+  --focus-ring:     var(--st-celeste);
+
+  /* Gradiente de marca (overlay fotográfico oficial) */
+  --st-gradient-brand: linear-gradient(120deg, var(--st-coral) 0%, var(--st-petroleo) 100%);
+  --st-gradient-tech:  linear-gradient(120deg, var(--st-petroleo) 0%, var(--st-celeste) 100%);
+  --st-overlay-petroleo: rgba(1,44,61,0.78);
+
+}

@@ -1,0 +1,13 @@
+html, body { margin: 0; background: var(--st-gris-claro); color: var(--text-body); font-family: var(--font-body); }
+* { box-sizing: border-box; }
+a { color: var(--st-coral); text-decoration: none; }
+a:hover { color: var(--st-coral-700); text-decoration: underline; }
+textarea:focus { outline: none; }
+
+/* Equivalentes de los style-hover del prototipo */
+.hv-fmt:hover { color: var(--st-coral) !important; }
+.hv-inverse:hover { background: rgba(255,255,255,0.08) !important; }
+.hv-emoji:hover { background: var(--st-white) !important; box-shadow: var(--shadow-sm); }
+.hv-card:hover { border-color: var(--st-coral) !important; }
+.hv-google:hover { background: var(--st-neutral-50) !important; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }

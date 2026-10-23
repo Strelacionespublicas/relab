@@ -1,0 +1,16 @@
+name = "textoredes"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+# Base de datos para cuentas, borradores y grupos de hashtags.
+# Creala con `npx wrangler d1 create textoredes` y pegá acá el database_id que devuelve.
+[[d1_databases]]
+binding = "DB"
+database_name = "textoredes"
+database_id = "REEMPLAZAR_CON_EL_ID_DE_D1"
+
+# GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET van como secretos (ver DEPLOY.md), no acá.
+# ALLOWED_EMAILS (opcional): lista separada por comas de emails o dominios (@empresa.com)
+# que pueden crear cuenta. Vacío = cualquier cuenta de Google.
+[vars]
+ALLOWED_EMAILS = ""
