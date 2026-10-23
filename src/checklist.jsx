@@ -121,6 +121,7 @@ function Checklist() {
         const { data } = await api.getState(RESOURCE);
         if (data) setSt(normalize(data));
         else if (hasProgress(initial())) await api.saveState(RESOURCE, initial());
+        setSaved(true);
       } catch (e) {}
       ready.current = true;
     });
@@ -191,7 +192,22 @@ function Checklist() {
                 <div style={{ height: '100%', width: pct + '%', background: 'var(--st-coral)', borderRadius: 999, transition: 'width .3s ease' }} />
               </div>
               <div style={{ fontSize: 15, color: 'var(--st-celeste-100)' }}>{done} de {total} tareas completadas</div>
+              <div data-noprint style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: user ? 'var(--st-celeste)' : 'var(--st-celeste-100)' }}>
+                {user ? (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>
+                    <span>{saved ? 'Guardado en tu cuenta' : 'Guardando en tu cuenta…'} · {user.name}</span></>
+                ) : (
+                  <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 13 3.5 3.5 0 0 0 6 19z" /></svg>
+                    <span>Tu avance está solo en este navegador</span></>
+                )}
+              </div>
               <div data-noprint style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {!user && (
+                  <button onClick={() => setLoginOpen(true)} style={{ flexBasis: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, height: 48, border: 'none', borderRadius: 8, background: '#fff', color: 'var(--st-petroleo)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 13 3.5 3.5 0 0 0 6 19z" /><path d="M12 16v-5" /><path d="m9.5 13.5 2.5-2.5 2.5 2.5" /></svg>
+                    Guardar en mi cuenta
+                  </button>
+                )}
                 <button className="cl-btn-coral" onClick={() => window.print()} style={{ flex: 1, minWidth: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, height: 48, border: 'none', borderRadius: 8, background: 'var(--st-coral)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
                   Descargar PDF
