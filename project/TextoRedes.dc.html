@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>TextoRedes — ST Relaciones Públicas</title>
+  <link rel="stylesheet" href="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/styles.css">
+  <script src="_ds/st-relaciones-p-blicas-design-system-b4dfa284-749e-4196-9bb6-daf00a793f98/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; background: var(--st-gris-claro); color: var(--text-body); font-family: var(--font-body); }
+    * { box-sizing: border-box; }
+    a { color: var(--st-coral); text-decoration: none; }
+    a:hover { color: var(--st-coral-700); text-decoration: underline; }
+    textarea:focus { outline: none; }
+  </style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; flex-direction: column;">
+
+  <header style="background: var(--st-petroleo); color: var(--st-white); padding: 14px clamp(16px, 4vw, 40px); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Logo" variant="white" height="{{ 30 }}" hint-size="60px,30px"></x-import>
+      <div style="width: 1px; height: 28px; background: var(--border-inverse);"></div>
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="font-family: var(--font-display); font-size: 22px; line-height: 1; letter-spacing: -0.035em; color: var(--st-white); display: flex; align-items: baseline; gap: 5px;">
+          <span style="font-weight: 800;">texto</span><span style="font-weight: 400; font-style: italic; color: var(--st-coral);">en</span><span style="font-weight: 300;">redes</span>
+        </div>
+        <span style="font-family: var(--font-data); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--st-celeste-300);">un recurso <strong style="color: var(--st-white); font-weight: 800;">relab</strong></span>
+      </div>
+    </div>
+    <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 34px; height: 34px; border-radius: 999px; background: var(--st-celeste); color: var(--st-petroleo); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm);">{{ userInitial }}</div>
+        <span style="font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm);">{{ userName }}</span>
+        <button onClick="{{ logout }}" style="background: transparent; border: 1px solid var(--border-inverse); color: var(--st-white); border-radius: 999px; padding: 7px 14px; font-family: var(--font-display); font-size: var(--fs-xs); cursor: pointer;" style-hover="background: rgba(255,255,255,0.08);">Salir</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+      <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" size="sm" onClick="{{ openLogin }}" hint-size="96px,36px">Ingresar</x-import>
+    </sc-if>
+  </header>
+
+  <section style="padding: clamp(28px, 5vw, 48px) clamp(16px, 4vw, 40px) 24px; max-width: 1280px; width: 100%; margin: 0 auto;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.02em; color: var(--st-petroleo); text-wrap: balance;">Formato que <span style="color: var(--st-coral);">sí funciona</span> en las redes</h1>
+    <p style="margin: 12px 0 0; max-width: 620px; font-size: var(--fs-lg); line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Escribí o pegá tu texto, aplicá negrita y cursiva, sumá emojis y hashtags, y copialo listo para publicar.</p>
+  </section>
+
+  <main style="flex: 1; padding: 0 clamp(16px, 4vw, 40px) 48px; max-width: 1280px; width: 100%; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch;">
+
+    <div style="flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+      <div style="flex: 1; display: flex; flex-direction: column; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg, 12px); box-shadow: var(--shadow-sm); overflow: hidden;">
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border-subtle);">
+          <div style="display: flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 10px;">
+            <button onMouseDown="{{ preventBlur }}" onClick="{{ fmtBold }}" title="Negrita" style="width: 40px; height: 36px; border: none; border-radius: 8px; background: var(--st-white); box-shadow: var(--shadow-sm); cursor: pointer; font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--st-petroleo);" style-hover="color: var(--st-coral);">N</button>
+            <button onMouseDown="{{ preventBlur }}" onClick="{{ fmtItalic }}" title="Cursiva" style="width: 40px; height: 36px; border: none; border-radius: 8px; background: var(--st-white); box-shadow: var(--shadow-sm); cursor: pointer; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 15px; color: var(--st-petroleo);" style-hover="color: var(--st-coral);">K</button>
+            <button onMouseDown="{{ preventBlur }}" onClick="{{ fmtBoldItalic }}" title="Negrita + cursiva" style="width: 44px; height: 36px; border: none; border-radius: 8px; background: var(--st-white); box-shadow: var(--shadow-sm); cursor: pointer; font-family: var(--font-display); font-style: italic; font-weight: 800; font-size: 15px; color: var(--st-petroleo);" style-hover="color: var(--st-coral);">NK</button>
+          </div>
+
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <sc-for list="{{ panelTabs }}" as="tab" hint-placeholder-count="4">
+              <button onClick="{{ tab.onClick }}" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid {{ tab.border }}; background: {{ tab.bg }}; color: {{ tab.color }}; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-xs); cursor: pointer;">{{ tab.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="flex: 1;"></div>
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" variant="outline" size="sm" disabled="{{ cannotUndo }}" onClick="{{ undo }}" hint-size="96px,36px">↶ Deshacer</x-import>
+            <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" variant="outline" size="sm" onClick="{{ clearFormat }}" hint-size="130px,36px">Quitar formato</x-import>
+          </div>
+        </div>
+
+        <sc-if value="{{ showEmoji }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border-bottom: 1px solid var(--border-subtle); background: var(--st-neutral-50); display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 1 1 220px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; background: var(--st-white); border: 1.5px solid var(--border-default); border-radius: 999px;">
+                <span aria-hidden="true" style="font-size: 14px; color: var(--text-subtle);">🔍</span>
+                <input value="{{ emojiQ }}" onChange="{{ onEmojiQ }}" placeholder="Buscar emoji: corazón, fiesta, mate…" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-family: var(--font-body); font-size: var(--fs-sm); color: var(--st-gris-oscuro);">
+              </div>
+              <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Switch" label="Estilo iPhone" checked="{{ appleStyle }}" onChange="{{ toggleApple }}" hint-size="140px,28px"></x-import>
+            </div>
+            <div style="display: flex; gap: 2px; padding: 3px; background: var(--surface-sunken); border-radius: 10px; overflow-x: auto;">
+              <sc-for list="{{ emojiCats }}" as="c" hint-placeholder-count="10">
+                <button onClick="{{ c.onClick }}" title="{{ c.title }}" style="flex: 1 0 36px; height: 34px; border: none; border-radius: 8px; background: {{ c.bg }}; box-shadow: {{ c.shadow }}; opacity: {{ c.op }}; font-size: 18px; cursor: pointer;">{{ c.icon }}</button>
+              </sc-for>
+            </div>
+            <span style="font-family: var(--font-data); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-muted);">{{ emojiTitle }}</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 2px; max-height: 240px; overflow-y: auto;">
+              <sc-for list="{{ emojiList }}" as="e" hint-placeholder-count="16">
+                <button onMouseDown="{{ preventBlur }}" onClick="{{ e.onClick }}" style="height: 40px; border: none; background: transparent; border-radius: 8px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;" style-hover="background: var(--st-white); box-shadow: var(--shadow-sm);">
+                  <sc-if value="{{ e.apple }}" hint-placeholder-val="{{ false }}"><img src="{{ e.src }}" alt="{{ e.ch }}" onError="{{ e.onErr }}" loading="lazy" style="width: 26px; height: 26px; display: block;"><span style="display: none;">{{ e.ch }}</span></sc-if>
+                  <sc-if value="{{ e.native }}" hint-placeholder-val="{{ true }}">{{ e.ch }}</sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noEmojiResults }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; font-size: var(--fs-sm); color: var(--text-muted);">No encontramos emojis con esa palabra. Probá con otra.</p>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showTemplates }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border-bottom: 1px solid var(--border-subtle); background: var(--st-neutral-50); display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+            <sc-for list="{{ templates }}" as="t" hint-placeholder-count="4">
+              <button onClick="{{ t.onClick }}" style="text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--st-white); cursor: pointer; display: flex; flex-direction: column; gap: 4px;" style-hover="border-color: var(--st-coral);">
+                <span style="font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--st-petroleo);">{{ t.name }}</span>
+                <span style="font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.4;">{{ t.desc }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showHashtags }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border-bottom: 1px solid var(--border-subtle); background: var(--st-neutral-50); display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: var(--font-data); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-muted);">Sugeridos para tu texto</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <sc-for list="{{ suggestedTags }}" as="h" hint-placeholder-count="6">
+                  <button onClick="{{ h.onClick }}" style="padding: 6px 12px; border-radius: 999px; border: 1px solid {{ h.border }}; background: {{ h.bg }}; color: {{ h.color }}; font-family: var(--font-body); font-size: var(--fs-sm); cursor: pointer;">{{ h.tag }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="height: 1px; background: var(--border-subtle);"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-family: var(--font-data); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-muted);">Mis grupos de hashtags</span>
+                <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ saveTagSet }}" disabled="{{ noTagsInText }}" style="border: none; background: none; color: var(--st-coral); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-xs); cursor: pointer; padding: 4px 0;">+ Guardar los hashtags del texto</button>
+                </sc-if>
+              </div>
+              <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+                <p style="margin: 0; font-size: var(--fs-sm); color: var(--text-muted);"><a href="#" onClick="{{ openLoginLink }}">Ingresá</a> para guardar tus hashtags y reutilizarlos.</p>
+              </sc-if>
+              <sc-if value="{{ loggedInNoSets }}" hint-placeholder-val="{{ false }}">
+                <p style="margin: 0; font-size: var(--fs-sm); color: var(--text-muted);">Todavía no guardaste grupos. Escribí hashtags en el texto y guardalos acá.</p>
+              </sc-if>
+              <sc-for list="{{ tagSets }}" as="s" hint-placeholder-count="0">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--st-white); border: 1px solid var(--border-subtle); border-radius: 10px;">
+                  <span style="flex: 1; min-width: 0; font-size: var(--fs-sm); color: var(--st-petroleo-600); overflow-wrap: anywhere;">{{ s.text }}</span>
+                  <button onClick="{{ s.onInsert }}" style="border: none; background: var(--st-coral-100); color: var(--st-coral-700); border-radius: 999px; padding: 5px 12px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); cursor: pointer;">Insertar</button>
+                  <button onClick="{{ s.onDelete }}" title="Eliminar" style="border: none; background: none; color: var(--text-subtle); font-size: 16px; cursor: pointer; padding: 4px;">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showHistory }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border-bottom: 1px solid var(--border-subtle); background: var(--st-neutral-50); display: flex; flex-direction: column; gap: 8px;">
+            <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 4px 2px;">
+                <p style="margin: 0; font-size: var(--fs-sm); color: var(--text-body);">Ingresá para guardar borradores y retomarlos cuando quieras.</p>
+                <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" variant="secondary" size="sm" onClick="{{ openLogin }}" hint-size="96px,36px">Ingresar</x-import>
+              </div>
+            </sc-if>
+            <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span style="font-family: var(--font-data); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-muted);">Borradores guardados</span>
+                <button onClick="{{ saveDraft }}" style="border: none; background: none; color: var(--st-coral); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-xs); cursor: pointer; padding: 4px 0;">+ Guardar texto actual</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ loggedInNoDrafts }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; font-size: var(--fs-sm); color: var(--text-muted);">No hay borradores todavía.</p>
+            </sc-if>
+            <sc-for list="{{ drafts }}" as="d" hint-placeholder-count="0">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--st-white); border: 1px solid var(--border-subtle); border-radius: 10px;">
+                <button onClick="{{ d.onLoad }}" style="flex: 1; min-width: 0; text-align: left; border: none; background: none; cursor: pointer; padding: 0; display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--st-petroleo); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ d.title }}</span>
+                  <span style="font-size: var(--fs-xs); color: var(--text-muted);">{{ d.meta }}</span>
+                </button>
+                <button onClick="{{ d.onDelete }}" title="Eliminar" style="border: none; background: none; color: var(--text-subtle); font-size: 16px; cursor: pointer; padding: 4px;">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <textarea ref="{{ taRef }}" value="{{ text }}" onChange="{{ onText }}" placeholder="Escribí o pegá tu texto acá. Seleccioná una parte y tocá N, K o NK para darle formato." style="display: block; flex: 1; width: 100%; min-height: 320px; resize: none; border: none; padding: 20px; font-family: var(--font-body); font-size: 17px; line-height: 1.6; color: var(--st-gris-oscuro); background: var(--st-white);"></textarea>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--border-subtle); background: var(--st-neutral-50);">
+          <div style="display: flex; gap: 16px; font-family: var(--font-data); font-size: var(--fs-xs); color: var(--text-muted);">
+            <span><strong style="color: var(--st-petroleo); font-weight: 700;">{{ charCount }}</strong> caracteres</span>
+            <span><strong style="color: var(--st-petroleo); font-weight: 700;">{{ wordCount }}</strong> palabras</span>
+            <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+              <span style="color: var(--st-success);">{{ autosaveLabel }}</span>
+            </sc-if>
+          </div>
+          <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" onClick="{{ copy }}" hint-size="150px,44px">Copiar texto</x-import>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.5;">Tip: las letras con formato son caracteres especiales. Usalas para destacar, no en todo el texto: los lectores de pantalla y los buscadores las leen distinto.</p>
+    </div>
+
+    <aside style="flex: 1 1 340px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px;">
+
+      <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: var(--shadow-sm); overflow: hidden;">
+        <div style="padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--st-petroleo);">Vista previa</span>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <sc-for list="{{ netTabs }}" as="n" hint-placeholder-count="7">
+              <button onClick="{{ n.onClick }}" style="padding: 5px 10px; border-radius: 999px; border: none; background: {{ n.bg }}; color: {{ n.color }}; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); cursor: pointer;">{{ n.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding: 0 16px 16px;">
+          <div style="border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--st-white); overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--st-petroleo); display: flex; align-items: center; justify-content: center;">
+                <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Logo" variant="white" height="{{ 12 }}" hint-size="20px,12px"></x-import>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                <span style="font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--st-gris-oscuro);">{{ previewHandle }}</span>
+                <span style="font-size: var(--fs-2xs); color: var(--text-muted);">{{ previewMeta }}</span>
+              </div>
+            </div>
+            <sc-if value="{{ previewHasMedia }}" hint-placeholder-val="{{ true }}">
+              <div style="aspect-ratio: {{ previewRatio }}; background: var(--st-neutral-100); display: flex; align-items: center; justify-content: center; color: var(--text-subtle); font-family: var(--font-data); font-size: var(--fs-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase;">Imagen o video</div>
+            </sc-if>
+            <div style="padding: 10px 12px 14px; font-size: 14px; line-height: 1.45; color: var(--st-gris-oscuro); white-space: pre-wrap; overflow-wrap: anywhere;"><sc-if value="{{ previewShowHandleInline }}" hint-placeholder-val="{{ false }}"><strong style="font-weight: 700;">{{ previewHandleShort }} </strong></sc-if>{{ previewText }}<sc-if value="{{ previewTruncated }}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-muted);">… {{ previewMoreLabel }}</span></sc-if><sc-if value="{{ previewEmpty }}" hint-placeholder-val="{{ true }}"><span style="color: var(--text-subtle);">Tu texto aparecerá acá.</span></sc-if></div>
+          </div>
+          <p style="margin: 8px 0 0; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.4;">{{ previewNote }}</p>
+        </div>
+      </div>
+
+      <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: var(--shadow-sm); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--st-petroleo);">Conteo por red social</span>
+        <sc-for list="{{ netCounts }}" as="c" hint-placeholder-count="7">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: var(--fs-sm);">
+              <span style="display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; color: var(--st-gris-oscuro);"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; background: var(--st-petroleo); -webkit-mask: url({{ c.icon }}) center / contain no-repeat; mask: url({{ c.icon }}) center / contain no-repeat;"></span>{{ c.name }}</span>
+              <span style="font-family: var(--font-data); font-size: var(--fs-xs); color: {{ c.textColor }};">{{ c.label }}</span>
+            </div>
+            <div style="height: 6px; border-radius: 999px; background: var(--st-neutral-100); overflow: hidden;">
+              <div style="height: 100%; width: {{ c.pct }}; background: {{ c.barColor }}; border-radius: 999px; transition: width 200ms ease;"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background: var(--st-petroleo); color: var(--st-white); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md);">Desglose del texto</span>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px;">
+          <sc-for list="{{ breakdown }}" as="b" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); color: var(--st-white);">{{ b.value }}</span>
+              <span style="font-family: var(--font-data); font-size: var(--fs-3xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--st-celeste-300);">{{ b.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer style="border-top: 1px solid var(--border-subtle); padding: 20px clamp(16px, 4vw, 40px); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--text-muted);">
+    <span>© 2026 ST Relaciones Públicas SAS · Herramienta de uso exclusivo</span>
+    <div style="display: flex; gap: 16px;">
+      <a href="https://www.instagram.com/strelacionespublicas/" target="_blank">@strelacionespublicas</a>
+      <a href="https://strelacionespublicas.com.ar/" target="_blank">strelacionespublicas.com.ar</a>
+    </div>
+  </footer>
+</div>
+
+<sc-if value="{{ loginOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeLogin }}" style="position: fixed; inset: 0; background: rgba(1,44,61,0.6); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;">
+    <div onClick="{{ stop }}" style="width: 100%; max-width: 400px; background: var(--st-white); border-radius: 16px; box-shadow: var(--shadow-lg); padding: 28px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2xl); color: var(--st-petroleo);">{{ loginTitle }}</span>
+        <span style="font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.5;">Guardá borradores, retomá textos y reutilizá tus hashtags. La herramienta funciona igual sin cuenta.</span>
+      </div>
+      <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+        <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Input" label="Nombre" value="{{ fName }}" onChange="{{ onName }}" placeholder="Tu nombre" hint-size="100%,72px"></x-import>
+      </sc-if>
+      <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Input" label="Email" type="email" value="{{ fEmail }}" onChange="{{ onEmail }}" placeholder="nombre@correo.com" error="{{ loginError }}" hint-size="100%,72px"></x-import>
+      <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Input" label="Contraseña" type="password" value="{{ fPass }}" onChange="{{ onPass }}" placeholder="••••••••" hint-size="100%,72px"></x-import>
+      <x-import component-from-global-scope="STRelacionesPBlicasDesignSystem_b4dfa2.Button" fullWidth="{{ true }}" onClick="{{ submitLogin }}" hint-size="100%,44px">{{ loginCta }}</x-import>
+      <div style="display: flex; justify-content: space-between; gap: 8px; font-size: var(--fs-sm);">
+        <a href="#" onClick="{{ toggleSignup }}">{{ loginSwitch }}</a>
+        <a href="#" onClick="{{ closeLoginLink }}" style="color: var(--text-muted);">Seguir sin cuenta</a>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--st-petroleo); color: var(--st-white); padding: 12px 20px; border-radius: 999px; box-shadow: var(--shadow-lg); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); z-index: 60; white-space: nowrap;">✓ {{ toast }}</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultNetwork&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ig&quot;,&quot;fb&quot;,&quot;tt&quot;,&quot;li&quot;,&quot;x&quot;,&quot;th&quot;,&quot;wa&quot;],&quot;default&quot;:&quot;ig&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;appleEmoji&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const MAPS = { bold: [0x1D5D4, 0x1D5EE, 0x1D7EC], italic: [0x1D608, 0x1D622, null], bolditalic: [0x1D63C, 0x1D656, 0x1D7EC] };
+const REV = (() => { const r = {}; for (const k in MAPS) { const [A, a, d] = MAPS[k];
+  for (let i = 0; i < 26; i++) { r[String.fromCodePoint(A + i)] = [String.fromCharCode(65 + i), k]; r[String.fromCodePoint(a + i)] = [String.fromCharCode(97 + i), k]; }
+  if (d) for (let i = 0; i < 10; i++) { const ch = String.fromCodePoint(d + i); if (!r[ch]) r[ch] = [String(i), k === 'bolditalic' ? 'bold' : k]; } } return r; })();
+const toPlain = s => [...s].map(c => REV[c] ? REV[c][0] : c).join('').normalize('NFC');
+const styleChar = (c, k) => { const [A, a, d] = MAPS[k]; const n = c.charCodeAt(0);
+  if (n >= 65 && n <= 90) return String.fromCodePoint(A + n - 65);
+  if (n >= 97 && n <= 122) return String.fromCodePoint(a + n - 97);
+  if (d && n >= 48 && n <= 57) return String.fromCodePoint(d + n - 48); return c; };
+const applyStyle = (s, k) => { const chars = [...s]; const letters = chars.filter(c => /[A-Za-z0-9]/.test(toPlain(c)));
+  const already = letters.length && letters.every(c => REV[c] && REV[c][1] === k);
+  const plain = toPlain(s); if (already) return plain;
+  return [...plain.normalize('NFD')].map(c => styleChar(c, k)).join(''); };
+
+const NETS = [
+  { id: 'ig', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/instagram.svg', name: 'Instagram', limit: 2200, cut: 125, more: 'más', media: true, ratio: '1 / 1', handle: 'strelacionespublicas', meta: 'Publicación', inline: true, note: 'Instagram muestra ~125 caracteres antes de “más”. Límite: 2.200 y hasta 30 hashtags.' },
+  { id: 'fb', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/facebook.svg', name: 'Facebook', limit: 63206, cut: 480, more: 'Ver más', media: true, ratio: '1.91 / 1', handle: 'ST Relaciones Públicas', meta: 'Ahora · Público', note: 'Facebook corta cerca de los 480 caracteres en el feed.' },
+  { id: 'tt', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/tiktok.svg', name: 'TikTok', limit: 4000, cut: 100, more: 'más', media: true, ratio: '9 / 10', handle: '@strelacionespublicas', meta: 'Descripción del video', note: 'TikTok muestra una o dos líneas sobre el video. Límite: 4.000.' },
+  { id: 'li', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@8.0.0/icons/linkedin.svg', name: 'LinkedIn', limit: 3000, cut: 210, more: '…ver más', media: false, handle: 'ST Relaciones Públicas', meta: 'Agencia de comunicación · Ahora', note: 'LinkedIn corta a las ~3 líneas (≈210 caracteres). Límite: 3.000.' },
+  { id: 'x', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/x.svg', name: 'X', limit: 280, cut: 280, more: 'Mostrar más', media: false, handle: 'ST Relaciones Públicas', meta: '@strelacionespub · ahora', weighted: true, note: 'En X las letras con formato y los emojis cuentan como 2 caracteres.' },
+  { id: 'th', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/threads.svg', name: 'Threads', limit: 500, cut: 500, more: 'más', media: false, handle: 'strelacionespublicas', meta: 'ahora', note: 'Threads permite 500 caracteres por publicación.' },
+  { id: 'wa', icon: 'https://cdn.jsdelivr.net/npm/simple-icons@11.0.0/icons/whatsapp.svg', name: 'WhatsApp', limit: 700, cut: 700, more: 'Leer más', media: false, handle: 'ST Relaciones Públicas', meta: 'Estado / Canal', note: 'Estados de WhatsApp: 700 caracteres. Los mensajes admiten mucho más.' },
+];
+const EMOJI_DATA = {
+  'Caras': '😀 feliz sonrisa alegre;😃 feliz contento;😄 risa alegre;😁 sonrisa dientes;😆 risa carcajada;😅 nervios sudor;😂 llorar de risa jaja;🤣 carcajada piso;😊 sonrisa tierno;😇 angel inocente;🙂 sonrisa leve;😉 guiño;😌 alivio tranquilo;😍 enamorado amor ojos corazon;🥰 amor cariño corazones;😘 beso;😋 rico delicioso;😛 lengua;😜 broma guiño lengua;🤪 loco;🤓 nerd estudio;😎 genial lentes cool;🥸 disfraz;🤩 estrellas wow fan;🥳 fiesta festejo cumpleaños;😏 picaro;😒 aburrido;😔 triste pensativo;😟 preocupado;😕 confundido;🙁 triste;😣 esfuerzo;😫 cansado;😩 agotado;🥺 suplica ojitos;😢 llorar triste lagrima;😭 llanto;😤 enojo bufido;😠 enojado;😡 furioso;🤯 cabeza explota sorpresa;😳 sonrojado verguenza;🥵 calor;🥶 frio;😱 miedo grito susto;😨 asustado;🤗 abrazo;🤔 pensar duda;🤭 risita ups;🤫 silencio secreto;🤥 mentira;😶 sin palabras;😐 neutral;😑 inexpresivo;😬 incomodo;🙄 ojos revoleados;😯 sorpresa;😮 asombro wow;😲 asombrado;🥱 bostezo sueño;😴 dormir;🤤 baba;😷 barbijo enfermo;🤒 fiebre;🤠 vaquero;🤡 payaso;👻 fantasma;💀 calavera;👽 alien;🤖 robot ia;💩 caca',
+  'Gestos y personas': '👋 hola saludo chau;🤚 mano;✋ alto mano;🖐️ mano abierta;👌 ok perfecto;🤌 italiano;🤏 poquito;✌️ paz victoria;🤞 suerte dedos cruzados;🤟 te quiero;🤘 rock;🤙 llamame;👈 izquierda señalar;👉 derecha señalar;👆 arriba;👇 abajo;☝️ uno atencion;👍 me gusta bien ok pulgar;👎 no me gusta mal;✊ puño fuerza;👊 puño choque;👏 aplausos felicitaciones bravo;🙌 celebrar hurra;👐 manos abiertas;🤲 ofrenda;🤝 acuerdo trato alianza apreton;🙏 gracias por favor rezar;✍️ escribir firma;💅 uñas;💪 fuerza musculo poder;🧠 cerebro idea mente;👀 ojos mirar atencion;👁️ ojo;👄 boca;🗣️ hablar voz;👤 persona usuario;👥 personas equipo grupo;👶 bebe;🧒 niño;👦 chico;👧 chica;👩 mujer;👨 hombre;🧑 persona;👵 abuela;👴 abuelo;👩‍💼 mujer oficina profesional;👨‍💼 hombre oficina profesional;👩‍💻 mujer computadora tecnologia;👨‍💻 hombre computadora;👩‍🏫 docente profesora;👨‍🏫 docente profesor;👩‍⚕️ medica salud;👨‍⚕️ medico salud;👩‍🎓 graduada egresada;👨‍🎓 graduado;👩‍🍳 cocinera chef;🙋 levantar mano pregunta;🙆 ok;🤷 no se;🤦 facepalm;🧑‍🤝‍🧑 personas juntas comunidad;👪 familia;💃 bailar;🕺 baile',
+  'Animales y naturaleza': '🐶 perro;🐱 gato;🐭 raton;🐰 conejo;🦊 zorro;🐻 oso;🐼 panda;🐨 koala;🐯 tigre;🦁 leon;🐮 vaca;🐷 chancho cerdo;🐸 rana;🐵 mono;🐔 gallina;🐧 pinguino;🐦 pajaro;🦅 aguila;🦉 buho;🐝 abeja;🦋 mariposa;🐢 tortuga;🐟 pez;🐬 delfin;🐳 ballena;🐴 caballo;🌸 flor cerezo primavera;🌹 rosa;🌻 girasol;🌷 tulipan;🌼 flor;🌱 brote crecer sustentable;🌿 hoja planta;🍀 trebol suerte;🍃 hojas;🍂 otoño;🌳 arbol;🌲 pino;🌵 cactus;🌴 palmera;🌎 mundo tierra planeta;☀️ sol;🌞 sol cara;🌙 luna noche;⭐ estrella;🌟 estrella brillante;✨ brillo magia destacado;⚡ rayo energia;🔥 fuego tendencia hot;🌈 arcoiris;☁️ nube;🌧️ lluvia;❄️ nieve frio;💧 gota agua;🌊 ola mar',
+  'Comida y bebida': '🍏 manzana verde;🍎 manzana;🍊 naranja;🍋 limon;🍌 banana;🍉 sandia;🍇 uvas;🍓 frutilla;🍒 cereza;🍑 durazno;🍍 anana;🥑 palta;🍅 tomate;🥕 zanahoria;🌽 choclo;🥔 papa;🥖 pan;🧀 queso;🥩 carne asado;🍗 pollo;🍔 hamburguesa;🍟 papas fritas;🍕 pizza;🌭 pancho;🥪 sandwich;🌮 taco;🥗 ensalada;🍝 pasta fideos;🍣 sushi;🍦 helado;🍰 torta;🎂 torta cumpleaños;🧁 cupcake;🍫 chocolate;🍪 galletita;🍩 dona;☕ cafe mañana;🧉 mate;🍵 te;🥤 gaseosa;🍺 cerveza;🍷 vino;🥂 brindis;🍾 champagne festejo;🍽️ restaurante cubiertos',
+  'Actividades': '⚽ futbol pelota;🏀 basquet;🏈 rugby americano;⚾ beisbol;🎾 tenis;🏐 voley;🏉 rugby;🏓 ping pong;🏸 badminton;🥊 boxeo;🏃 correr running;🚴 bici ciclismo;🏊 natacion;🧘 yoga meditar;🏋️ gimnasio pesas;🏆 trofeo ganador premio;🥇 medalla oro primero;🥈 plata segundo;🥉 bronce tercero;🏅 medalla;🎖️ condecoracion;🎯 objetivo meta diana;🎮 videojuego;🎲 dado juego;🧩 rompecabezas;🎨 arte pintura;🎭 teatro;🎬 cine video;🎤 microfono cantar charla;🎧 auriculares musica podcast;🎵 musica nota;🎸 guitarra;🎹 piano;🥁 bateria;🎉 fiesta festejo celebracion;🎊 confeti;🎈 globo;🎁 regalo sorteo;🎟️ entrada ticket;🎪 circo evento',
+  'Viajes y lugares': '🇦🇷 argentina bandera;🚗 auto;🚕 taxi;🚌 colectivo bus;🚑 ambulancia;🚓 policia;🚒 bomberos;🚲 bicicleta;🛴 monopatin;✈️ avion viaje;🚀 cohete lanzamiento;🚆 tren;⛵ velero;🚢 barco;🗺️ mapa;📍 ubicacion lugar pin;🧭 brujula;🏔️ montaña;⛰️ cerro;🏖️ playa vacaciones;🏕️ camping;🏠 casa;🏡 casa jardin;🏢 edificio oficina empresa;🏛️ institucion gobierno municipio;🏫 escuela;🏥 hospital;🏦 banco;🏨 hotel;⛪ iglesia;🏟️ estadio;🌆 ciudad atardecer;🏙️ ciudad;🌃 noche ciudad;🗽 estatua libertad;🎡 parque',
+  'Objetos': '📱 celular telefono;📲 llamar app;💻 computadora notebook;🖥️ monitor pc;⌨️ teclado;🖨️ impresora;📷 camara foto;📸 foto flash;🎥 filmadora video;📺 tele;📻 radio;🎙️ microfono podcast entrevista;⏰ alarma reloj hora;⌛ tiempo;📅 calendario fecha;🗓️ agenda;📆 calendario;💡 idea foco;🔦 linterna;📚 libros estudio;📖 libro leer;📝 nota escribir;✏️ lapiz;🖊️ lapicera;📌 importante fijar pin;📎 clip adjunto;✂️ tijera;🗂️ carpetas archivo;📁 carpeta;📊 grafico estadistica datos;📈 crecimiento subir aumento;📉 baja caida;📋 lista portapapeles;📰 diario noticia prensa;🗞️ periodico;📣 megafono anuncio;📢 altavoz comunicado;🔔 notificacion campana;✉️ sobre carta mail;📧 email correo;📩 mensaje recibido;📦 paquete envio;🏷️ etiqueta precio;💰 dinero plata;💵 billete;💳 tarjeta;🧾 recibo factura;💼 maletin trabajo negocio;🔑 llave clave;🔒 candado seguridad;🔓 abierto;🔍 buscar lupa;🔗 link enlace;🛒 carrito compra;🎓 graduacion educacion;👔 corbata;👗 vestido;👟 zapatilla;👜 cartera;💍 anillo;🕶️ lentes de sol',
+  'Símbolos': '❤️ corazon amor rojo;🧡 corazon naranja;💛 corazon amarillo;💚 corazon verde;💙 corazon azul;💜 corazon violeta;🖤 corazon negro;🤍 corazon blanco;💕 corazones;💖 corazon brillo;💯 cien perfecto;✅ check listo hecho;✔️ tilde ok;☑️ casilla;❌ cruz no error;⭕ circulo;❗ exclamacion importante;❓ pregunta;‼️ doble exclamacion;⚠️ atencion advertencia;🚫 prohibido;⛔ no entrar;🔴 rojo circulo;🟠 naranja;🟡 amarillo;🟢 verde;🔵 azul;🟣 violeta;⚫ negro;⚪ blanco;🔸 rombo naranja viñeta;🔹 rombo azul viñeta;▪️ cuadrado viñeta;➡️ flecha derecha;⬅️ flecha izquierda;⬆️ arriba;⬇️ abajo;↗️ diagonal;🔄 actualizar repetir;🔁 repetir;▶️ play reproducir;⏸️ pausa;⏩ adelantar;🆕 nuevo;🆓 gratis;🆗 ok;🔝 top;🔜 pronto;➕ mas sumar;➖ menos;✖️ por;➗ dividir;♻️ reciclar sustentable;#️⃣ numeral hashtag;*️⃣ asterisco;1️⃣ uno;2️⃣ dos;3️⃣ tres;4️⃣ cuatro;5️⃣ cinco;6️⃣ seis;7️⃣ siete;8️⃣ ocho;9️⃣ nueve;🔟 diez;©️ copyright;®️ registrado;™️ marca;💬 comentario chat mensaje;💭 pensamiento;🗯️ grito',
+  'Banderas': '🇦🇷 argentina;🇺🇾 uruguay;🇧🇷 brasil;🇨🇱 chile;🇵🇾 paraguay;🇧🇴 bolivia;🇵🇪 peru;🇨🇴 colombia;🇻🇪 venezuela;🇪🇨 ecuador;🇲🇽 mexico;🇺🇸 estados unidos;🇨🇦 canada;🇪🇸 españa;🇮🇹 italia;🇫🇷 francia;🇩🇪 alemania;🇬🇧 reino unido;🇵🇹 portugal;🇯🇵 japon;🇨🇳 china;🇺🇳 naciones unidas onu;🏳️‍🌈 orgullo diversidad lgbt;🏁 llegada carrera;🚩 bandera roja',
+};
+const EMOJIS = {}; const EMOJI_KW = {};
+for (const k in EMOJI_DATA) EMOJIS[k] = EMOJI_DATA[k].split(';').map(x => { const [ch, ...kw] = x.trim().split(' '); EMOJI_KW[ch] = (k + ' ' + kw.join(' ')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); return ch; });
+const CAT_ICON = { 'Recientes': '🕘', 'Caras': '😀', 'Gestos y personas': '👋', 'Animales y naturaleza': '🌿', 'Comida y bebida': '🍕', 'Actividades': '⚽', 'Viajes y lugares': '✈️', 'Objetos': '💡', 'Símbolos': '❤️', 'Banderas': '🏁' };
+const appleUrl = (ch, strip) => { let cps = [...ch].map(c => c.codePointAt(0).toString(16)); if (strip) cps = cps.filter(c => c !== 'fe0f'); return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/' + cps.join('-') + '.png'; };
+const normQ = q => q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+const TEMPLATES = [
+  { name: 'Lanzamiento', desc: 'Anunciar un producto, servicio o novedad.', body: '🚀 [Novedad en una línea]\n\nPresentamos [qué es] para [a quién ayuda].\n\n✅ [Beneficio 1]\n✅ [Beneficio 2]\n✅ [Beneficio 3]\n\n👉 [Llamado a la acción]\n\n#Lanzamiento #Novedades' },
+  { name: 'Evento', desc: 'Fecha, lugar y cómo participar.', body: '📣 [Nombre del evento]\n\n📅 [Día y fecha]\n⏰ [Horario]\n📍 [Lugar]\n\n[Una o dos líneas sobre por qué ir.]\n\n🔗 Inscripción: [link en bio]\n\n#Evento #Agenda' },
+  { name: 'Comunicado institucional', desc: 'Informar con tono claro y formal.', body: '📌 [Título del comunicado]\n\n[Qué pasó o qué se informa, en dos oraciones.]\n\n[Dato concreto o próxima acción.]\n\nMás información: [link]\n\n#Comunicación #Institucional' },
+  { name: 'Consejo / tip', desc: 'Contenido de valor en formato lista.', body: '💡 [Tema]: 3 claves para [objetivo]\n\n1️⃣ [Clave 1]\n2️⃣ [Clave 2]\n3️⃣ [Clave 3]\n\n¿Cuál aplicás? Contanos 💬\n\n#Tips #Comunicación' },
+  { name: 'Testimonio', desc: 'Voz de un cliente o participante.', body: '💬 “[Frase del testimonio]”\n\n— [Nombre], [rol / organización]\n\n[Contexto breve del trabajo realizado.]\n\n#Testimonio #Clientes' },
+];
+const TAG_RULES = [
+  [/evento|jornada|encuentro|charla|taller/i, ['#Evento', '#Agenda']],
+  [/lanz|novedad|nuevo|nueva/i, ['#Lanzamiento', '#Novedades']],
+  [/comunica|prensa|medios|gacetilla/i, ['#Comunicación', '#Prensa']],
+  [/marketing|marca|campaña/i, ['#Marketing', '#MarketingDigital']],
+  [/redes|instagram|contenido/i, ['#RedesSociales', '#Contenido']],
+  [/municip|gobierno|gesti[oó]n|ciudad/i, ['#GestiónPública', '#Municipio']],
+  [/ia\b|inteligencia artificial|tecnolog/i, ['#InteligenciaArtificial', '#Innovación']],
+  [/emprend|pyme|negocio/i, ['#Emprendedores', '#Pymes']],
+];
+const DEFAULT_TAGS = ['#RelacionesPúblicas', '#Comunicación', '#Argentina'];
+const LS = { user: 'textoredes_user', drafts: 'textoredes_drafts', tags: 'textoredes_tagsets', current: 'textoredes_current' };
+const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const fmtDate = t => new Date(t).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+class Component extends DCLogic {
+  taRef = React.createRef();
+  past = [];
+  lastPush = 0;
+  state = {
+    text: '', panel: null, emojiCat: 'Caras', emojiQ: '', appleStyle: this.props.appleEmoji ?? true, recent: load('textoredes_recent_emojis', ['✨','🔥','💡','📌','✅','👉','📣','🚀','💬','📅','📍','🙌']), net: this.props.defaultNetwork ?? 'ig',
+    user: null, drafts: [], tagSets: [], loginOpen: false, isSignup: false,
+    fName: '', fEmail: '', fPass: '', loginError: '', toast: '', savedAt: null, undoLen: 0,
+  };
+  componentDidMount() {
+    const user = load(LS.user, null);
+    this.setState({ user, drafts: load(LS.drafts, []), tagSets: load(LS.tags, []), text: user ? load(LS.current, '') : '' });
+  }
+  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.saveT); }
+
+  setText(next, sel, force) {
+    const now = Date.now();
+    if (force || now - this.lastPush > 900) { this.past.push(this.state.text); if (this.past.length > 100) this.past.shift(); this.lastPush = now; }
+    this.setState({ text: next, undoLen: this.past.length }, () => {
+      if (sel && this.taRef.current) { const ta = this.taRef.current; ta.focus(); ta.setSelectionRange(sel[0], sel[1]); }
+    });
+    if (this.state.user) { clearTimeout(this.saveT); this.saveT = setTimeout(() => { save(LS.current, next); this.setState({ savedAt: Date.now() }); }, 600); }
+  }
+  sel() { const ta = this.taRef.current; return ta ? [ta.selectionStart, ta.selectionEnd] : [this.state.text.length, this.state.text.length]; }
+  format(k) {
+    const [s, e] = this.sel(); const t = this.state.text;
+    if (s === e) { this.flash('Seleccioná el texto que querés formatear'); return; }
+    const out = applyStyle(t.slice(s, e), k);
+    this.setText(t.slice(0, s) + out + t.slice(e), [s, s + out.length], true);
+  }
+  insert(str) {
+    const [s, e] = this.sel(); const t = this.state.text;
+    this.setText(t.slice(0, s) + str + t.slice(e), [s + str.length, s + str.length], true);
+  }
+  appendTag(tag) {
+    const t = this.state.text; const sep = !t ? '' : /\n\s*#[^\n]*$/.test(t) || /#\S+$/.test(t) ? ' ' : '\n\n';
+    const next = t + sep + tag; this.setText(next, [next.length, next.length], true);
+  }
+  flash(msg) { clearTimeout(this.toastT); this.setState({ toast: msg }); this.toastT = setTimeout(() => this.setState({ toast: '' }), 1800); }
+  persistUser(patch) { this.setState(patch, () => { save(LS.drafts, this.state.drafts); save(LS.tags, this.state.tagSets); }); }
+
+  renderVals() {
+    const st = this.state; const text = st.text; const loggedIn = !!st.user;
+    const cps = [...text]; const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const tagsInText = (text.match(/#[\p{L}\p{N}_]+/gu) || []).map(toPlain);
+    const tagSetLower = new Set(tagsInText.map(t => t.toLowerCase()));
+    const emojiCount = (text.match(/\p{Extended_Pictographic}/gu) || []).length;
+    const styled = cps.filter(c => REV[c]).length;
+    const weighted = cps.reduce((n, c) => n + (c.codePointAt(0) > 0xFFFF || /\p{Extended_Pictographic}/u.test(c) ? 2 : 1), 0);
+
+    const togglePanel = p => () => this.setState(s => ({ panel: s.panel === p ? null : p }));
+    const panelTabs = [['emoji', '😊 Emojis'], ['templates', 'Plantillas'], ['hashtags', '# Hashtags'], ['history', 'Historial']].map(([id, label]) => {
+      const on = st.panel === id;
+      return { label, onClick: togglePanel(id), bg: on ? 'var(--st-petroleo)' : 'transparent', color: on ? 'var(--st-white)' : 'var(--st-petroleo)', border: on ? 'var(--st-petroleo)' : 'var(--border-default)' };
+    });
+
+    const plainText = toPlain(text);
+    const sugg = []; TAG_RULES.forEach(([re, tags]) => { if (re.test(plainText)) sugg.push(...tags); });
+    DEFAULT_TAGS.forEach(t => sugg.push(t));
+    const suggestedTags = [...new Set(sugg)].slice(0, 10).map(tag => {
+      const used = tagSetLower.has(tag.toLowerCase());
+      return { tag: used ? '✓ ' + tag : tag, onClick: used ? () => {} : () => this.appendTag(tag), bg: used ? 'var(--st-celeste-100)' : 'var(--st-white)', color: used ? 'var(--st-celeste-700)' : 'var(--st-petroleo)', border: used ? 'var(--st-celeste-300)' : 'var(--border-default)' };
+    });
+
+    const net = NETS.find(n => n.id === st.net) || NETS[0];
+    const len = net.weighted ? weighted : cps.length;
+    const truncated = len > net.cut && net.cut < net.limit;
+    const previewText = truncated ? cps.slice(0, net.cut).join('').replace(/\s+\S*$/, '') : text;
+
+    const netCounts = NETS.map(n => {
+      const c = n.weighted ? weighted : cps.length; const r = c / n.limit; const over = c > n.limit;
+      return { name: n.name, icon: n.icon, label: over ? `${(c - n.limit).toLocaleString('es-AR')} de más` : `${c.toLocaleString('es-AR')} / ${n.limit.toLocaleString('es-AR')}`,
+        pct: Math.min(100, Math.max(c ? 1.5 : 0, r * 100)) + '%', barColor: over ? 'var(--st-coral)' : r > 0.85 ? 'var(--st-warning)' : 'var(--st-celeste)', textColor: over ? 'var(--st-coral-700)' : 'var(--text-muted)' };
+    });
+
+    const lines = text ? text.split('\n').length : 0;
+    const paras = text.split(/\n\s*\n/).filter(p => p.trim()).length;
+    const mentions = (text.match(/@[\w.]+/g) || []).length;
+
+    const user = st.user || {};
+    return {
+      text, taRef: this.taRef,
+      onText: e => this.setText(e.target.value),
+      preventBlur: e => e.preventDefault(),
+      fmtBold: () => this.format('bold'), fmtItalic: () => this.format('italic'), fmtBoldItalic: () => this.format('bolditalic'),
+      undo: () => { if (!this.past.length) return; const prev = this.past.pop(); this.lastPush = 0; this.setState({ text: prev, undoLen: this.past.length }); if (loggedIn) save(LS.current, prev); },
+      cannotUndo: st.undoLen === 0,
+      clearFormat: () => { const [s, e] = this.sel(); const t = this.state.text;
+        if (s !== e) { const out = toPlain(t.slice(s, e)); this.setText(t.slice(0, s) + out + t.slice(e), [s, s + out.length], true); }
+        else { const out = toPlain(t); if (out !== t) this.setText(out, null, true); }
+        this.flash(s !== e ? 'Formato quitado de la selección' : 'Formato quitado de todo el texto'); },
+      copy: () => { if (!text) { this.flash('No hay texto para copiar'); return; }
+        (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(() => { const ta = this.taRef.current; ta.select(); document.execCommand('copy'); });
+        this.flash('Copiado al portapapeles'); },
+      charCount: cps.length.toLocaleString('es-AR'), wordCount: words.toLocaleString('es-AR'),
+      autosaveLabel: st.savedAt ? 'Guardado automáticamente' : 'Se guarda en tu cuenta',
+      panelTabs,
+      showEmoji: st.panel === 'emoji', showTemplates: st.panel === 'templates', showHashtags: st.panel === 'hashtags', showHistory: st.panel === 'history',
+      emojiCats: ['Recientes', ...Object.keys(EMOJIS)].map(k => { const on = !st.emojiQ && st.emojiCat === k; return { icon: CAT_ICON[k], title: k, onClick: () => this.setState({ emojiCat: k, emojiQ: '' }), bg: on ? 'var(--st-white)' : 'transparent', shadow: on ? 'var(--shadow-sm)' : 'none', op: on ? 1 : 0.55 }; }),
+      emojiQ: st.emojiQ, onEmojiQ: e => this.setState({ emojiQ: e.target.value }),
+      emojiTitle: st.emojiQ ? 'Resultados' : st.emojiCat,
+      appleStyle: st.appleStyle, toggleApple: v => this.setState({ appleStyle: typeof v === 'boolean' ? v : (v && v.target ? v.target.checked : !st.appleStyle) }),
+      emojiList: (() => { const q = normQ(st.emojiQ);
+        const list = q ? Object.keys(EMOJI_KW).filter(ch => EMOJI_KW[ch].split(' ').some(w => w.startsWith(q)) || EMOJI_KW[ch].includes(q)).slice(0, 120) : st.emojiCat === 'Recientes' ? st.recent : EMOJIS[st.emojiCat];
+        return list.map(ch => ({ ch, apple: st.appleStyle, native: !st.appleStyle, src: appleUrl(ch), onErr: e => { const img = e.target; if (!img.dataset.retry) { img.dataset.retry = '1'; img.src = appleUrl(ch, true); } else { img.style.display = 'none'; if (img.nextSibling) img.nextSibling.style.display = 'inline'; } },
+          onClick: () => { this.insert(ch); const recent = [ch, ...st.recent.filter(x => x !== ch)].slice(0, 32); save('textoredes_recent_emojis', recent); this.setState({ recent }); } })); })(),
+      noEmojiResults: !!st.emojiQ.trim() && !Object.keys(EMOJI_KW).some(ch => EMOJI_KW[ch].includes(normQ(st.emojiQ))),
+      templates: TEMPLATES.map(t => ({ name: t.name, desc: t.desc, onClick: () => { this.setText(text ? text + '\n\n' + t.body : t.body, null, true); this.setState({ panel: null }); this.flash('Plantilla agregada — reemplazá los [corchetes]'); } })),
+      suggestedTags,
+      noTagsInText: tagsInText.length === 0,
+      saveTagSet: () => { if (!tagsInText.length) { this.flash('Primero escribí hashtags en el texto'); return; }
+        const str = [...new Set(tagsInText)].join(' '); if (st.tagSets.some(s => s.text === str)) { this.flash('Ese grupo ya está guardado'); return; }
+        this.persistUser({ tagSets: [{ id: Date.now(), text: str }, ...st.tagSets] }); this.flash('Grupo de hashtags guardado'); },
+      tagSets: loggedIn ? st.tagSets.map(s => ({ text: s.text, onInsert: () => this.appendTag(s.text), onDelete: () => this.persistUser({ tagSets: st.tagSets.filter(x => x.id !== s.id) }) })) : [],
+      loggedInNoSets: loggedIn && !st.tagSets.length,
+      saveDraft: () => { if (!text.trim()) { this.flash('No hay texto para guardar'); return; }
+        const first = toPlain(text).split('\n').find(l => l.trim()) || 'Sin título';
+        this.persistUser({ drafts: [{ id: Date.now(), text, title: first.slice(0, 70), at: Date.now() }, ...st.drafts].slice(0, 50) }); this.flash('Borrador guardado'); },
+      drafts: loggedIn ? st.drafts.map(d => ({ title: d.title, meta: `${fmtDate(d.at)} · ${[...d.text].length} caracteres`,
+        onLoad: () => { this.setText(d.text, null, true); this.flash('Borrador cargado'); },
+        onDelete: () => this.persistUser({ drafts: st.drafts.filter(x => x.id !== d.id) }) })) : [],
+      loggedInNoDrafts: loggedIn && !st.drafts.length,
+      netTabs: NETS.map(n => ({ label: n.name, onClick: () => this.setState({ net: n.id }), bg: st.net === n.id ? 'var(--st-coral)' : 'var(--st-neutral-100)', color: st.net === n.id ? 'var(--st-white)' : 'var(--st-neutral-600)' })),
+      previewHandle: net.handle, previewMeta: net.meta, previewHasMedia: net.media, previewRatio: net.ratio || '1 / 1',
+      previewShowHandleInline: !!net.inline && !!text, previewHandleShort: net.handle,
+      previewText, previewTruncated: truncated, previewMoreLabel: net.more, previewEmpty: !text, previewNote: net.note,
+      netCounts,
+      breakdown: [
+        { value: lines, label: 'Líneas' }, { value: paras, label: 'Párrafos' }, { value: tagsInText.length, label: 'Hashtags' },
+        { value: mentions, label: 'Menciones' }, { value: emojiCount, label: 'Emojis' }, { value: styled, label: 'Con formato' },
+      ],
+      loggedIn, loggedOut: !loggedIn, userName: user.name || '', userInitial: (user.name || '?').charAt(0).toUpperCase(),
+      openLogin: () => this.setState({ loginOpen: true, loginError: '' }),
+      openLoginLink: e => { e.preventDefault(); this.setState({ loginOpen: true, loginError: '' }); },
+      closeLogin: () => this.setState({ loginOpen: false }),
+      closeLoginLink: e => { e.preventDefault(); this.setState({ loginOpen: false }); },
+      stop: e => e.stopPropagation(),
+      logout: () => { localStorage.removeItem(LS.user); this.setState({ user: null }); this.flash('Sesión cerrada'); },
+      loginOpen: st.loginOpen, isSignup: st.isSignup,
+      loginTitle: st.isSignup ? 'Crear cuenta' : 'Ingresar', loginCta: st.isSignup ? 'Crear cuenta' : 'Ingresar',
+      loginSwitch: st.isSignup ? 'Ya tengo cuenta' : 'Crear una cuenta',
+      toggleSignup: e => { e.preventDefault(); this.setState(s => ({ isSignup: !s.isSignup, loginError: '' })); },
+      fName: st.fName, fEmail: st.fEmail, fPass: st.fPass, loginError: st.loginError || undefined,
+      onName: e => this.setState({ fName: e.target.value }), onEmail: e => this.setState({ fEmail: e.target.value }), onPass: e => this.setState({ fPass: e.target.value }),
+      submitLogin: () => {
+        if (!/^\S+@\S+\.\S+$/.test(st.fEmail)) { this.setState({ loginError: 'Ingresá un email válido' }); return; }
+        const name = st.fName.trim() || st.fEmail.split('@')[0]; const u = { name, email: st.fEmail };
+        save(LS.user, u); save(LS.current, text);
+        this.setState({ user: u, loginOpen: false, fPass: '', loginError: '' }); this.flash(`Hola, ${name}`);
+      },
+      toastVisible: !!st.toast, toast: st.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

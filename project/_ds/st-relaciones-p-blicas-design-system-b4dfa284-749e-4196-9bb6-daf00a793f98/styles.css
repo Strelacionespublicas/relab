@@ -1,0 +1,8 @@
+/* ============================================================
+   ST Relaciones Públicas — DESIGN SYSTEM
+   Entry point. Solo @import. No reglas aquí.
+   ============================================================ */
+@import "tokens/fonts.css";
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
