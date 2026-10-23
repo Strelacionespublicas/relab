@@ -59,7 +59,7 @@ En el panel de Cloudflare: **Workers & Pages → textoredes → Custom domains �
 
 ## 4. Limitar quién puede crear cuenta (opcional)
 
-El pie dice "Herramienta de uso exclusivo". Si querés que solo entren ciertas personas, completá `ALLOWED_EMAILS` en `wrangler.toml` y volvé a publicar:
+Hoy puede ingresar cualquier persona con Google (la cuenta sirve para guardar avance, hashtags y textos). Si algún día querés limitarlo, completá `ALLOWED_EMAILS` en `wrangler.toml` y volvé a publicar:
 
 ```toml
 ALLOWED_EMAILS = "@strelacionespublicas.com.ar, cliente@gmail.com"
