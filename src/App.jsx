@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button, Switch, Logo } from './ds/components.jsx';
+import { Footer } from './Footer.jsx';
 import { NET_ICONS } from './lib/icons.js';
 import { api, newId } from './lib/api.js';
 import {
@@ -235,7 +236,7 @@ export default function App() {
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, lineHeight: 1, letterSpacing: '-0.035em', color: 'var(--st-white)', display: 'flex', alignItems: 'baseline', gap: 5 }}>
                 <span style={{ fontWeight: 800 }}>texto</span><span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>en</span><span style={{ fontWeight: 300 }}>redes</span>
               </div>
-              <span style={{ fontFamily: 'var(--font-data)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--st-celeste-300)' }}>un recurso <strong style={{ color: 'var(--st-white)', fontWeight: 800 }}>relab</strong></span>
+              <a href="/" style={{ fontFamily: 'var(--font-data)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--st-celeste-300)', textDecoration: 'none' }}>un recurso <strong style={{ color: 'var(--st-white)', fontWeight: 800 }}>relab</strong></a>
             </div>
           </div>
           {loggedIn ? (
@@ -458,13 +459,7 @@ export default function App() {
           </aside>
         </main>
 
-        <footer style={{ borderTop: '1px solid var(--border-subtle)', padding: '20px clamp(16px, 4vw, 40px)', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
-          <span>Herramienta diseñada por ST Relaciones Públicas · © 2026 Todos los derechos reservados</span>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <a href="https://www.instagram.com/strelacionespublicas/" target="_blank" rel="noreferrer">@strelacionespublicas</a>
-            <a href="https://strelacionespublicas.com.ar/" target="_blank" rel="noreferrer">strelacionespublicas.com.ar</a>
-          </div>
-        </footer>
+        <Footer />
       </div>
 
       {loginOpen && (

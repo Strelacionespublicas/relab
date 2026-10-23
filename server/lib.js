@@ -1,6 +1,6 @@
 // Utilidades compartidas por las Pages Functions.
 
-export const SESSION_COOKIE = 'tr_session';
+export const SESSION_COOKIE = 'relab_session';
 export const SESSION_DAYS = 30;
 export const MAX_TEXT = 100_000;
 
@@ -58,6 +58,9 @@ export async function requireUser(context) {
 export const readJson = async request => {
   try { return await request.json(); } catch { return null; }
 };
+
+// Solo rutas internas ("/textoenredes/"), nunca "//otro-sitio" ni URLs absolutas.
+export const safeReturn = p => (typeof p === 'string' && /^\/(?![\/\\])[\w\-\/]*$/.test(p) ? p : '/');
 
 export const validId = id => typeof id === 'string' && /^[\w-]{1,64}$/.test(id);
 export const validText = (t, max = MAX_TEXT) => typeof t === 'string' && t.length <= max;

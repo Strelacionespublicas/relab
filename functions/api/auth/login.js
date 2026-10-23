@@ -1,6 +1,6 @@
-import { randomToken, pkceChallenge, redirect, setCookie } from '../../../server/lib.js';
+import { randomToken, pkceChallenge, redirect, setCookie, safeReturn } from '../../../server/lib.js';
 
-// Arranca el login con Google (OAuth 2.0 + PKCE).
+// Arranca el login con Google (OAuth 2.0 + PKCE). ?return= es el recurso al que se vuelve.
 export async function onRequestGet({ request, env }) {
   const origin = new URL(request.url).origin;
   const state = randomToken(16);
@@ -16,7 +16,8 @@ export async function onRequestGet({ request, env }) {
     prompt: 'select_account',
   });
   return redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, [
-    setCookie('tr_oauth_state', state, 600),
-    setCookie('tr_oauth_verifier', verifier, 600),
+    setCookie('relab_oauth_state', state, 600),
+    setCookie('relab_oauth_verifier', verifier, 600),
+    setCookie('relab_oauth_return', safeReturn(new URL(request.url).searchParams.get('return')), 600),
   ]);
 }

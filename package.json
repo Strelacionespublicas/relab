@@ -1,5 +1,5 @@
 {
-  "name": "textoredes",
+  "name": "relab",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,8 +8,8 @@
     "dev:api": "wrangler pages dev dist --port 8788",
     "build": "vite build",
     "preview": "vite build && wrangler pages dev dist --port 8788",
-    "db:migrate:local": "wrangler d1 migrations apply textoredes --local",
-    "db:migrate": "wrangler d1 migrations apply textoredes --remote",
+    "db:migrate:local": "wrangler d1 migrations apply relab --local",
+    "db:migrate": "wrangler d1 migrations apply relab --remote",
     "deploy": "vite build && wrangler pages deploy dist"
   },
   "dependencies": {

@@ -1,7 +1,6 @@
-import { getCookie, setCookie, redirect, randomToken, sha256Hex, SESSION_COOKIE, SESSION_DAYS } from '../../../server/lib.js';
+import { getCookie, setCookie, redirect, randomToken, sha256Hex, SESSION_COOKIE, SESSION_DAYS, safeReturn } from '../../../server/lib.js';
 
-const clearOauth = [setCookie('tr_oauth_state', '', 0), setCookie('tr_oauth_verifier', '', 0)];
-const fail = reason => redirect(`/?login=${reason}`, clearOauth);
+const clearOauth = ['state', 'verifier', 'return'].map(k => setCookie(`relab_oauth_${k}`, '', 0));
 
 const isAllowed = (email, list) => {
   const rules = (list || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -12,10 +11,12 @@ const isAllowed = (email, list) => {
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
+  const back = safeReturn(getCookie(request, 'relab_oauth_return'));
+  const fail = reason => redirect(`${back}?login=${reason}`, clearOauth);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  const verifier = getCookie(request, 'tr_oauth_verifier');
-  if (!code || !state || state !== getCookie(request, 'tr_oauth_state') || !verifier) return fail('error');
+  const verifier = getCookie(request, 'relab_oauth_verifier');
+  if (!code || !state || state !== getCookie(request, 'relab_oauth_state') || !verifier) return fail('error');
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -57,5 +58,5 @@ export async function onRequestGet({ request, env }) {
     env.DB.prepare('DELETE FROM sessions WHERE user_id = ? AND expires_at < ?').bind(claims.sub, now),
   ]);
 
-  return redirect('/?login=ok', [...clearOauth, setCookie(SESSION_COOKIE, token, SESSION_DAYS * 86400)]);
+  return redirect(`${back}?login=ok`, [...clearOauth, setCookie(SESSION_COOKIE, token, SESSION_DAYS * 86400)]);
 }

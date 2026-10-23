@@ -14,7 +14,7 @@ const call = async (method, path, body) => {
 export const api = {
   // Sin backend (por ejemplo `npm run dev` solo) la herramienta funciona como "sin cuenta".
   me: () => call('GET', '/me').catch(() => ({ user: null })),
-  login: () => { window.location.href = '/api/auth/login'; },
+  login: () => { window.location.href = `/api/auth/login?return=${encodeURIComponent(window.location.pathname)}`; },
   logout: () => call('POST', '/auth/logout'),
   saveCurrent: text => call('PUT', '/current', { text }),
   addDraft: draft => call('POST', '/drafts', draft),
