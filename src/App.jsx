@@ -470,7 +470,7 @@ export default function App() {
               <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>Guardá borradores, retomá textos y reutilizá tus hashtags. La herramienta funciona igual sin cuenta.</span>
             </div>
             <Button variant="outline" fullWidth onClick={startLogin} className="hv-google" iconLeft={<GoogleIcon />} style={{ background: 'var(--st-white)' }}>Continuar con Google</Button>
-            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.5 }}>Solo usamos tu nombre y tu email para guardar tus textos. No publicamos nada en tu nombre.</span>
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: 1.5 }}>Solo usamos tu nombre y tu email para guardar tus textos. No publicamos nada en tu nombre. <a href="/privacidad/" target="_blank">Política de privacidad</a>.</span>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, fontSize: 'var(--fs-sm)' }}>
               <a href="#" onClick={e => { e.preventDefault(); setLoginOpen(false); }} style={{ color: 'var(--text-muted)' }}>Seguir sin cuenta</a>
             </div>

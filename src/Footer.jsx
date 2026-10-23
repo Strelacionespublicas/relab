@@ -5,6 +5,7 @@ export function Footer() {
       <span>Herramienta diseñada por ST Relaciones Públicas · © 2026 Todos los derechos reservados</span>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <a href="/">Más recursos relab</a>
+        <a href="/privacidad/">Privacidad</a>
         <a href="https://www.instagram.com/strelacionespublicas/" target="_blank" rel="noreferrer">@strelacionespublicas</a>
         <a href="https://strelacionespublicas.com.ar/" target="_blank" rel="noreferrer">strelacionespublicas.com.ar</a>
       </div>
