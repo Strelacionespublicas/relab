@@ -9,7 +9,7 @@ import {
 } from './lib/core.js';
 
 const DEFAULT_RECENT = ['✨', '🔥', '💡', '📌', '✅', '👉', '📣', '🚀', '💬', '📅', '📍', '🙌'];
-const LOGIN_MSG = { denied: 'Esa cuenta no tiene acceso a TextoRedes', error: 'No pudimos iniciar sesión. Probá de nuevo' };
+const LOGIN_MSG = { denied: 'Esa cuenta no tiene acceso a TextoRedes', error: 'No pudimos iniciar sesión. Probá de nuevo', config: 'El login todavía no está configurado' };
 
 const eyebrow = { fontFamily: 'var(--font-data)', fontSize: 'var(--fs-3xs)', letterSpacing: 'var(--tracking-wider)', textTransform: 'uppercase', color: 'var(--text-muted)' };
 const linkBtn = { border: 'none', background: 'none', color: 'var(--st-coral)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-xs)', cursor: 'pointer', padding: '4px 0' };
