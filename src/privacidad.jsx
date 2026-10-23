@@ -8,7 +8,7 @@ import './app.css';
 import { Logo } from './ds/components.jsx';
 import { Footer } from './Footer.jsx';
 
-const CONTACT_EMAIL = 'PENDIENTE@strelacionespublicas.com.ar';
+const CONTACT_EMAIL = 'strelacionespublicas@gmail.com';
 const UPDATED = '23 de octubre de 2026';
 
 const SECTIONS = [
