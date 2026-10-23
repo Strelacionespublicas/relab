@@ -9,8 +9,10 @@ binding = "DB"
 database_name = "relab"
 database_id = "27104637-1cf1-4bc0-a786-c845c359ea48"
 
-# GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET van como secretos (ver DEPLOY.md), no acá.
+# GOOGLE_CLIENT_ID es público (viaja en cada login), por eso va acá.
+# GOOGLE_CLIENT_SECRET va SOLO en el panel de Cloudflare, como Secreto (ver DEPLOY.md).
 # ALLOWED_EMAILS (opcional): lista separada por comas de emails o dominios (@empresa.com)
 # que pueden crear cuenta. Vacío = cualquier cuenta de Google.
 [vars]
+GOOGLE_CLIENT_ID = "1010724195443-aq6kr91kklqmr7bt0dn2lg3kmpm5mo3i.apps.googleusercontent.com"
 ALLOWED_EMAILS = ""

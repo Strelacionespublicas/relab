@@ -1,3 +1,2 @@
 # Copiá este archivo a .dev.vars para probar el login en local (no se sube a git).
-GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxx

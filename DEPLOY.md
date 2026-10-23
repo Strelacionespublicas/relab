@@ -48,7 +48,6 @@ Pegá ese `database_id` en `wrangler.toml`, en lugar de `REEMPLAZAR_CON_EL_ID_DE
 ```bash
 npm run db:migrate                                     # crea las tablas
 npx wrangler pages project create relab --production-branch main
-npx wrangler pages secret put GOOGLE_CLIENT_ID --project-name relab
 npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name relab
 npm run deploy
 ```
@@ -78,7 +77,7 @@ Un valor que empieza con `@` habilita todo ese dominio. Vacío = cualquier cuent
 npm run deploy
 ```
 
-Para que se publique solo con cada cambio, conectá el repo de GitHub en **Workers & Pages → Create → Pages → Connect to Git**. Build command: `npm run build`. Output: `dist`. Después, en **Settings**, cargá la base D1 (binding `DB`) y las variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+Para que se publique solo con cada cambio, conectá el repo de GitHub en **Workers & Pages → Create → Pages → Connect to Git**. Build command: `npm run build`. Output: `dist`. Después, en **Configuración → Variables y secretos**, cargá `GOOGLE_CLIENT_SECRET` como **Secreto**. La base D1 y `GOOGLE_CLIENT_ID` ya vienen de `wrangler.toml`: las variables de texto del panel se ignoran.
 
 ---
 
