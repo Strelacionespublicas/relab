@@ -183,13 +183,22 @@ function Checklist() {
           </div>
         </div>
 
-        <nav data-noprint data-sticky style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--st-gris-claro)', padding: '12px 0', display: 'flex', gap: 8, overflowX: 'auto', borderBottom: '1px solid var(--st-neutral-200)' }} className="cl-nav">
+        <div data-noprint data-sticky style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--st-gris-claro)', padding: '10px 0', display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid var(--st-neutral-200)' }}>
+        <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, lineHeight: 1, color: 'var(--st-petroleo)', minWidth: 52 }}>{pct}%</span>
+          <div style={{ flex: 1, height: 8, borderRadius: 999, background: 'var(--st-neutral-200)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: pct + '%', background: pct === 100 ? 'var(--st-success)' : 'var(--st-coral)', borderRadius: 999, transition: 'width .3s ease' }} />
+          </div>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--st-neutral-600)', whiteSpace: 'nowrap' }}>{done}/{total} tareas</span>
+        </div>
+        <nav aria-label="Secciones" style={{ display: 'flex', gap: 8, overflowX: 'auto' }} className="cl-nav">
           {sections.map(s => (
             <a key={s.id} href={'#' + s.id} style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: s.complete ? 'var(--st-petroleo)' : '#fff', color: s.complete ? '#fff' : 'var(--st-petroleo)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
               <span>{s.num}. {s.short}</span><span style={{ opacity: 0.75 }}>{s.done}/{s.total}</span>
             </a>
           ))}
         </nav>
+        </div>
 
         {sections.map(s => (
           <section key={s.id} id={s.id} style={{ display: 'flex', flexDirection: 'column', gap: 20, scrollMarginTop: 72 }}>
