@@ -1,7 +1,8 @@
 // Checklist Cyber Monday (recurso de Relab). Portado de "Checklist Cyber Monday.dc.html"
 // del proyecto de Claude Design "Estrategia de oferta para Cyber Monday".
-// El avance se guarda solo en el navegador (localStorage), como indica la página.
-import { useEffect, useState } from 'react';
+// El avance se guarda en el navegador y, si la persona ingresa con su cuenta de Relab, también
+// en su cuenta (cifrado, /api/state/checklist-cyber-2026) para verlo desde cualquier dispositivo.
+import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './ds/tokens/fonts.css';
 import './ds/tokens/colors.css';
@@ -12,6 +13,8 @@ import './checklist.css';
 import logoWhite from './ds/assets/logo-white.png';
 import logoPetrol from './ds/assets/logo-petrol.png';
 import { Footer } from './Footer.jsx';
+import LoginModal from './LoginModal.jsx';
+import { api } from './lib/api.js';
 
 const SECTIONS = [
   { short: 'Tienda', title: 'Prepará tu tienda online', items: [
@@ -80,11 +83,14 @@ const STATUSES = [
 ];
 const LINKS = { ig: 'strelacionespublicas', li: 'https://www.linkedin.com/in/licstellatorres/', web: 'strelacionespublicas.com.ar' };
 const KEY = 'st-checklist-cyber-2026';
+const RESOURCE = 'checklist-cyber-2026';
 const blankPlan = () => Array.from({ length: 7 }, () => ({ task: '', resp: '', date: '', status: 0 }));
+const normalize = s => ({ checks: {}, biz: '', rev: '', camp: '', ...s, plan: s?.plan || blankPlan() });
 const initial = () => {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) return { checks: {}, biz: '', rev: '', camp: '', ...s, plan: s.plan || blankPlan() }; } catch (e) {}
-  return { checks: {}, biz: '', rev: '', camp: '', plan: blankPlan() };
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) return normalize(s); } catch (e) {}
+  return normalize({});
 };
+const hasProgress = s => Object.values(s.checks).some(Boolean) || !!(s.biz || s.rev || s.camp) || s.plan.some(r => r.task || r.resp || r.date || r.status);
 
 const label = { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '0.14em', color: 'var(--st-coral)' };
 const field = { height: 44, padding: '0 14px', border: '1.5px solid var(--st-neutral-300)', borderRadius: 8, background: '#fff', fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--st-gris-oscuro)', outline: 'none' };
@@ -99,7 +105,37 @@ const Ico = ({ children, color = 'var(--st-coral)' }) => (
 
 function Checklist() {
   const [st, setSt] = useState(initial);
-  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }, [st]);
+  const [user, setUser] = useState(null);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const saveT = useRef(null);
+  const ready = useRef(false); // no subir nada hasta saber si hay avance guardado en la cuenta
+
+  // Sesión de Relab: si hay avance en la cuenta se usa ese; si no, se sube el de este navegador.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('login')) window.history.replaceState(null, '', window.location.pathname);
+    api.me().then(async me => {
+      if (!me.user) return;
+      setUser(me.user);
+      try {
+        const { data } = await api.getState(RESOURCE);
+        if (data) setSt(normalize(data));
+        else if (hasProgress(initial())) await api.saveState(RESOURCE, initial());
+      } catch (e) {}
+      ready.current = true;
+    });
+    return () => clearTimeout(saveT.current);
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
+    if (!user || !ready.current) return;
+    setSaved(false);
+    clearTimeout(saveT.current);
+    saveT.current = setTimeout(() => api.saveState(RESOURCE, st).then(() => setSaved(true)).catch(() => {}), 800);
+  }, [st, user]);
+
+  const logout = () => { api.logout().catch(() => {}); setUser(null); ready.current = false; };
 
   const c = st.checks;
   const toggle = k => setSt(s => ({ ...s, checks: { ...s.checks, [k]: !s.checks[k] } }));
@@ -126,7 +162,19 @@ function Checklist() {
               <img src={logoWhite} alt="ST Relaciones Públicas" style={{ height: 44, width: 'auto', display: 'block' }} />
               <a data-noprint href="/" style={{ fontFamily: 'var(--font-data)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--st-celeste-300)', textDecoration: 'none', borderLeft: '1px solid var(--border-inverse)', paddingLeft: 16 }}>un recurso <strong style={{ color: '#fff', fontWeight: 800 }}>relab</strong></a>
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, letterSpacing: '0.14em', color: 'var(--st-celeste)' }}>GUÍA PRÁCTICA PARA EMPRENDEDORES</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, letterSpacing: '0.14em', color: 'var(--st-celeste)' }}>GUÍA PRÁCTICA PARA EMPRENDEDORES</div>
+              <div data-noprint>
+                {user ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-display)', fontSize: 13 }}>
+                    <span style={{ fontWeight: 600 }}>{user.name}</span>
+                    <button className="cl-btn-ghost" onClick={logout} style={{ height: 32, padding: '0 12px', border: '1px solid var(--border-inverse)', borderRadius: 999, background: 'transparent', color: '#fff', fontFamily: 'var(--font-display)', fontSize: 12, cursor: 'pointer' }}>Salir</button>
+                  </span>
+                ) : (
+                  <button className="cl-btn-coral" onClick={() => setLoginOpen(true)} style={{ height: 36, padding: '0 16px', border: 'none', borderRadius: 999, background: 'var(--st-coral)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Guardar mi avance</button>
+                )}
+              </div>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 40, alignItems: 'end' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -172,7 +220,8 @@ function Checklist() {
         </div>
 
         <div data-block style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p style={{ margin: 0, fontSize: 17, lineHeight: 1.6, color: 'var(--st-neutral-600)', maxWidth: 680, textWrap: 'pretty' }}>Usá esta guía para revisar cada área de tu negocio. Marcá las tareas completadas y anotá qué necesitás resolver antes de lanzar la campaña. Tu avance se guarda en este navegador.</p>
+          <p style={{ margin: 0, fontSize: 17, lineHeight: 1.6, color: 'var(--st-neutral-600)', maxWidth: 680, textWrap: 'pretty' }}>Usá esta guía para revisar cada área de tu negocio. Marcá las tareas completadas y anotá qué necesitás resolver antes de lanzar la campaña.{' '}
+            {user ? 'Tu avance se guarda en tu cuenta de Relab: lo ves desde cualquier dispositivo.' : <>Tu avance se guarda en este navegador. <a data-noprint href="#" onClick={e => { e.preventDefault(); setLoginOpen(true); }}>Ingresá con Google</a> para tenerlo también en el celular y la compu.</>}</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             {[['Nombre del negocio', 'biz', 'text', 'Mi tienda'], ['Fecha de revisión', 'rev', 'date'], ['Fecha de la campaña', 'camp', 'date']].map(([lab, key, type, ph]) => (
               <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -189,7 +238,7 @@ function Checklist() {
           <div style={{ flex: 1, height: 8, borderRadius: 999, background: 'var(--st-neutral-200)', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: pct + '%', background: pct === 100 ? 'var(--st-success)' : 'var(--st-coral)', borderRadius: 999, transition: 'width .3s ease' }} />
           </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--st-neutral-600)', whiteSpace: 'nowrap' }}>{done}/{total} tareas</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--st-neutral-600)', whiteSpace: 'nowrap' }}>{done}/{total} tareas{user && <span style={{ color: 'var(--st-success)' }}>{saved ? ' · guardado' : ' · en tu cuenta'}</span>}</span>
         </div>
         <nav aria-label="Secciones" style={{ display: 'flex', gap: 8, overflowX: 'auto' }} className="cl-nav">
           {sections.map(s => (
@@ -314,6 +363,8 @@ function Checklist() {
         </div>
       </main>
       <div data-noprint><Footer /></div>
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={() => api.login()}
+        description="Guardá tu avance del checklist y retomalo desde cualquier dispositivo. Funciona igual sin cuenta." />
     </div>
   );
 }

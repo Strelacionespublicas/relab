@@ -22,6 +22,7 @@ Casi siempre llega como handoff de Claude Design. Leé su README y los chats ant
 4. Sumá la tarjeta en `src/resources.jsx`.
 
 **Herramienta con cuenta (guarda avances):** lo anterior, más:
+- Si el avance es un JSON por persona (checklist, formulario), no hace falta tabla nueva: usá `api.getState(recurso)` / `api.saveState(recurso, data)` (`functions/api/state/[resource].js`, tabla `resource_state`, cifrado). Ejemplo: `src/checklist.jsx`. El login es `LoginModal` (`src/LoginModal.jsx`) + `api.login()`.
 - Una migración nueva `migrations/000N_<recurso>.sql`. Las tablas llevan `user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE`.
 - Los endpoints en `functions/api/<recurso>/`, usando `requireUser`, `readJson`, `validId`, `validText` y `json` de `server/lib.js`. Mirá `functions/api/drafts/` como ejemplo.
 - Que `/api/me` no crezca sin control: cada recurso trae sus propios datos desde sus endpoints.

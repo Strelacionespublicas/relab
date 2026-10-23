@@ -22,6 +22,8 @@ export const api = {
   addTagSet: set => call('POST', '/tagsets', set),
   deleteTagSet: id => call('DELETE', `/tagsets/${encodeURIComponent(id)}`),
   deleteAccount: () => call('DELETE', '/account'),
+  getState: resource => call('GET', `/state/${resource}`),
+  saveState: (resource, data) => call('PUT', `/state/${resource}`, { data }),
 };
 
 export const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
