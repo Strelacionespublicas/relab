@@ -1,0 +1,18 @@
+{
+  "id": "/textoenredes/",
+  "name": "Texto en Redes",
+  "short_name": "TextoRedes",
+  "description": "Negrita y cursiva que se ven en todas las redes, emojis, hashtags y vista previa del post.",
+  "lang": "es-AR",
+  "start_url": "/textoenredes/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#012C3D",
+  "background_color": "#F7F8F3",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -4,6 +4,7 @@ import { Footer } from './Footer.jsx';
 import RichEditor from './RichEditor.jsx';
 import HashtagPanel from './HashtagPanel.jsx';
 import Preview from './Preview.jsx';
+import InstallBanner from './InstallBanner.jsx';
 import { NET_ICONS } from './lib/icons.js';
 import { api, newId } from './lib/api.js';
 import {
@@ -284,6 +285,7 @@ export default function App() {
 
         <main style={{ flex: 1, padding: '0 clamp(16px, 4vw, 40px) 48px', maxWidth: 1280, width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'stretch' }}>
           <div style={{ flex: '1 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <InstallBanner />
             <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: 12, borderBottom: '1px solid var(--border-subtle)' }}>
