@@ -1,0 +1,18 @@
+/* Checklist Cyber Monday: hover/foco del diseño y reglas de impresión para "Descargar PDF". */
+.cl-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.cl-page input::placeholder { color: var(--st-neutral-400); }
+.cl-input:focus { border-color: var(--st-petroleo) !important; }
+.cl-btn-coral:hover { background: var(--st-coral-700) !important; }
+.cl-btn-ghost:hover { border-color: #fff !important; }
+.cl-item:hover { border-color: var(--st-petroleo-500) !important; }
+.cl-social:hover { background: var(--st-coral) !important; color: #fff !important; }
+.cl-social-outline:hover { border-color: var(--st-coral) !important; color: var(--st-coral) !important; }
+
+@media print {
+  [data-noprint] { display: none !important; }
+  [data-sticky] { position: static !important; }
+  [data-block] { break-inside: avoid; }
+  body { background: #fff !important; }
+}
+.cl-nav { scrollbar-width: none; }
+.cl-nav::-webkit-scrollbar { display: none; }

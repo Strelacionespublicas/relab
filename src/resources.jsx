@@ -11,4 +11,11 @@ export const RESOURCES = [
     desc: 'Negrita y cursiva que se ven en todas las redes, emojis, hashtags, vista previa del post y conteo de caracteres para 7 redes.',
     status: 'activo',
   },
+  {
+    href: '/checklist-cyber-monday/',
+    name: <span><span style={{ fontWeight: 800 }}>checklist</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>cyber monday</span></span>,
+    desc: 'Prepará tu tienda, diseñá promociones rentables y organizá tus ventas. Marcá tu avance y descargalo en PDF.',
+    cta: 'Abrir checklist',
+    status: 'activo',
+  },
 ];
