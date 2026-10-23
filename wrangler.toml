@@ -3,11 +3,11 @@ compatibility_date = "2026-10-01"
 pages_build_output_dir = "dist"
 
 # Base de datos de Relab: una sola cuenta para todos los recursos.
-# Creala con `npx wrangler d1 create relab` y pegá acá el database_id que devuelve.
+# Creada desde el panel de Cloudflare (D1 → relab).
 [[d1_databases]]
 binding = "DB"
 database_name = "relab"
-database_id = "REEMPLAZAR_CON_EL_ID_DE_D1"
+database_id = "27104637-1cf1-4bc0-a786-c845c359ea48"
 
 # GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET van como secretos (ver DEPLOY.md), no acá.
 # ALLOWED_EMAILS (opcional): lista separada por comas de emails o dominios (@empresa.com)
