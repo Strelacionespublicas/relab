@@ -246,7 +246,7 @@ export default function App() {
               <button className="hv-inverse" onClick={logout} style={{ background: 'transparent', border: '1px solid var(--border-inverse)', color: 'var(--st-white)', borderRadius: 999, padding: '7px 14px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-xs)', cursor: 'pointer' }}>Salir</button>
             </div>
           ) : (
-            <Button size="sm" onClick={() => setLoginOpen(true)}>Ingresar</Button>
+            <Button size="sm" onClick={() => setLoginOpen(true)}>Guardar mi avance</Button>
           )}
         </header>
 
@@ -466,7 +466,7 @@ export default function App() {
         <div onClick={() => setLoginOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(1,44,61,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 400, background: 'var(--st-white)', borderRadius: 16, boxShadow: 'var(--shadow-lg)', padding: 28, display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-2xl)', color: 'var(--st-petroleo)' }}>Ingresar</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-2xl)', color: 'var(--st-petroleo)' }}>Guardá tu avance</span>
               <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>Guardá borradores, retomá textos y reutilizá tus hashtags. La herramienta funciona igual sin cuenta.</span>
             </div>
             <Button variant="outline" fullWidth onClick={startLogin} className="hv-google" iconLeft={<GoogleIcon />} style={{ background: 'var(--st-white)' }}>Continuar con Google</Button>
