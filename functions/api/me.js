@@ -1,5 +1,5 @@
 import { getUser, json } from '../../server/lib.js';
-import { decryptText, encryptText, needsEncryption } from '../../server/crypto.js';
+import { decryptText, encryptText, needsEncryption, MissingKeyError } from '../../server/crypto.js';
 
 // Usuario logueado + todo lo que tiene guardado. { user: null } si no hay sesión.
 export async function onRequestGet({ request, env, waitUntil }) {
@@ -10,7 +10,9 @@ export async function onRequestGet({ request, env, waitUntil }) {
   const tagSets = await env.DB.prepare('SELECT id, title, text FROM tag_sets WHERE user_id = ? ORDER BY created_at DESC').bind(user.id).all()
     .catch(() => env.DB.prepare("SELECT id, '' AS title, text FROM tag_sets WHERE user_id = ? ORDER BY created_at DESC").bind(user.id).all());
   if (env.TEXT_KEY) waitUntil(encryptLegacy(env, user, drafts.results, tagSets.results).catch(err => console.error(err)));
-  const dec = s => decryptText(env, s);
+  // Si TEXT_KEY cambió, lo cifrado con la clave anterior no se puede leer: se muestra vacío
+  // en lugar de romper el ingreso a la cuenta.
+  const dec = s => decryptText(env, s).catch(err => { if (err instanceof MissingKeyError) throw err; return ''; });
   return json({
     user: { name: user.name, email: user.email, picture: user.picture },
     current: await dec(user.current_text),
