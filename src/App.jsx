@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button, Switch, Logo } from './ds/components.jsx';
 import { Footer } from './Footer.jsx';
+import RichEditor from './RichEditor.jsx';
 import { NET_ICONS } from './lib/icons.js';
 import { api, newId } from './lib/api.js';
 import {
@@ -154,7 +155,9 @@ export default function App() {
   };
   const copy = () => {
     if (!text) { flash('No hay texto para copiar'); return; }
-    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(() => { const ta = taRef.current; ta.select(); document.execCommand('copy'); });
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(() => {
+      const tmp = document.createElement('textarea'); tmp.value = text; document.body.append(tmp); tmp.select(); document.execCommand('copy'); tmp.remove();
+    });
     flash('Copiado al portapapeles');
   };
 
@@ -378,7 +381,7 @@ export default function App() {
                 </div>
               )}
 
-              <textarea ref={taRef} value={text} onChange={e => setText(e.target.value)} placeholder="Escribí o pegá tu texto acá. Seleccioná una parte y tocá N, K o NK para darle formato." style={{ display: 'block', flex: 1, width: '100%', minHeight: 320, resize: 'none', border: 'none', padding: 20, fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.6, color: 'var(--st-gris-oscuro)', background: 'var(--st-white)' }} />
+              <RichEditor ref={taRef} value={text} onChange={setText} placeholder="Escribí o pegá tu texto acá. Seleccioná una parte y tocá N, K o NK para darle formato." style={{ minHeight: 320, padding: 20, fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.6, color: 'var(--st-gris-oscuro)', background: 'var(--st-white)' }} />
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 16px', borderTop: '1px solid var(--border-subtle)', background: 'var(--st-neutral-50)' }}>
                 <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--font-data)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>

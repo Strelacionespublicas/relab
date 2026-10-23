@@ -11,3 +11,8 @@ textarea:focus { outline: none; }
 .hv-card:hover { border-color: var(--st-coral) !important; }
 .hv-google:hover { background: var(--st-neutral-50) !important; }
 button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* Editor con formato real (RichEditor) */
+.re-editor strong { font-weight: 700; }
+.re-editor em { font-style: italic; }
+.re-editor:focus { outline: none; }
