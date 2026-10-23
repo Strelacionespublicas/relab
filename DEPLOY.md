@@ -29,7 +29,7 @@ Sin cuenta, la herramienta funciona igual. El login es opcional.
    - Tipo: **Aplicación web**.
    - **URIs de redireccionamiento autorizados** (agregá las tres):
      - `https://relab.strelacionespublicas.com.ar/api/auth/callback`
-     - `https://relab.pages.dev/api/auth/callback`
+     - `https://relab-6su.pages.dev/api/auth/callback`
      - `http://localhost:8788/api/auth/callback` (para probar en tu compu)
 4. Guardá el **ID de cliente** y el **Secreto del cliente**.
 
@@ -53,14 +53,14 @@ npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name relab
 npm run deploy
 ```
 
-Ya queda funcionando en `https://relab.pages.dev`.
+Ya queda funcionando en `https://relab-6su.pages.dev`.
 
 ## 3. Tu dominio
 
 En el panel de Cloudflare: **Workers & Pages → relab → Custom domains → Set up a custom domain** → `relab.strelacionespublicas.com.ar`.
 
 - Si el DNS del dominio ya está en Cloudflare, se configura solo.
-- Si está en otro proveedor (por ejemplo NIC Argentina con DNS de tu hosting), creá allá un registro **CNAME** `relab` → `relab.pages.dev`. Cloudflare te muestra el dato exacto.
+- Si está en otro proveedor (por ejemplo NIC Argentina con DNS de tu hosting), creá allá un registro **CNAME** `relab` → `relab-6su.pages.dev`. Cloudflare te muestra el dato exacto.
 
 ## 4. Limitar quién puede crear cuenta (opcional)
 
