@@ -16,7 +16,7 @@ function GoogleIcon() {
 export default function LoginModal({ open, onClose, onLogin, description }) {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(1,44,61,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(1,44,61,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 200 }}>
       <div role="dialog" aria-modal="true" aria-labelledby="login-title" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 400, background: 'var(--st-white)', borderRadius: 16, boxShadow: 'var(--shadow-lg)', padding: 28, display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span id="login-title" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-2xl)', color: 'var(--st-petroleo)' }}>Guardá tu avance</span>

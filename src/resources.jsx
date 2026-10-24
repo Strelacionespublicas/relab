@@ -21,7 +21,7 @@ export const RESOURCES = [
   {
     href: '/guia-herramientas-digitales/',
     name: <span><span style={{ fontWeight: 800 }}>guía</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>herramientas digitales</span></span>,
-    desc: 'GitHub, Netlify, Vercel, Codex o Claude Code: qué usar para crear una landing, una calculadora o un cotizador, con tutoriales paso a paso.',
+    desc: 'GitHub, Netlify, Vercel, Cloudflare, Codex o Claude Code: qué usar para crear una landing, una calculadora o un cotizador, con tutoriales paso a paso.',
     cta: 'Leer la guía',
     status: 'activo',
   },
