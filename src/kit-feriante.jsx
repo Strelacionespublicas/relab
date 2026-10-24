@@ -257,6 +257,7 @@ function Kit() {
           })}
         </div>
       ))}
+      <a href="/" className="kf-nav-relab">Más recursos de Relab →</a>
     </nav>
   );
 
@@ -266,7 +267,7 @@ function Kit() {
         <div className="kf-topbar-in">
           <a href="#inicio" className="kf-brand"><img src={logoPetrol} alt="ST Relaciones Públicas" /><span>Kit <b>feriante</b></span></a>
           <div className="kf-bar-r">
-            <a href="/" className="kf-relab">un recurso <b>relab</b></a>
+            <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
               <span className="kf-user"><span className={`kf-saved${saved ? ' ok' : ''}`}>{saved ? '✓ Guardado' : 'Guardando…'}</span><span>{user.name.split(' ')[0]}</span><button type="button" onClick={logout}>Salir</button></span>
             ) : (
@@ -340,6 +341,7 @@ function Home({ status, pct, st, saveLine, open }) {
             <h1>Kit del emprendedor feriante</h1>
             <p className="kf-lead">Para el Festival del Poncho, ferias navideñas, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
             <a className="kf-btn kf-btn--coral" href="#checklist">Empezar por el checklist →</a>
+            <a className="kf-hero-relab" href="/">Ver todos los recursos de Relab</a>
             {saveLine}
           </div>
           <div className="kf-hero-stats">
