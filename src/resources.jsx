@@ -25,4 +25,11 @@ export const RESOURCES = [
     cta: 'Empezar el curso',
     status: 'activo',
   },
+  {
+    href: '/kit-feriante/',
+    name: <span><span style={{ fontWeight: 800 }}>kit</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>feriante</span></span>,
+    desc: 'Para vender en ferias y expos: checklist, pitch, registro de ventas por día, calculadora de rentabilidad, medios de cobro y ROI post feria.',
+    cta: 'Abrir kit',
+    status: 'activo',
+  },
 ];
