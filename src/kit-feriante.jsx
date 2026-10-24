@@ -1,6 +1,7 @@
 // Kit del emprendedor feriante (recurso de Relab). Portado del "Kit Feriante — Festival del Poncho"
-// de Stella y generalizado para cualquier feria. Siete pestañas (checklist, pitch, visitantes,
-// tracker de ventas, calculadora, cobros y ROI); la abierta queda en el hash. Todo lo que se carga
+// de Stella y generalizado para cualquier feria. "Tu kit" muestra las siete herramientas por momento
+// (antes, durante y después de la feria) y cada una se abre en su pantalla según el hash, con un
+// ejemplo que sigue a un mismo caso (Rosa, tejedora de Belén). Todo lo que se carga
 // se guarda en el navegador y, con cuenta de Relab, en /api/state/kit-feriante (cifrado).
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -10,23 +11,13 @@ import './ds/tokens/typography.css';
 import './ds/tokens/spacing.css';
 import './app.css';
 import './kit-feriante.css';
-import logoWhite from './ds/assets/logo-white.png';
+import logoPetrol from './ds/assets/logo-petrol.png';
 import { Footer } from './Footer.jsx';
 import LoginModal from './LoginModal.jsx';
 import { api } from './lib/api.js';
 
 const KEY = 'relab-kit-feriante';
 const RESOURCE = 'kit-feriante';
-
-const TABS = [
-  ['checklist', 'Checklist'],
-  ['pitch', 'Pitch y ventas'],
-  ['visitantes', 'Visitantes'],
-  ['tracker', 'Ventas del día'],
-  ['calculadora', 'Calculadora'],
-  ['cobros', 'Cobros'],
-  ['roi', 'ROI post feria'],
-];
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
 const CHECKLIST = [
@@ -62,7 +53,7 @@ const CHECKLIST = [
     ['post-1', 'Balance de ventas y costos cerrado', '¿Cuánto vendí? ¿Cuánto gasté? ¿Fue rentable?'],
     ['post-2', 'Seguimiento de contactos en las primeras 48 horas', 'Mensaje cálido y una propuesta concreta'],
     ['post-3', 'Contenido del evento publicado en redes', 'Fotos, videos y resultados para la semana siguiente'],
-    ['post-4', 'ROI calculado y decisión sobre la próxima edición', 'Usá la pestaña ROI post feria'],
+    ['post-4', 'ROI calculado y decisión sobre la próxima edición', 'Usá la herramienta ROI post feria'],
   ] },
 ];
 const CHECK_IDS = CHECKLIST.flatMap(s => s.items.map(i => i[0]));
@@ -121,9 +112,66 @@ const Field = ({ label, value, onChange, placeholder = '0', hint, suffix }) => (
   </label>
 );
 
+const MOMENTS = [
+  ['antes', 'Antes de la feria', 'Preparate y hacé las cuentas'],
+  ['durante', 'Durante la feria', 'Atendé, vendé y registrá'],
+  ['despues', 'Después de la feria', 'Medí y decidí'],
+];
+const momentLabel = Object.fromEntries(MOMENTS.map(m => [m[0], m[1]]));
+const Svg = ({ children }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
+const ICONS = {
+  inicio: <Svg><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" /></Svg>,
+  checklist: <Svg><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></Svg>,
+  calculadora: <Svg><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8" /><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" /></Svg>,
+  cobros: <Svg><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /><path d="M6 15h4" /></Svg>,
+  pitch: <Svg><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></Svg>,
+  visitantes: <Svg><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Svg>,
+  tracker: <Svg><path d="M3 3v18h18" /><path d="M7 16v-5" /><path d="M12 16V8" /><path d="M17 16V5" /></Svg>,
+  roi: <Svg><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></Svg>,
+  menu: <Svg><path d="M4 6h16M4 12h16M4 18h16" /></Svg>,
+};
+
+// Las herramientas del kit, en el orden del recorrido. El ejemplo sigue a un mismo caso: Rosa.
+const SECTIONS = [
+  { id: 'checklist', label: 'Checklist', moment: 'antes', desc: 'Todo lo que tenés que tener listo, de la estrategia al balance.',
+    para: ['Llegar a la feria sin olvidarte de nada.', 'Ordenar las tareas de antes, durante y después.'],
+    ejemplo: 'Cinco días antes del festival, Rosa anuncia en Instagram el número de su stand y adelanta un poncho nuevo que va a presentar allá: su novedad exclusiva de la feria.' },
+  { id: 'calculadora', label: 'Calculadora', moment: 'antes', desc: 'Cuánto vas a ganar y cuántas unidades necesitás vender para cubrir el stand.',
+    para: ['Saber si la feria te conviene antes de pagar el stand.', 'Conocer tu punto de equilibrio: cuánto vender para no perder.'],
+    ejemplo: 'Rosa paga $120.000 de stand, $30.000 de flete, $25.000 de cartelería y $40.000 de viáticos. Lleva ponchos, mantas y caminos de mesa. Con 10 unidades cubre los costos fijos; todo lo que vende después es ganancia.' },
+  { id: 'cobros', label: 'Cobros', moment: 'antes', desc: 'Billeteras, QR y efectivo: qué conviene y cuánto cobra cada uno.',
+    para: ['Elegir cómo cobrar sin perder ventas.', 'Saber cuánto se lleva cada medio de pago.'],
+    ejemplo: 'Rosa cobra con QR de Mercado Pago, tiene Ualá Bis como respaldo y lleva cambio para quien paga en efectivo. Antes del festival hizo una compra de prueba con cada uno.' },
+  { id: 'pitch', label: 'Pitch y ventas', moment: 'durante', desc: 'Qué decir en 20 segundos, cómo cerrar y cómo responder objeciones.',
+    para: ['Presentar tu producto en pocas palabras.', 'Vender más a quien ya compra y responder las objeciones de siempre.'],
+    ejemplo: '“Tejemos ponchos en telar con lana de oveja de Belén, para quienes buscan una prenda que dure toda la vida. Cada uno lleva tres semanas de trabajo. ¿Querés ver cómo se teje?”' },
+  { id: 'visitantes', label: 'Visitantes', moment: 'durante', desc: 'Los tipos de clientes que vas a encontrar y cómo atender a cada uno.',
+    para: ['Reconocer qué busca cada visitante.', 'Atender bien incluso a los clientes difíciles.'],
+    ejemplo: 'Un visitante toca una manta y dice “después vuelvo”. Rosa no insiste: le da una tarjeta con su Instagram y le cuenta que hace envíos a todo el país.' },
+  { id: 'tracker', label: 'Ventas del día', moment: 'durante', desc: 'Registrá cada venta y mirá el balance del día y de toda la feria.',
+    para: ['Tener el balance del día sin papeles ni cuentas.', 'Ver qué se vende más y con qué medio de pago.'],
+    ejemplo: 'Rosa anota cada venta en el momento. Al cierre del sábado ve que vendió más caminos de mesa que ponchos, y el domingo los pone adelante en el stand.' },
+  { id: 'roi', label: 'ROI post feria', moment: 'despues', desc: 'El balance final: ganancia real, retorno y si te conviene volver.',
+    para: ['Saber si la feria fue rentable.', 'Decidir con números si volvés el año que viene.'],
+    ejemplo: 'Al terminar el festival, Rosa trae sus ventas del tracker, carga lo que gastó en stand, viaje y lana, y decide con números si vuelve el año que viene.' },
+];
+const secById = id => SECTIONS.find(s => s.id === id);
+const fromHash = () => (secById(location.hash.slice(1)) ? location.hash.slice(1) : null);
+
+const ROSA_CALC = () => ({
+  fijos: { alquiler: '120000', traslado: '30000', deco: '25000', viaticos: '40000' },
+  productos: [
+    { id: newId(), nombre: 'Poncho de telar', costo: '45000', precio: '95000', unid: '8' },
+    { id: newId(), nombre: 'Manta', costo: '30000', precio: '65000', unid: '10' },
+    { id: newId(), nombre: 'Camino de mesa', costo: '6000', precio: '15000', unid: '25' },
+  ],
+  comision: '3', pctDigital: '70',
+});
+
 function Kit() {
   const [st, setSt] = useState(initial);
-  const [tab, setTab] = useState(() => (TABS.some(t => t[0] === location.hash.slice(1)) ? location.hash.slice(1) : 'checklist'));
+  const [view, setView] = useState(fromHash); // null = Tu kit
+  const [menu, setMenu] = useState(false);
   const [user, setUser] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -154,81 +202,125 @@ function Kit() {
     saveT.current = setTimeout(() => api.saveState(RESOURCE, st).then(() => setSaved(true)).catch(() => {}), 800);
   }, [st, user]);
 
+  // Una herramienta por pantalla según el hash (#calculadora); sin hash, "Tu kit".
   useEffect(() => {
-    const onHash = () => { const h = location.hash.slice(1); if (TABS.some(t => t[0] === h)) setTab(h); else if (!h) setTab('checklist'); };
+    const onHash = () => { setView(fromHash()); setMenu(false); window.scrollTo(0, 0); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-  const tabsRef = useRef(null);
-  // En celular la barra se desliza: la pestaña abierta queda a la vista.
-  useEffect(() => { tabsRef.current?.querySelector('button.on')?.scrollIntoView({ block: 'nearest', inline: 'center' }); }, [tab]);
-  const openTab = id => {
-    if (location.hash !== '#' + id) location.hash = id; else setTab(id);
-    const top = tabsRef.current?.offsetTop ?? 0;
-    if (window.scrollY > top) window.scrollTo({ top });
-  };
+  const open = id => { location.hash = id || 'inicio'; };
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') setMenu(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   const logout = () => { api.logout().catch(() => {}); setUser(null); ready.current = false; };
   const set = (key, fn) => setSt(s => ({ ...s, [key]: fn(s[key]) }));
 
   const checksDone = CHECK_IDS.filter(id => st.checks[id]).length;
   const pct = Math.round((checksDone / CHECK_IDS.length) * 100);
+  const calcOn = Object.values(st.calc.fijos).some(Boolean) || st.calc.productos.some(p => p.precio && p.unid);
+  const roiOn = Object.entries(st.roi).some(([k, v]) => k !== 'dias' && v);
+  const status = id => ({
+    checklist: [`${checksDone}/${CHECK_IDS.length}`, pct === 100 ? 'ok' : checksDone ? 'now' : ''],
+    calculadora: calcOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
+    tracker: st.ventas.length ? [`${st.ventas.length} ${st.ventas.length === 1 ? 'venta' : 'ventas'}`, 'now'] : ['Sin ventas', ''],
+    roi: roiOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
+  }[id] || ['Para leer', 'read']);
+
+  const sec = view && secById(view);
+  const idx = sec ? SECTIONS.indexOf(sec) : -1;
+  const prev = SECTIONS[idx - 1];
+  const next = SECTIONS[idx + 1];
+
+  const saveLine = (
+    <p className={`kf-save${user ? ' ok' : ''}`}>
+      {user ? (saved ? `✓ Guardado en tu cuenta · ${user.name.split(' ')[0]}` : 'Guardando en tu cuenta…')
+        : <>Lo que cargues queda en este navegador. <button type="button" onClick={() => setLoginOpen(true)}>Ingresá con Google</button> para tenerlo también en el celular.</>}
+    </p>
+  );
+  const nav = (
+    <nav className="kf-nav" aria-label="Herramientas del kit">
+      <a href="#inicio" className={`kf-nav-home${!sec ? ' on' : ''}`}><span className="kf-ico">{ICONS.inicio}</span>Tu kit</a>
+      {MOMENTS.map(([m, label]) => (
+        <div key={m} className="kf-nav-grp">
+          <p>{label}</p>
+          {SECTIONS.filter(s => s.moment === m).map(s => {
+            const [txt, cls] = status(s.id);
+            return (
+              <a key={s.id} href={'#' + s.id} className={view === s.id ? 'on' : ''} aria-current={view === s.id ? 'page' : undefined}>
+                <span className="kf-ico">{ICONS[s.id]}</span><span className="t">{s.label}</span>
+                {cls !== 'read' && <span className={`kf-st kf-st--${cls}`}>{txt}</span>}
+              </a>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
 
   return (
-    <div className="kf">
-      <header className="kf-hero">
-        <div className="kf-wrap">
-          <div className="kf-top">
-            <div className="kf-brand">
-              <img src={logoWhite} alt="ST Relaciones Públicas" />
-              <a href="/">un recurso <strong>relab</strong></a>
-            </div>
+    <div className={`kf${sec ? ' kf--sec' : ''}`}>
+      <header className="kf-topbar">
+        <div className="kf-topbar-in">
+          <a href="#inicio" className="kf-brand"><img src={logoPetrol} alt="ST Relaciones Públicas" /><span>Kit <b>feriante</b></span></a>
+          <div className="kf-bar-r">
+            <a href="/" className="kf-relab">un recurso <b>relab</b></a>
             {user ? (
-              <span className="kf-user"><span>{user.name}</span><button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved${saved ? ' ok' : ''}`}>{saved ? '✓ Guardado' : 'Guardando…'}</span><span>{user.name.split(' ')[0]}</span><button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
           </div>
-          <p className="kf-kicker">Kit gratuito</p>
-          <h1>Kit del emprendedor feriante</h1>
-          <p className="kf-lead">Para el Festival del Poncho, ferias navideñas, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
-          <p className={`kf-save${user ? ' ok' : ''}`}>
-            {user ? (saved ? `✓ Guardado en tu cuenta · ${user.name.split(' ')[0]}` : 'Guardando en tu cuenta…')
-              : <>Todo lo que cargues queda en este navegador. <button type="button" onClick={() => setLoginOpen(true)}>Ingresá con Google</button> para tenerlo también en el celular.</>}
-          </p>
         </div>
       </header>
 
-      <nav className="kf-tabs" ref={tabsRef} aria-label="Secciones del kit">
-        <div className="kf-tabs-in">
-          {TABS.map(([id, label]) => (
-            <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => openTab(id)}>
-              {label}{id === 'checklist' && <span className="kf-badge">{pct}%</span>}
-              {id === 'tracker' && st.ventas.length > 0 && <span className="kf-badge">{st.ventas.length}</span>}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <main className="kf-wrap kf-main">
-        {tab === 'checklist' && <Checklist st={st} set={set} done={checksDone} pct={pct} />}
-        {tab === 'pitch' && <Pitch />}
-        {tab === 'visitantes' && <Visitantes />}
-        {tab === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
-        {tab === 'calculadora' && <Calculadora calc={st.calc} set={set} />}
-        {tab === 'cobros' && <Cobros />}
-        {tab === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={openTab} />}
-
-        <div className="kf-cta">
-          <div>
-            <p className="kf-kicker">ST Relaciones Públicas</p>
-            <h3>¿Querés preparar tu próxima feria con acompañamiento?</h3>
-            <p>Consultoría en marketing y ventas, capacitaciones para equipos y cursos online.</p>
+      {!sec ? (
+        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} />
+      ) : (
+        <>
+          <div className="kf-sub">
+            <a href="#inicio">‹ Tu kit</a>
+            <span className="kf-sub-t"><span className="kf-ico">{ICONS[sec.id]}</span>{sec.label}</span>
+            <button type="button" onClick={() => setMenu(true)} aria-expanded={menu} aria-controls="kfDrawer"><span className="kf-ico">{ICONS.menu}</span>Herramientas</button>
           </div>
-          <a className="kf-btn kf-btn--coral" href="https://instagram.com/strelacionespublicas" target="_blank" rel="noopener noreferrer">Escribinos en Instagram</a>
-        </div>
-      </main>
+          <div className="kf-layout">
+            <aside className="kf-side">{nav}</aside>
+            <main className="kf-sec">
+              <header className="kf-sec-head">
+                <span className="kf-ico-big">{ICONS[sec.id]}</span>
+                <div><p className="kf-kicker">{momentLabel[sec.moment]} · {idx + 1} de {SECTIONS.length}</p><h1>{sec.label}</h1></div>
+              </header>
+              <div className="kf-intro">
+                <div className="kf-para"><p className="kf-para-t">Para qué sirve</p><ul>{sec.para.map(x => <li key={x}>{x}</li>)}</ul></div>
+                <div className="kf-ejemplo">
+                  <p className="kf-ejemplo-t"><span>R</span>Ejemplo · Rosa, tejedora de Belén</p>
+                  <p>{sec.ejemplo}</p>
+                  {sec.id === 'calculadora' && (
+                    <button type="button" className="kf-btn kf-btn--soft kf-btn--sm" onClick={() => (!calcOn || window.confirm('Esto reemplaza lo que cargaste en la calculadora. ¿Seguimos?')) && set('calc', () => ROSA_CALC())}>Probar con los números de Rosa</button>
+                  )}
+                </div>
+              </div>
+              {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} pct={pct} />}
+              {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} />}
+              {sec.id === 'cobros' && <Cobros />}
+              {sec.id === 'pitch' && <Pitch />}
+              {sec.id === 'visitantes' && <Visitantes />}
+              {sec.id === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
+              {sec.id === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={open} />}
+              <nav className="kf-pn" aria-label="Anterior y siguiente">
+                {prev ? <a href={'#' + prev.id} className="prev"><small>Anterior</small><span>← {prev.label}</span></a> : <a href="#inicio" className="prev"><small>Volver</small><span>← Tu kit</span></a>}
+                {next ? <a href={'#' + next.id} className="next"><small>Siguiente</small><span>{next.label} →</span></a> : <a href="#inicio" className="next"><small>Terminaste el recorrido</small><span>Tu kit →</span></a>}
+              </nav>
+            </main>
+          </div>
+          <div className={`kf-backdrop${menu ? ' open' : ''}`} onClick={() => setMenu(false)} />
+          <div id="kfDrawer" className={`kf-drawer${menu ? ' open' : ''}`} onClick={e => e.target.closest('a') && setMenu(false)}>{nav}</div>
+        </>
+      )}
 
+      <div className="kf-wrap"><Cta /></div>
       <Footer />
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={() => api.login()}
         description="Guardá tu checklist, tus ventas y tus cálculos, y retomalos desde cualquier dispositivo. Funciona igual sin cuenta." />
@@ -236,13 +328,77 @@ function Kit() {
   );
 }
 
+function Home({ status, pct, st, saveLine, open }) {
+  const hoy = dayKey(Date.now());
+  const hoyTotal = st.ventas.filter(v => dayKey(v.ts) === hoy).reduce((a, v) => a + v.monto, 0);
+  return (
+    <>
+      <section className="kf-hero">
+        <div className="kf-wrap kf-hero-in">
+          <div>
+            <p className="kf-kicker">Kit gratuito · 7 herramientas</p>
+            <h1>Kit del emprendedor feriante</h1>
+            <p className="kf-lead">Para el Festival del Poncho, ferias navideñas, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
+            <a className="kf-btn kf-btn--coral" href="#checklist">Empezar por el checklist →</a>
+            {saveLine}
+          </div>
+          <div className="kf-hero-stats">
+            <div><b>{pct}%</b><span>de tu checklist</span></div>
+            <div><b>{st.ventas.length}</b><span>{st.ventas.length === 1 ? 'venta registrada' : 'ventas registradas'}</span></div>
+            <div><b>{fmt(hoyTotal)}</b><span>vendido hoy</span></div>
+          </div>
+        </div>
+      </section>
+      <main className="kf-wrap kf-home">
+        {MOMENTS.map(([m, label, sub], mi) => (
+          <section key={m} className="kf-moment">
+            <div className="kf-moment-h"><span>{mi + 1}</span><div><h2>{label}</h2><p>{sub}</p></div></div>
+            <div className="kf-cards">
+              {SECTIONS.filter(s => s.moment === m).map(s => {
+                const [txt, cls] = status(s.id);
+                return (
+                  <a key={s.id} href={'#' + s.id} className="kf-tool">
+                    <span className="kf-ico-card">{ICONS[s.id]}</span>
+                    <span className="kf-tool-t">{s.label}</span>
+                    <span className="kf-tool-d">{s.desc}</span>
+                    <span className={`kf-st kf-st--${cls}`}>{txt}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+        <div className="kf-rosa">
+          <span className="kf-rosa-av">R</span>
+          <div>
+            <h3>Te presentamos a Rosa</h3>
+            <p>Teje ponchos y mantas en telar en Belén, Catamarca, y vende en el Festival del Poncho. En cada herramienta vas a ver cómo la usa ella, y en la calculadora podés probar con sus números.</p>
+            <button type="button" className="kf-link-inline" onClick={() => open('calculadora')}>Ver la calculadora con el ejemplo de Rosa →</button>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
+
+const Cta = () => (
+  <div className="kf-cta">
+    <div>
+      <p className="kf-kicker">ST Relaciones Públicas</p>
+      <h3>¿Querés preparar tu próxima feria con acompañamiento?</h3>
+      <p>Consultoría en marketing y ventas, capacitaciones para equipos y cursos online.</p>
+    </div>
+    <a className="kf-btn kf-btn--coral" href="https://instagram.com/strelacionespublicas" target="_blank" rel="noopener noreferrer">Escribinos en Instagram</a>
+  </div>
+);
+
 function Checklist({ st, set, done, pct }) {
   const toggle = id => set('checks', c => ({ ...c, [id]: !c[id] }));
   return (
     <>
       <div className="kf-progress">
         <div className="kf-progress-top"><span>Tu preparación</span><b>{done} de {CHECK_IDS.length} ítems</b></div>
-        <div className="kf-bar"><i style={{ width: pct + '%' }} className={pct === 100 ? 'full' : ''} /></div>
+        <div className="kf-topbar"><i style={{ width: pct + '%' }} className={pct === 100 ? 'full' : ''} /></div>
       </div>
       {CHECKLIST.map(sec => (
         <section key={sec.id} className="kf-cl-sec">
@@ -465,7 +621,7 @@ function Calculadora({ calc, set }) {
           {FIJOS.map(([k, l]) => <Field key={k} label={l} value={calc.fijos[k]} onChange={v => setFijo(k, v)} suffix="$" />)}
         </Card>
         <Card title="Cobros">
-          <Field label="Comisión promedio de los cobros digitales" value={calc.comision} onChange={v => upd(c => ({ ...c, comision: v }))} suffix="%" hint="Mezcla de débito y crédito, con IVA. Mirá la pestaña Cobros." />
+          <Field label="Comisión promedio de los cobros digitales" value={calc.comision} onChange={v => upd(c => ({ ...c, comision: v }))} suffix="%" hint="Mezcla de débito y crédito, con IVA. Mirá la sección Cobros." />
           <Field label="Ventas que esperás cobrar en digital" value={calc.pctDigital} onChange={v => upd(c => ({ ...c, pctDigital: v }))} suffix="%" hint="El resto, en efectivo (sin comisión)." />
         </Card>
       </div>
