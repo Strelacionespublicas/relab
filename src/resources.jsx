@@ -4,7 +4,18 @@
 //   desc:   una o dos líneas: qué resuelve, no cómo funciona.
 //   cta:    texto del link (opcional, por defecto "Abrir herramienta").
 //   status: 'activo' (con link) o 'proximamente' (tarjeta punteada, sin link).
+//   badge:  etiqueta opcional arriba a la derecha: 'Nuevo' o 'Recomendado'. Usar pocas para que no pierdan fuerza.
+//   external: true si el recurso vive en otro sitio (se abre en una pestaña nueva).
 export const RESOURCES = [
+  {
+    href: 'https://guia.strelacionespublicas.com.ar/',
+    external: true,
+    badge: 'Recomendado',
+    name: <span><span style={{ fontWeight: 800 }}>guía</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>prompting</span></span>,
+    desc: 'Curso gratuito para pedirle a la IA lo que necesitás y crear tus propias herramientas con Claude y Codex: método, ejercicios y certificado.',
+    cta: 'Ir al curso',
+    status: 'activo',
+  },
   {
     href: '/textoenredes/',
     name: <><span style={{ fontWeight: 800 }}>texto</span><span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>en</span><span style={{ fontWeight: 300 }}>redes</span></>,
@@ -14,7 +25,7 @@ export const RESOURCES = [
   {
     href: '/checklist-cyber-monday/',
     name: <span><span style={{ fontWeight: 800 }}>checklist</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>cyber monday</span></span>,
-    desc: 'Prepará tu tienda, diseñá promociones rentables y organizá tus ventas. Marcá tu avance y descargalo en PDF.',
+    desc: 'Checklist interactivo en 7 áreas: tienda, promociones, comunicación, logística, plan de acción y resultados. Con ejemplos y descarga en PDF.',
     cta: 'Abrir checklist',
     status: 'activo',
   },
@@ -27,6 +38,7 @@ export const RESOURCES = [
   },
   {
     href: '/kit-feriante/',
+    badge: 'Nuevo',
     name: <span><span style={{ fontWeight: 800 }}>kit</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>feriante</span></span>,
     desc: 'Para vender en ferias y expos: checklist, pitch, registro de ventas por día, calculadora de rentabilidad, medios de cobro y ROI post feria.',
     cta: 'Abrir kit',

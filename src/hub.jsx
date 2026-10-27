@@ -11,6 +11,11 @@ import { RESOURCES } from './resources.jsx';
 
 
 const soon = { boxShadow: 'none', background: 'transparent', border: '1.5px dashed var(--border-default)' };
+const badge = { alignSelf: 'flex-start', marginBottom: -4, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 999 };
+const BADGES = {
+  Nuevo: { background: 'var(--st-coral)', color: 'var(--st-white)' },
+  Recomendado: { background: 'var(--st-celeste-100)', color: 'var(--st-petroleo)', boxShadow: 'inset 0 0 0 1px var(--st-celeste-300)' },
+};
 const card = { background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 16, boxShadow: 'var(--shadow-sm)', padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 200 };
 
 function Hub() {
@@ -37,7 +42,9 @@ function Hub() {
               <span style={{ fontFamily: 'var(--font-data)', fontSize: 'var(--fs-3xs)', letterSpacing: 'var(--tracking-wider)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Próximamente</span>
             </div>
           ) : (
-            <a key={r.href} href={r.href} className="hv-card" style={{ ...card, textDecoration: 'none', color: 'inherit' }}>
+            <a key={r.href} href={r.href} className="hv-card" style={{ ...card, textDecoration: 'none', color: 'inherit' }}
+              {...(r.external ? { target: '_blank', rel: 'noopener' } : {})}>
+              {r.badge && <span style={{ ...badge, ...(BADGES[r.badge] || BADGES.Nuevo) }}>{r.badge}</span>}
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: '-0.035em', color: 'var(--st-petroleo)', display: 'flex', gap: 6, alignItems: 'baseline' }}>{r.name}</span>
               <span style={{ flex: 1, fontSize: 'var(--fs-md)', lineHeight: 1.5, color: 'var(--text-body)' }}>{r.desc}</span>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--st-coral)' }}>{r.cta || 'Abrir herramienta'} →</span>
