@@ -18,6 +18,7 @@ import { api } from './lib/api.js';
 import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
 import { blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
 import { createKitSync } from './kit/sync.js';
+import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
@@ -162,6 +163,8 @@ function Kit() {
   const [view, setView] = useState(fromHash); // null = Tu kit
   const [menu, setMenu] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const access = useProAccess({ user, ready: snap.status !== 'cargando' });
+  const login = () => { sync.markLoginIntent(); api.login(); };
 
   useEffect(() => {
     const unsub = sync.subscribe(setSnap);
@@ -244,7 +247,7 @@ function Kit() {
           <div className="kf-bar-r">
             <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
-              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span>{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && !access.pro?.pro && <button type="button" onClick={access.openModal}>Tengo un código</button>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
@@ -299,7 +302,8 @@ function Kit() {
 
       <div className="kf-wrap"><Cta /></div>
       <Footer />
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={() => { sync.markLoginIntent(); api.login(); }}
+      <CodeModal access={access} user={user} onLogin={login} />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={login}
         description="Guardá tu checklist, tus ventas y tus cálculos, y retomalos desde cualquier dispositivo. Funciona igual sin cuenta." />
     </div>
   );

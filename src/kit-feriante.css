@@ -342,6 +342,21 @@ body { margin: 0; background: var(--st-gris-claro); }
 @media (max-width: 640px) { .kf-aviso { padding: 0 16px; } .kf-aviso-btns .kf-btn { flex: 1 1 auto; } }
 @media (max-width: 640px) {
   .kf-relab { white-space: nowrap; }
-  .kf-user > span:not(.kf-saved) { display: none; }
+  .kf-user > span:not(.kf-saved):not(.kf-pro) { display: none; }
   .kf-saved { font-size: 11.5px; line-height: 1.25; max-width: 160px; }
 }
+
+/* Acceso PRO: insignia y modal de canje de código */
+.kf-pro { display: inline-flex; align-items: baseline; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--st-petroleo); color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+.kf-pro small { font-family: var(--font-data); font-size: 11px; font-weight: 400; letter-spacing: 0; opacity: .85; }
+.kf-modal-bg { position: fixed; inset: 0; z-index: 210; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(1, 44, 61, .6); }
+.kf-modal { width: 100%; max-width: 420px; box-sizing: border-box; padding: 26px; border-radius: 16px; background: #fff; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 12px; }
+.kf-modal h2 { margin: 0; font-family: var(--font-display); font-size: var(--fs-2xl); color: var(--st-petroleo); }
+.kf-modal .kf-kicker { margin: 0; }
+.kf-modal p { margin: 0; line-height: 1.5; }
+.kf-modal form { display: flex; flex-direction: column; gap: 14px; }
+.kf-modal input { text-transform: uppercase; letter-spacing: .06em; }
+.kf-modal-msg.ok { color: var(--st-success); font-weight: 600; }
+.kf-modal-msg.err { color: var(--st-danger); }
+.kf-modal-act { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+@media (max-width: 640px) { .kf-pro small { display: none; } }
