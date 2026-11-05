@@ -15,6 +15,7 @@ import logoPetrol from './ds/assets/logo-petrol.png';
 import { Footer } from './Footer.jsx';
 import LoginModal from './LoginModal.jsx';
 import { api } from './lib/api.js';
+import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
 
 const KEY = 'relab-kit-feriante';
 const RESOURCE = 'kit-feriante';
@@ -85,9 +86,7 @@ const hasData = s => Object.values(s.checks).some(Boolean) || s.ventas.length > 
   || Object.values(s.calc.fijos).some(Boolean) || s.calc.productos.some(p => p.nombre || p.costo || p.precio || p.unid)
   || Object.entries(s.roi).some(([k, v]) => k !== 'dias' && v);
 
-// Los campos guardan el texto tal cual; para calcular, vacío es 0 y se acepta coma decimal.
-const num = v => { const n = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : 0; };
-const fmt = n => (n < 0 ? '−$' : '$') + Math.round(Math.abs(n)).toLocaleString('es-AR');
+// Los campos guardan el texto tal cual; los importes se interpretan en formato argentino en src/kit/calc.js.
 const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const dayLabel = key => {
   const [y, m, d] = key.split('-').map(Number);
@@ -101,14 +100,14 @@ const Tip = ({ tone = 'ambar', children }) => <div className={`kf-tip kf-tip--${
 const Card = ({ title, children, className = '' }) => (
   <div className={`kf-card ${className}`}>{title && <h3 className="kf-card-title">{title}</h3>}{children}</div>
 );
-const Field = ({ label, value, onChange, placeholder = '0', hint, suffix }) => (
+const Field = ({ label, value, onChange, placeholder = '0', hint, suffix, error }) => (
   <label className="kf-field">
     <span>{label}</span>
     <span className="kf-input-wrap">
-      <input type="text" inputMode="decimal" value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
+      <input type="text" inputMode="decimal" value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} aria-invalid={error ? true : undefined} />
       {suffix && <em>{suffix}</em>}
     </span>
-    {hint && <small>{hint}</small>}
+    {error ? <small className="kf-err" role="alert">{error}</small> : hint && <small>{hint}</small>}
   </label>
 );
 
@@ -509,8 +508,8 @@ function Tracker({ ventas, set }) {
 
   const add = e => {
     e.preventDefault();
-    const m = num(monto);
-    if (m <= 0) { setErr('Ingresá un monto mayor a 0.'); return; }
+    const { value: m, error } = readMonto(monto);
+    if (error) { setErr(`Revisá el monto: ${error.charAt(0).toLowerCase()}${error.slice(1)}`); return; }
     set('ventas', v => [...v, { id: newId(), prod: prod.trim() || 'Sin nombre', monto: m, medio, ts: Date.now() }]);
     setProd(''); setMonto(''); setErr('');
   };
@@ -527,7 +526,7 @@ function Tracker({ ventas, set }) {
 
   const exportar = () => {
     const rows = [['Fecha', 'Hora', 'Producto', 'Monto', 'Medio de pago']].concat(
-      [...ventas].sort((a, b) => a.ts - b.ts).map(v => [dayKey(v.ts), hora(v.ts), v.prod, Math.round(v.monto), medioLabel[v.medio] || v.medio]));
+      [...ventas].sort((a, b) => a.ts - b.ts).map(v => [dayKey(v.ts), hora(v.ts), v.prod, csvMonto(v.monto), medioLabel[v.medio] || v.medio]));
     const csv = '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -554,7 +553,7 @@ function Tracker({ ventas, set }) {
         <h3 className="kf-card-title">Registrar venta</h3>
         <div className="kf-venta-row">
           <label className="kf-field"><span>Producto</span><input type="text" value={prod} onChange={e => setProd(e.target.value)} placeholder="Ej.: poncho de vicuña" maxLength={80} /></label>
-          <label className="kf-field"><span>Monto</span><span className="kf-input-wrap"><em className="pre">$</em><input type="text" inputMode="decimal" value={monto} onChange={e => setMonto(e.target.value)} placeholder="0" /></span></label>
+          <label className="kf-field"><span>Monto</span><span className="kf-input-wrap"><em className="pre">$</em><input type="text" inputMode="decimal" value={monto} onChange={e => { setMonto(e.target.value); setErr(''); }} placeholder="0" aria-invalid={err ? true : undefined} /></span></label>
           <label className="kf-field"><span>Medio de pago</span><select value={medio} onChange={e => setMedio(e.target.value)}>{MEDIOS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
           <button type="submit" className="kf-btn kf-btn--coral">+ Registrar</button>
         </div>
@@ -595,20 +594,10 @@ function Calculadora({ calc, set }) {
   const setFijo = (k, v) => upd(c => ({ ...c, fijos: { ...c.fijos, [k]: v } }));
   const setProd = (id, f, v) => upd(c => ({ ...c, productos: c.productos.map(p => (p.id === id ? { ...p, [f]: v } : p)) }));
 
-  const fijos = FIJOS.reduce((a, [k]) => a + num(calc.fijos[k]), 0);
-  const cp = num(calc.comision) / 100;
-  const pd = Math.min(100, num(calc.pctDigital)) / 100;
-  const ing = calc.productos.reduce((a, p) => a + num(p.precio) * num(p.unid), 0);
-  const cv = calc.productos.reduce((a, p) => a + num(p.costo) * num(p.unid), 0);
-  const unid = calc.productos.reduce((a, p) => a + num(p.unid), 0);
-  const com = ing * pd * cp;
-  const gan = ing - cv - fijos - com;
-  const margen = ing > 0 ? Math.round((gan / ing) * 100) : 0;
-  // Punto de equilibrio con la mezcla de productos estimada: cuántas unidades cubren los costos fijos.
-  const pProm = unid > 0 ? ing / unid : 0;
-  const mu = unid > 0 ? pProm - cv / unid - pProm * pd * cp : 0;
-  const eq = mu > 0 ? Math.ceil(fijos / mu) : null;
+  // Fórmulas y validaciones en src/kit/calc.js (calcFeria).
+  const { ok, errors, fijos, ing, cv, com, gan, margen, unid, pProm, eq } = calcFeria(calc, FIJOS.map(([k]) => k));
   const show = ing > 0 || fijos > 0;
+  const prodErrors = p => ['costo', 'precio', 'unid'].map(f => errors[`prod.${p.id}.${f}`]).find(Boolean);
 
   let tip = '';
   if (gan < 0) tip = 'Con estos números la feria no cubre los costos. Revisá precios, reducí gastos fijos o pensá cómo vender más unidades.';
@@ -620,11 +609,11 @@ function Calculadora({ calc, set }) {
     <>
       <div className="kf-calc">
         <Card title="Costos fijos del stand">
-          {FIJOS.map(([k, l]) => <Field key={k} label={l} value={calc.fijos[k]} onChange={v => setFijo(k, v)} suffix="$" />)}
+          {FIJOS.map(([k, l]) => <Field key={k} label={l} value={calc.fijos[k]} onChange={v => setFijo(k, v)} suffix="$" error={errors[`fijos.${k}`]} />)}
         </Card>
         <Card title="Cobros">
-          <Field label="Comisión promedio de los cobros digitales" value={calc.comision} onChange={v => upd(c => ({ ...c, comision: v }))} suffix="%" hint="Mezcla de débito y crédito, con IVA. Mirá la sección Cobros." />
-          <Field label="Ventas que esperás cobrar en digital" value={calc.pctDigital} onChange={v => upd(c => ({ ...c, pctDigital: v }))} suffix="%" hint="El resto, en efectivo (sin comisión)." />
+          <Field label="Comisión promedio de los cobros digitales" value={calc.comision} onChange={v => upd(c => ({ ...c, comision: v }))} suffix="%" error={errors.comision} hint="Mezcla de débito y crédito, con IVA. Mirá la sección Cobros." />
+          <Field label="Ventas que esperás cobrar en digital" value={calc.pctDigital} onChange={v => upd(c => ({ ...c, pctDigital: v }))} suffix="%" error={errors.pctDigital} hint="El resto, en efectivo (sin comisión)." />
         </Card>
       </div>
       <Card title="Tus productos" className="kf-prods">
@@ -632,16 +621,17 @@ function Calculadora({ calc, set }) {
         {calc.productos.map(p => (
           <div key={p.id} className="kf-prod">
             <input type="text" aria-label="Producto" placeholder="Nombre" value={p.nombre} onChange={e => setProd(p.id, 'nombre', e.target.value)} />
-            <input type="text" inputMode="decimal" aria-label="Costo por unidad" placeholder="Costo $" value={p.costo} onChange={e => setProd(p.id, 'costo', e.target.value)} />
-            <input type="text" inputMode="decimal" aria-label="Precio de venta" placeholder="Precio $" value={p.precio} onChange={e => setProd(p.id, 'precio', e.target.value)} />
-            <input type="text" inputMode="decimal" aria-label="Unidades que esperás vender" placeholder="Unid." value={p.unid} onChange={e => setProd(p.id, 'unid', e.target.value)} />
+            <input type="text" inputMode="decimal" aria-label="Costo por unidad" aria-invalid={errors[`prod.${p.id}.costo`] ? true : undefined} placeholder="Costo $" value={p.costo} onChange={e => setProd(p.id, 'costo', e.target.value)} />
+            <input type="text" inputMode="decimal" aria-label="Precio de venta" aria-invalid={errors[`prod.${p.id}.precio`] ? true : undefined} placeholder="Precio $" value={p.precio} onChange={e => setProd(p.id, 'precio', e.target.value)} />
+            <input type="text" inputMode="decimal" aria-label="Unidades que esperás vender" aria-invalid={errors[`prod.${p.id}.unid`] ? true : undefined} placeholder="Unid." value={p.unid} onChange={e => setProd(p.id, 'unid', e.target.value)} />
             <button type="button" aria-label="Quitar producto" onClick={() => upd(c => ({ ...c, productos: c.productos.length > 1 ? c.productos.filter(x => x.id !== p.id) : [blankProduct()] }))}>×</button>
+            {prodErrors(p) && <small className="kf-err kf-prod-err" role="alert">{p.nombre ? `${p.nombre}: ` : ''}{prodErrors(p)}</small>}
           </div>
         ))}
         <button type="button" className="kf-btn kf-btn--soft" onClick={() => upd(c => ({ ...c, productos: [...c.productos, blankProduct()] }))}>+ Agregar producto</button>
       </Card>
 
-      {show ? (
+      {!ok ? <p className="kf-empty">Corregí los campos marcados para ver el resultado.</p> : show ? (
         <div className="kf-results">
           <h3>Resultado estimado</h3>
           <div className="kf-res-grid">
@@ -706,20 +696,16 @@ function Roi({ roi, ventas, set, openTab }) {
     const dig = ventas.filter(v => v.medio !== 'efect').reduce((a, v) => a + v.monto, 0);
     set('roi', r => ({ ...r, ef: String(Math.round(ef)), dig: String(Math.round(dig)), dias: String(new Set(ventas.map(v => dayKey(v.ts))).size || 1) }));
   };
-  const ing = num(roi.ef) + num(roi.dig) - num(roi.com);
-  const costo = num(roi.stand) + num(roi.tras) + num(roi.ins) + num(roi.otros);
-  const gan = ing - costo;
-  const dias = Math.max(1, num(roi.dias));
-  const cont = num(roi.cont);
-  const obj = num(roi.obj);
-  const pctRoi = costo > 0 ? Math.round((gan / costo) * 100) : null;
-  const show = ing !== 0 || costo > 0;
+  // Fórmulas y validaciones en src/kit/calc.js (calcRoi).
+  const r = calcRoi(roi);
+  const { errors, ing, costo, gan, cont, seg, pctRoi, pctObj } = r;
+  const show = r.ok && r.show;
 
   let dec = null;
-  if (show && costo === 0) dec = ['maybe', 'Cargá los costos del evento para calcular el ROI.', ''];
-  else if (show && gan > 0 && pctRoi >= 20) dec = ['go', '✓ Feria rentable: vale la pena repetirla', `ROI del ${pctRoi}%: por cada $1 invertido volvieron $${(1 + pctRoi / 100).toFixed(2).replace('.', ',')}.${obj > 0 ? ` Llegaste al ${Math.round((ing / obj) * 100)}% de tu objetivo de ventas.` : ''}${cont ? ` Además, los ${cont} contactos y ${num(roi.seg)} seguidores nuevos son un retorno que no se ve en la caja.` : ''}`];
-  else if (show && gan > 0) dec = ['maybe', '~ Feria positiva pero con margen bajo: optimizá costos', `ROI del ${pctRoi}%. Cubriste los costos y ganaste, pero el margen es ajustado. Para la próxima: bajá gastos fijos o trabajá el ticket promedio.${cont ? ` Cada contacto nuevo te costó ${fmt(costo / cont)}.` : ''}`];
-  else if (show) dec = ['no', '✗ Feria con pérdida: revisá la estrategia antes de repetir', `Perdiste ${fmt(Math.abs(gan))}. Antes de volver, revisá precios, costos del stand y la comunicación previa.${cont ? ` Los ${cont} contactos que conseguiste pueden ser una inversión a largo plazo si les hacés seguimiento.` : ''}`];
+  if (r.decision === 'sinCostos') dec = ['maybe', 'Cargá los costos del evento para calcular el ROI.', ''];
+  else if (r.decision === 'go') dec = ['go', '✓ Feria rentable: vale la pena repetirla', `ROI del ${pctRoi}%: por cada $1 invertido volvieron $${(1 + pctRoi / 100).toFixed(2).replace('.', ',')}.${pctObj != null ? ` Llegaste al ${pctObj}% de tu objetivo de ventas.` : ''}${cont ? ` Además, los ${cont} contactos y ${seg} seguidores nuevos son un retorno que no se ve en la caja.` : ''}`];
+  else if (r.decision === 'maybe') dec = ['maybe', '~ Feria positiva pero con margen bajo: optimizá costos', `ROI del ${pctRoi}%. Cubriste los costos y ganaste, pero el margen es ajustado. Para la próxima: bajá gastos fijos o trabajá el ticket promedio.${r.costoContacto != null ? ` Cada contacto nuevo te costó ${fmt(r.costoContacto)}.` : ''}`];
+  else if (r.decision === 'no') dec = ['no', '✗ Feria con pérdida: revisá la estrategia antes de repetir', `Perdiste ${fmt(Math.abs(gan))}. Antes de volver, revisá precios, costos del stand y la comunicación previa.${cont ? ` Los ${cont} contactos que conseguiste pueden ser una inversión a largo plazo si les hacés seguimiento.` : ''}`];
 
   return (
     <>
@@ -732,23 +718,24 @@ function Roi({ roi, ventas, set, openTab }) {
       {ventas.length === 0 && <p className="kf-muted kf-mb">¿Registraste tus ventas en <button type="button" className="kf-link-inline" onClick={() => openTab('tracker')}>Ventas del día</button>? Desde acá las traés con un clic.</p>}
       <div className="kf-calc kf-calc--3">
         <Card title="Ingresos reales">
-          <Field label="Vendido en efectivo" value={roi.ef} onChange={v => upd('ef', v)} suffix="$" />
-          <Field label="Vendido en digital" value={roi.dig} onChange={v => upd('dig', v)} suffix="$" />
-          <Field label="Comisiones pagadas" value={roi.com} onChange={v => upd('com', v)} suffix="$" hint="Las ves en el resumen de cada billetera." />
+          <Field label="Vendido en efectivo" value={roi.ef} onChange={v => upd('ef', v)} error={errors.ef} suffix="$" />
+          <Field label="Vendido en digital" value={roi.dig} onChange={v => upd('dig', v)} error={errors.dig} suffix="$" />
+          <Field label="Comisiones pagadas" value={roi.com} onChange={v => upd('com', v)} error={errors.com} suffix="$" hint="Las ves en el resumen de cada billetera." />
         </Card>
         <Card title="Costos reales">
-          <Field label="Stand e inscripción" value={roi.stand} onChange={v => upd('stand', v)} suffix="$" />
-          <Field label="Traslado y viáticos" value={roi.tras} onChange={v => upd('tras', v)} suffix="$" />
-          <Field label="Mercadería e insumos" value={roi.ins} onChange={v => upd('ins', v)} suffix="$" />
-          <Field label="Otros costos" value={roi.otros} onChange={v => upd('otros', v)} suffix="$" />
+          <Field label="Stand e inscripción" value={roi.stand} onChange={v => upd('stand', v)} error={errors.stand} suffix="$" />
+          <Field label="Traslado y viáticos" value={roi.tras} onChange={v => upd('tras', v)} error={errors.tras} suffix="$" />
+          <Field label="Mercadería e insumos" hint="El costo de lo que vendiste, no de todo el stock." value={roi.ins} onChange={v => upd('ins', v)} error={errors.ins} suffix="$" />
+          <Field label="Otros costos" value={roi.otros} onChange={v => upd('otros', v)} error={errors.otros} suffix="$" />
         </Card>
         <Card title="Más allá de la caja">
-          <Field label="Contactos nuevos" value={roi.cont} onChange={v => upd('cont', v)} />
-          <Field label="Seguidores nuevos en redes" value={roi.seg} onChange={v => upd('seg', v)} />
-          <Field label="Días de feria" value={roi.dias} onChange={v => upd('dias', v)} placeholder="1" />
-          <Field label="Objetivo de ventas que tenías" value={roi.obj} onChange={v => upd('obj', v)} suffix="$" />
+          <Field label="Contactos nuevos" value={roi.cont} onChange={v => upd('cont', v)} error={errors.cont} />
+          <Field label="Seguidores nuevos en redes" value={roi.seg} onChange={v => upd('seg', v)} error={errors.seg} />
+          <Field label="Días de feria" value={roi.dias} onChange={v => upd('dias', v)} error={errors.dias} placeholder="1" />
+          <Field label="Objetivo de ventas que tenías" value={roi.obj} onChange={v => upd('obj', v)} error={errors.obj} suffix="$" />
         </Card>
       </div>
+      {!r.ok && <p className="kf-empty">Corregí los campos marcados para ver el análisis.</p>}
       {show && (
         <div className="kf-results">
           <h3>Análisis de resultados</h3>
@@ -757,8 +744,8 @@ function Roi({ roi, ventas, set, openTab }) {
             <div><span>Costos totales</span><b className="neg">{fmt(costo)}</b></div>
             <div className="hi"><span>Ganancia real</span><b className={gan < 0 ? 'neg' : 'pos'}>{fmt(gan)}</b></div>
             <div><span>ROI de la feria</span><b>{pctRoi == null ? '—' : pctRoi + '%'}</b></div>
-            <div><span>Venta por día</span><b>{fmt(ing / dias)}</b></div>
-            <div><span>Costo por contacto</span><b>{cont > 0 && costo > 0 ? fmt(costo / cont) : '—'}</b></div>
+            <div><span>Venta por día</span><b>{fmt(r.ventaDia)}</b></div>
+            <div><span>Costo por contacto</span><b>{r.costoContacto != null ? fmt(r.costoContacto) : '—'}</b></div>
           </div>
           <div className={`kf-dec kf-dec--${dec[0]}`}>{dec[1]}</div>
           {dec[2] && <p className="kf-analisis">{dec[2]}</p>}

@@ -217,6 +217,10 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-input-wrap em.pre + input { padding-left: 26px; }
 .kf-venta .kf-btn { height: 42px; min-height: 42px; }
 .kf-err { margin: 8px 0 0; color: var(--st-danger); font-size: 13.5px; }
+/* Campos con un valor que no se puede leer (ver src/kit/calc.js). */
+.kf input[aria-invalid="true"] { border-color: var(--st-danger); }
+.kf-field small.kf-err { margin: 0; font-size: 12.5px; }
+.kf-prod-err { grid-column: 1 / -1; margin: -2px 0 4px; font-size: 12.5px; }
 .kf-ventas { background: #fff; border: 1px solid var(--st-neutral-200); border-radius: 14px; overflow: hidden; }
 .kf-dia { display: flex; justify-content: space-between; padding: 9px 14px; background: var(--st-gris-claro); font-family: var(--font-display); font-size: 13px; color: var(--st-petroleo); border-top: 1px solid var(--st-neutral-200); }
 .kf-ventas > div:first-child .kf-dia, .kf-ventas > p + div .kf-dia { border-top: none; }
