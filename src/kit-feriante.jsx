@@ -16,9 +16,9 @@ import { Footer } from './Footer.jsx';
 import LoginModal from './LoginModal.jsx';
 import { api } from './lib/api.js';
 import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
+import { blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
+import { createKitSync } from './kit/sync.js';
 
-const KEY = 'relab-kit-feriante';
-const RESOURCE = 'kit-feriante';
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
 const CHECKLIST = [
@@ -68,23 +68,7 @@ const FIJOS = [
   ['viaticos', 'Comidas y viáticos'], ['personal', 'Personal de apoyo'], ['otros', 'Otros gastos'],
 ];
 
-const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const blankProduct = () => ({ id: newId(), nombre: '', costo: '', precio: '', unid: '' });
-const blankCalc = () => ({ fijos: {}, productos: [blankProduct()], comision: '3', pctDigital: '70' });
-const blankRoi = () => ({ dias: '1' });
-const normalize = s => ({
-  checks: s?.checks && typeof s.checks === 'object' ? s.checks : {},
-  ventas: Array.isArray(s?.ventas) ? s.ventas.filter(v => v && Number.isFinite(v.monto) && Number.isFinite(v.ts)) : [],
-  calc: { ...blankCalc(), ...(s?.calc || {}), productos: s?.calc?.productos?.length ? s.calc.productos : [blankProduct()] },
-  roi: { ...blankRoi(), ...(s?.roi || {}) },
-});
-const initial = () => {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) return normalize(s); } catch (e) {}
-  return normalize(null);
-};
-const hasData = s => Object.values(s.checks).some(Boolean) || s.ventas.length > 0
-  || Object.values(s.calc.fijos).some(Boolean) || s.calc.productos.some(p => p.nombre || p.costo || p.precio || p.unid)
-  || Object.entries(s.roi).some(([k, v]) => k !== 'dias' && v);
+// Forma del estado y valores en blanco: src/kit/state.js. Guardado y sincronización: src/kit/sync.js.
 
 // Los campos guardan el texto tal cual; los importes se interpretan en formato argentino en src/kit/calc.js.
 const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -168,38 +152,26 @@ const ROSA_CALC = () => ({
 });
 
 function Kit() {
-  const [st, setSt] = useState(initial);
+  // Guardado: estado local con dueño, conciliación con la cuenta y modo sin conexión (src/kit/sync.js).
+  const syncRef = useRef(null);
+  if (!syncRef.current) syncRef.current = createKitSync();
+  const sync = syncRef.current;
+  const [snap, setSnap] = useState(() => sync.snapshot());
+  const st = snap.data;
+  const user = snap.user;
   const [view, setView] = useState(fromHash); // null = Tu kit
   const [menu, setMenu] = useState(false);
-  const [user, setUser] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const saveT = useRef(null);
-  const ready = useRef(false); // no subir nada hasta saber si la cuenta ya tiene datos
-
-  // Sesión de Relab: si la cuenta tiene datos se usan esos; si no, se suben los de este navegador.
-  useEffect(() => {
-    api.me().then(async me => {
-      if (!me.user) return;
-      setUser(me.user);
-      try {
-        const { data } = await api.getState(RESOURCE);
-        if (data) setSt(normalize(data));
-        else if (hasData(initial())) await api.saveState(RESOURCE, initial());
-        setSaved(true);
-      } catch (e) {}
-      ready.current = true;
-    });
-    return () => clearTimeout(saveT.current);
-  }, []);
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
-    if (!user || !ready.current) return;
-    setSaved(false);
-    clearTimeout(saveT.current);
-    saveT.current = setTimeout(() => api.saveState(RESOURCE, st).then(() => setSaved(true)).catch(() => {}), 800);
-  }, [st, user]);
+    const unsub = sync.subscribe(setSnap);
+    sync.start();
+    const onOnline = () => sync.resume();
+    const onVisible = () => { if (document.visibilityState === 'visible') sync.resume(); };
+    window.addEventListener('online', onOnline);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { unsub(); sync.stop(); window.removeEventListener('online', onOnline); document.removeEventListener('visibilitychange', onVisible); };
+  }, [sync]);
 
   // Una herramienta por pantalla según el hash (#calculadora); sin hash, "Tu kit".
   useEffect(() => {
@@ -214,8 +186,12 @@ function Kit() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  const logout = () => { api.logout().catch(() => {}); setUser(null); ready.current = false; };
-  const set = (key, fn) => setSt(s => ({ ...s, [key]: fn(s[key]) }));
+  const logout = () => sync.logout(() => api.logout());
+  const set = (key, fn) => sync.update(s => ({ ...s, [key]: fn(s[key]) }));
+  const firstName = user?.name ? user.name.split(' ')[0] : '';
+  const [statusText, statusCls] = SAVE_STATUS[snap.status] || SAVE_STATUS.cargando;
+  const retry = snap.status === 'error' && <button type="button" onClick={() => sync.syncNow()}>Reintentar</button>;
+  const relogin = snap.status === 'sesion' && <button type="button" onClick={() => setLoginOpen(true)}>Ingresar</button>;
 
   const checksDone = CHECK_IDS.filter(id => st.checks[id]).length;
   const pct = Math.round((checksDone / CHECK_IDS.length) * 100);
@@ -234,8 +210,8 @@ function Kit() {
   const next = SECTIONS[idx + 1];
 
   const saveLine = (
-    <p className={`kf-save${user ? ' ok' : ''}`}>
-      {user ? (saved ? `✓ Guardado en tu cuenta · ${user.name.split(' ')[0]}` : 'Guardando en tu cuenta…')
+    <p className={`kf-save${snap.status === 'guardado' ? ' ok' : ''}`} role="status">
+      {user ? <>{statusText}{snap.status === 'guardado' && firstName ? ` · ${firstName}` : ''} {retry}{relogin}</>
         : <>Lo que cargues queda en este navegador. <button type="button" onClick={() => setLoginOpen(true)}>Ingresá con Google</button> para tenerlo también en el celular.</>}
     </p>
   );
@@ -268,13 +244,14 @@ function Kit() {
           <div className="kf-bar-r">
             <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
-              <span className="kf-user"><span className={`kf-saved${saved ? ' ok' : ''}`}>{saved ? '✓ Guardado' : 'Guardando…'}</span><span>{user.name.split(' ')[0]}</span><button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span>{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
           </div>
         </div>
       </header>
+      <Avisos snap={snap} sync={sync} />
 
       {!sec ? (
         <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} />
@@ -322,10 +299,53 @@ function Kit() {
 
       <div className="kf-wrap"><Cta /></div>
       <Footer />
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={() => api.login()}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={() => { sync.markLoginIntent(); api.login(); }}
         description="Guardá tu checklist, tus ventas y tus cálculos, y retomalos desde cualquier dispositivo. Funciona igual sin cuenta." />
     </div>
   );
+}
+
+// Estado de guardado que se muestra arriba y en la portada.
+const SAVE_STATUS = {
+  cargando: ['Cargando…', ''],
+  local: ['Guardado en este dispositivo', ''],
+  guardando: ['Guardando…', ''],
+  guardado: ['✓ Guardado en tu cuenta', 'ok'],
+  'sin-conexion': ['Sin conexión. Guardado en este dispositivo.', 'warn'],
+  sesion: ['Tu sesión venció. Guardado en este dispositivo.', 'warn'],
+  error: ['No se pudo sincronizar.', 'err'],
+};
+
+function Avisos({ snap, sync }) {
+  const items = [];
+  if (snap.anonPending) {
+    const { ventas, items: marcados } = snap.anonPending;
+    const partes = [ventas && `${ventas} ${ventas === 1 ? 'venta' : 'ventas'}`, marcados && `${marcados} ${marcados === 1 ? 'ítem' : 'ítems'} del checklist`].filter(Boolean).join(' y ');
+    items.push(
+      <div key="anon" className="kf-tip kf-tip--celeste" role="alert">
+        <span>Este dispositivo tiene datos cargados sin cuenta{partes ? ` (${partes})` : ''}. ¿Los sumamos a tu cuenta?</span>
+        <span className="kf-aviso-btns">
+          <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => sync.acceptAnon()}>Sumar a mi cuenta</button>
+          <button type="button" className="kf-btn kf-btn--outline kf-btn--sm" onClick={() => sync.dismissAnon()}>No, dejarlos en este dispositivo</button>
+        </span>
+      </div>,
+    );
+  }
+  if (snap.notice === 'resguardo') {
+    items.push(
+      <div key="res" className="kf-tip" role="status">
+        <span>Tenías cambios sin sincronizar. Quedaron guardados en este dispositivo y se suben solos cuando vuelvas a ingresar con tu cuenta.</span>
+        <span className="kf-aviso-btns"><button type="button" className="kf-btn kf-btn--outline kf-btn--sm" onClick={() => sync.dismissNotice()}>Entendido</button></span>
+      </div>,
+    );
+  }
+  if (snap.notice === 'recuperado') {
+    items.push(<div key="rec" className="kf-tip kf-tip--celeste" role="status"><span>Recuperamos cambios que habían quedado guardados en este dispositivo y los estamos sumando a tu cuenta.</span></div>);
+  }
+  if (snap.status === 'error' && snap.detail === 'limite') {
+    items.push(<div key="lim" className="kf-tip" role="alert"><span>Tus datos superan el límite de la cuenta y no se pudieron sincronizar. Siguen guardados en este dispositivo: descargá tus ventas en CSV como respaldo.</span></div>);
+  }
+  return items.length ? <div className="kf-aviso">{items}</div> : null;
 }
 
 function Home({ status, pct, st, saveLine, open }) {
@@ -504,13 +524,21 @@ function Tracker({ ventas, set }) {
   const [medio, setMedio] = useState('mp');
   const [vista, setVista] = useState('hoy');
   const [err, setErr] = useState('');
+  // Evita duplicar una venta por doble clic o Enter repetido: se ignora la misma venta (producto,
+  // monto y medio) dentro de 2 segundos, y un segundo envío con el formulario ya vacío.
+  const last = useRef({ key: '', at: 0 });
   const hoy = dayKey(Date.now());
 
   const add = e => {
     e.preventDefault();
+    const now = Date.now();
+    if (!monto.trim() && now - last.current.at < 1500) return;
     const { value: m, error } = readMonto(monto);
     if (error) { setErr(`Revisá el monto: ${error.charAt(0).toLowerCase()}${error.slice(1)}`); return; }
-    set('ventas', v => [...v, { id: newId(), prod: prod.trim() || 'Sin nombre', monto: m, medio, ts: Date.now() }]);
+    const key = `${prod.trim()}|${m}|${medio}`;
+    if (key === last.current.key && now - last.current.at < 2000) return;
+    last.current = { key, at: now };
+    set('ventas', v => [...v, { id: newId(), prod: prod.trim() || 'Sin nombre', monto: m, medio, ts: now }]);
     setProd(''); setMonto(''); setErr('');
   };
   const del = id => set('ventas', v => v.filter(x => x.id !== id));
