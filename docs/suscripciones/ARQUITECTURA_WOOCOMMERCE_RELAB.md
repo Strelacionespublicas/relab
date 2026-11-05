@@ -5,6 +5,21 @@
 - ***RELAB gestiona el acceso y el uso;***
 - ***el login es con Google.***
 
+## 0. Fase actual: producto a $0 con código en el email
+**Mientras dure el lanzamiento gratis no hay integración entre WooCommerce y RELAB**, ni cobros.
+1. **WooCommerce:** producto virtual "Kit Feriante PRO · Lanzamiento" a ARS 0.
+   - Campos extra en el checkout: WhatsApp, localidad, rubro y cantidad de ferias.
+   - Casilla de consentimiento sin marcar.
+2. **Email de pedido completado:** incluye el código de la campaña y el link a `relab.strelacionespublicas.com.ar/kit-feriante`.
+   - Se configura con la plantilla de emails de Woo o con un fragmento en el tema `st-rp`, sin plugins pagos.
+   - Los pedidos a $0 se completan solos al ser un producto virtual (⏳ verificar con tu configuración).
+3. **RELAB:** canje del código con sesión de Google (Etapa 2). Los permisos, el cupo y la fecha los controla el servidor.
+4. **El código no identifica a la persona:** es uno por campaña. Si alguien lo comparte, otra persona puede activar PRO igual, sin dejar sus datos en Woo. Es un riesgo aceptable mientras sea gratis, y el cupo lo limita. Si más adelante hace falta, se pasa a códigos individuales generados por pedido; para eso sí hace falta conectar Woo con RELAB.
+
+**Lo que no se toca:** Mercado Pago, PayPal, Payway, GoCuotas y los productos y cursos existentes.
+
+**El resto de este documento** (cobros automáticos, variante H/W) queda como **diseño futuro** para cuando se decida cobrar.
+
 ## 1. Lo que condiciona el diseño (verificado)
 | Hecho | Estado | Consecuencia |
 |---|---|---|

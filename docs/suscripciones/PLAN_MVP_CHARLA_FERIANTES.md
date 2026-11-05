@@ -37,7 +37,7 @@
 1. El problema: "¿Ganaste plata en la última feria?"
 2. Calculadora gratis.
 3. Ventas del día gratis.
-4. Activar el código, todos juntos, con el QR en pantalla.
+4. Registrarse, todos juntos, con el QR en pantalla: lleva al producto de WooCommerce a $0. Cada asistente deja sus datos, recibe el código por email y lo canjea en RELAB.
 5. Cargar un producto en vivo.
 6. Hacer una venta con stock.
 7. ROI.
@@ -101,7 +101,8 @@ Orden de recorte, de lo último a sacar a lo primero:
   - uso en la semana 2 y en la semana 8.
 
   Son números, sin leer contenido.
-- **Antes del día 80 de los 90:** la Etapa 4a lista (es una fecha límite, no una mejora), con la promo anual de 24.900 para quienes canjearon el código. Ese es el momento de mayor conversión.
+- **Fase de lanzamiento gratis:** el código de la charla da PRO hasta la fecha de fin del lanzamiento, no 90 días, así que **no hay reloj de cobro**. Lo que importa es el seguimiento: por email y WhatsApp, a quienes aceptaron recibir novedades, con tus capacitaciones y servicios.
+- *(Si en el futuro se cobra:* tener los cobros listos antes de que venza el acceso, con la promo anual de 24.900 para quienes canjearon el código. Ese es el momento de mayor conversión.
 - **Encuesta corta** a las 2 semanas: qué usaron y qué les falta. Eso ordena la Etapa 5.
 
 ## 7. Pendientes para cerrar este plan

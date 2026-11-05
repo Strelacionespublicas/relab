@@ -53,7 +53,25 @@ La única forma de borrar datos PRO es que la persona use "Borrar mi cuenta", o 
 - **Informes** PDF y Excel, por feria y anuales.
 - **Cierre de caja.**
 
-## 5. Planes y pruebas
+## 5. Fase actual: lanzamiento gratis (decisión de Stella, noviembre de 2026)
+**PRO se da gratis por lanzamiento.** No se cobra por ahora. El objetivo es construir la base de feriantes y usar el Kit como vidriera de los servicios de ST.
+
+| Pieza | Cómo funciona |
+|---|---|
+| **Registro en WooCommerce** | Producto "Kit Feriante PRO · Lanzamiento" a ARS 0. El checkout pide nombre, email, WhatsApp, localidad, rubro y en cuántas ferias participa. |
+| **Consentimiento** | Casilla **sin marcar**: "Quiero recibir novedades, capacitaciones y servicios de ST" (Ley 25.326). Sin la casilla marcada, no se envían comunicaciones comerciales. |
+| **Activación** | El email de confirmación del pedido trae un **código** y el link a RELAB. La persona entra con Google, canjea el código y PRO queda activo hasta la **fecha de fin del lanzamiento**. |
+| **Códigos por campaña** | Lanzamiento, charla, municipio u organizador: cada uno con su cupo y su fecha. Sirve para medir de dónde viene cada persona (solo totales). |
+| **Vidriera de servicios** | Sección discreta "Más ayuda para tu emprendimiento" (capacitaciones, mentorías, campus) y un banner al final del ROI, con links a WooCommerce. **Nunca** pop-ups ni avisos mientras se registra una venta. |
+| **Al terminar el lanzamiento** | PRO pasa a modo lectura, sin borrar nada (sección 2). Se puede renovar, también gratis si así se decide. |
+
+**Qué datos ve Stella:** los de contacto que la persona dejó en WooCommerce. **Nunca** sus ferias, productos, ventas ni stock, que siguen cifrados en RELAB.
+
+**Por qué "gratis por lanzamiento" y no "gratis para siempre":** deja abierta la venta futura, a instituciones (paquetes de capacitación + PRO para sus feriantes) o a personas, sin tener que "quitar" algo que se prometió gratis.
+
+⏳ **Pendiente:** la fecha de fin del lanzamiento (por ejemplo, 6 o 12 meses desde el canje, o una fecha fija).
+
+## 6. Planes pagos (futuros, a definir según la adopción y el interés de instituciones)
 | Plan | Precio | Condiciones |
 |---|---|---|
 | **Gratis** | ARS 0 | Permanente |
@@ -66,12 +84,12 @@ La única forma de borrar datos PRO es que la persona use "Borrar mi cuenta", o 
 **Al vencer una prueba**, PRO pasa solo a modo lectura y la cuenta vuelve a Gratis. **Nunca cobra.**
 **Avisos de vencimiento:** 7 días y 1 día antes, en el panel. Nunca mientras se registra una venta.
 
-## 6. Mi opinión sobre los precios
+## 7. Mi opinión sobre los precios (para cuando se cobre)
 - **El anual a 29.900 es el plan que conviene empujar.** Coincide con el ciclo de temporada de ferias, y además reduce cobros, rechazos y bajas. Ojo: un descuento del 49% hace que el mensual parezca caro. Si querés que el mensual también venda, yo lo bajaría a ARS 3.900, o subiría el anual a 34.900 (alrededor de 40% de descuento).
 - **La promo a 24.900 la limitaría** a quienes canjeen un código en la charla y contraten antes de que termine la prueba de 90 días. Es el mejor gancho para convertir a esas personas.
 - Los precios en ARS se desactualizan rápido. Conviene definir cada cuánto se revisan (⏳) y avisar a quien ya está suscripto antes de cualquier aumento.
 
-## 7. Consecuencias técnicas
+## 8. Consecuencias técnicas
 Ver `ARQUITECTURA_DATOS_KIT_PRO.md`. En resumen:
 - **El estado gratis (`kit-feriante`) no se toca.** PRO tiene tablas propias en D1, cifradas por fila.
 - **Las ventas gratis no se migran.** Se pueden importar a una feria PRO a pedido, y el original queda intacto.

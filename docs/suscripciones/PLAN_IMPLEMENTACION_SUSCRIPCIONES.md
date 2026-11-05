@@ -10,11 +10,12 @@
 | **En paralelo, desde ya** | **Legal y facturación** | Con tu contador o asesoría: botón de baja, botón de arrepentimiento, términos del servicio, privacidad y facturación ARCA de cada cobro. **No dependen del desarrollo y pueden frenar el lanzamiento si quedan para el final.** | — | Vos | — |
 | **2** | **Acceso PRO** | Migración `0004` (permisos, códigos, canjes, auditoría); `requirePro`; `GET /api/pro/me`; prueba de 30 días con botón; canje de códigos de 90 días; **panel de administración mínimo** de códigos; indicador de plan y vencimiento en el Kit; Política de privacidad actualizada | 10–14 h | 1 | **Sí, sola**: no cobra nada y ya permite dar códigos |
 | **3** | **MVP** | Migración `0005`; API `/api/pro/sync`, `/ops` y `/export`; **Mis ferias**, **Mis productos**, **Ventas PRO** y **Stock**; cola sin conexión; modo lectura al vencer; importar ventas gratis a una feria (opcional) | 30–45 h | 2 | Sí, para la charla (con códigos de 90 días) |
-| **4a** | **Comercialización: cobro y acceso** | Migración `0006`; Mercado Pago en sandbox (confirmar los ⏳); checkout; webhook; "Mi suscripción" con cancelar; renovaciones, rechazos, reembolsos; Worker de conciliación; página de producto en Woo con botón a RELAB; compra real de bajo monto | 28–40 h | 2, y lo legal resuelto | Con los cobros **apagados** hasta terminar el sandbox y tu OK. **Fecha límite: antes del día 80 después de la charla.** |
+| **3c** | **Registro en WooCommerce y vidriera de servicios** (fase de lanzamiento gratis) | Producto a $0 con campos extra y consentimiento; email de pedido con el código; sección "Más ayuda para tu emprendimiento" y banner en el ROI | 4–8 h | 2 | Sí, con tu OK para tocar Woo |
+| **4a** | ⏸ **POSTERGADA. Comercialización: cobro y acceso** | Migración `0006`; Mercado Pago en sandbox (confirmar los ⏳); checkout; webhook; "Mi suscripción" con cancelar; renovaciones, rechazos, reembolsos; Worker de conciliación; página de producto en Woo con botón a RELAB; compra real de bajo monto | 28–40 h | 2, y lo legal resuelto | Con los cobros **apagados** hasta terminar el sandbox y tu OK. **Fecha límite: antes del día 80 después de la charla.** |
 | **4b** | **Pedidos en WooCommerce** (opcional) | Alta de un pedido en Woo por cada cobro, por la REST API (variante H). **Solo si la facturación ARCA va a salir desde Woo**; si no, se posterga. | 7–10 h | 4a y la decisión de facturación | Sí, sin afectar los permisos |
 | **5** | **Avanzado** | Calculadora PRO, ROI PRO, estadísticas, informes PDF/Excel, cierre de caja; copia semanal a R2 | 25–40 h | 3 | Por partes |
 
-**Total hasta poder cobrar** (etapas 2, 3 y 4a): **≈ 68–100 h**, más 7–10 h si se hace la 4b. Para la charla alcanza con las etapas 2 y 3: **≈ 40–60 h**, más las pruebas de `PLAN_MVP_CHARLA_FERIANTES.md`.
+**Fase de lanzamiento gratis** (decisión de Stella): **etapas 2, 3 y 3c, ≈ 44–68 h.** Las etapas 4a y 4b (cobros automáticos y pedidos en Woo) quedan **postergadas**, con su diseño listo, hasta que se decida cobrar a personas o a instituciones. Si algún día se cobra, serían ≈ 35–50 h más. Para la charla alcanza con las etapas 2 y 3: **≈ 40–60 h**, más las pruebas de `PLAN_MVP_CHARLA_FERIANTES.md`.
 
 *Las horas son una estimación de esfuerzo, no un presupuesto: dependen de las decisiones pendientes y de lo que se confirme en sandbox.*
 
@@ -46,7 +47,7 @@
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
 | No llegar a la charla con todo el MVP | Alto | MVP reducido definido (ferias, productos y ventas PRO; stock simple) |
-| **Reloj de los 90 días:** los códigos de la charla vencen y todavía no se puede pagar | Alto: se pierde el momento de mayor conversión | La Etapa 4a es una fecha límite (antes del día 80 después de la charla), no una mejora |
+| *(Solo si se cobra)* **Reloj de los 90 días:** los códigos vencen y todavía no se puede pagar | Alto: se pierde el momento de mayor conversión | La Etapa 4a es una fecha límite (antes del día 80 después de la charla), no una mejora |
 | Construir algo que los feriantes no pagarían | Alto | Etapa 1b de validación antes de la Etapa 3 |
 | Lo legal o la facturación sin resolver al momento de cobrar | Alto | Arrancan ya, en paralelo |
 | Error de stock o ventas duplicadas con datos reales | Alto | Ids idempotentes, libro de movimientos, `batch` atómico y pruebas de concurrencia (ver la arquitectura de datos) |
