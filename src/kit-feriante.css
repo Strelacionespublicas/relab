@@ -466,3 +466,17 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-pro-banner .t b { display: block; font-family: var(--font-display); font-size: 17px; }
 .kf-pro-get { height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: var(--st-coral); color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 @media (max-width: 640px) { .kf-user .kf-pro-get { display: none; } }
+
+/* Importar productos */
+.kf-pro-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5; }
+.kf-pro-file { position: relative; overflow: hidden; cursor: pointer; }
+.kf-pro-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.kf-pro-paste { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1.5px solid var(--st-neutral-300); border-radius: 8px; font-family: var(--font-data); font-size: 13px; resize: vertical; }
+.kf-pro-errs { margin: 0; padding-left: 20px; color: var(--st-danger); font-size: 13px; }
+.kf-pro-prev { max-height: 320px; overflow: auto; border: 1px solid var(--st-neutral-200); border-radius: 10px; }
+.kf-pro-prev table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.kf-pro-prev th, .kf-pro-prev td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--st-neutral-200); white-space: nowrap; }
+.kf-pro-prev td:first-child { white-space: normal; }
+.kf-pro-prev small { color: var(--st-neutral-600); }
+.kf-pro-prev th { position: sticky; top: 0; background: #fff; }
+@media (max-width: 640px) { .kf-pro-prev th:nth-child(3), .kf-pro-prev td:nth-child(3) { display: none; } }

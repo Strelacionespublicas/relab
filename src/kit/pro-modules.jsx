@@ -7,6 +7,7 @@ import { ownerOf } from './sync.js';
 import { readField, fmt } from './calc.js';
 import { controlaStock, gastosFeria, resumenFeria, resumenVentas, stockBajo, stockDe, ventaTotales } from './pro-calc.js';
 import { fecha } from './pro.jsx';
+import { keyName, parseDelimited, parseProductRows, planImport, templateCsv } from './pro-import.js';
 
 const hoyKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -207,6 +208,7 @@ function Ferias({ store, data, canEdit }) {
 function Productos({ store, data, canEdit }) {
   const [form, setForm] = useState(null);
   const [err, setErr] = useState('');
+  const [importar, setImportar] = useState(false);
   const cats = [...new Set(data.productos.map(p => p.categoria).filter(Boolean))];
   const nuevo = () => { setErr(''); setForm({ id: store.newId(), nuevo: true, nombre: '', categoria: '', costo: '', precio: '', stockMin: '', variantes: [] }); };
   const editar = p => { setErr(''); setForm({ ...p, nuevo: false, costo: txt(p.costo), precio: txt(p.precio), stockMin: txt(p.stockMin), variantes: p.variantes || [] }); };
@@ -252,10 +254,16 @@ function Productos({ store, data, canEdit }) {
       </form>
     );
   }
+  if (importar) return <Importar store={store} data={data} onClose={() => setImportar(false)} />;
   return (
     <>
-      {canEdit && <button type="button" className="kf-btn kf-btn--coral kf-btn--sm kf-pro-new" onClick={nuevo}>+ Nuevo producto</button>}
-      {!data.productos.length && <p className="kf-empty">Cargá tus productos una vez y después vendés con un toque, con el precio y el stock al día.</p>}
+      {canEdit && (
+        <div className="kf-pro-btns kf-pro-new">
+          <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={nuevo}>+ Nuevo producto</button>
+          <button type="button" className="kf-btn kf-btn--outline kf-btn--sm" onClick={() => setImportar(true)}>Importar desde Excel</button>
+        </div>
+      )}
+      {!data.productos.length && <p className="kf-empty">Cargá tus productos una vez y después vendés con un toque, con el precio y el stock al día. Si ya los tenés en una planilla, usá <b>Importar desde Excel</b>.</p>}
       <div className="kf-pro-list">
         {data.productos.map(p => {
           const margen = p.precio ? ((p.precio - (p.costo || 0)) / p.precio) * 100 : 0;
@@ -274,6 +282,113 @@ function Productos({ store, data, canEdit }) {
       </div>
       <Papelera store={store} kind="producto" canEdit={canEdit} label={p => p.nombre} />
     </>
+  );
+}
+
+// ---- Importar productos desde Excel / CSV / filas pegadas ----
+function Importar({ store, data, onClose }) {
+  const [res, setRes] = useState(null); // { items, errors, missing }
+  const [pegado, setPegado] = useState('');
+  const [leyendo, setLeyendo] = useState(false);
+  const [fileErr, setFileErr] = useState('');
+  const [hecho, setHecho] = useState(null);
+  const plan = res ? planImport(res.items, data.productos) : [];
+  const nuevos = plan.filter(x => !x.existente).length;
+
+  const leerArchivo = async file => {
+    setFileErr(''); setRes(null); setLeyendo(true);
+    try {
+      let rows;
+      if (/\.(xlsx|xlsm)$/i.test(file.name)) {
+        const { readSheet } = await import('read-excel-file/browser'); // se carga solo cuando hace falta
+        rows = await readSheet(file);
+      } else if (/\.(csv|txt|tsv)$/i.test(file.name)) {
+        rows = parseDelimited(await file.text());
+      } else {
+        throw new Error('formato');
+      }
+      setRes(parseProductRows(rows.map(r => r.map(c => (c == null ? '' : c)))));
+    } catch (e) {
+      setFileErr(e?.message === 'formato' ? 'Subí un archivo de Excel (.xlsx) o CSV. Si tenés un .xls viejo, abrilo y guardalo como .xlsx.' : 'No pudimos leer el archivo. Probá guardarlo de nuevo como .xlsx, o copiá las filas y pegalas abajo.');
+    }
+    setLeyendo(false);
+  };
+
+  const confirmar = () => {
+    const ctx = { movimientos: data.movimientos, ventas: data.ventas };
+    let creados = 0; let actualizados = 0; let conStock = 0;
+    for (const it of plan) {
+      const prev = it.existente;
+      const id = prev ? prev.id : store.newId();
+      const prevVars = prev?.variantes || [];
+      const variantes = it.variantes.length
+        ? it.variantes.map(n => prevVars.find(v => keyName(v.nombre) === keyName(n)) || { id: uid(), nombre: n })
+        : prevVars;
+      const { id: _i, deletedAt: _d, ...base } = prev || {};
+      store.save('producto', id, { ...base, nombre: it.nombre, categoria: it.categoria || base.categoria || '', costo: it.costo || base.costo || 0, precio: it.precio, stockMin: it.stockMin ?? base.stockMin ?? null, variantes });
+      if (prev) actualizados++; else creados++;
+      if (it.stock != null && !variantes.length) {
+        const control = data.movimientos.some(m => m.productoId === id && (m.varianteId ?? null) === null);
+        const cant = control ? it.stock - stockDe(id, null, ctx) : it.stock;
+        if (cant || !control) {
+          store.save('stock', store.newId(), { ts: Date.now(), productoId: id, varianteId: null, tipo: control ? 'ajuste' : 'inicial', cant: Math.round(cant), nota: 'Importado desde planilla' });
+          conStock++;
+        }
+      }
+    }
+    setHecho({ creados, actualizados, conStock });
+  };
+
+  const descargarPlantilla = () => download('plantilla-productos-kit-feriante.csv', templateCsv(), 'text/csv;charset=utf-8');
+
+  if (hecho) {
+    return (
+      <div className="kf-card kf-pro-form">
+        <h3 className="kf-card-title">Listo</h3>
+        <p className="kf-pro-ok">{hecho.creados ? `${hecho.creados} productos nuevos` : ''}{hecho.creados && hecho.actualizados ? ' y ' : ''}{hecho.actualizados ? `${hecho.actualizados} actualizados` : ''}{hecho.conStock ? `, con stock en ${hecho.conStock}` : ''}.</p>
+        <div className="kf-modal-act"><button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={onClose}>Ver mis productos</button></div>
+      </div>
+    );
+  }
+  return (
+    <div className="kf-card kf-pro-form">
+      <h3 className="kf-card-title">Importar productos desde Excel</h3>
+      <ol className="kf-pro-steps">
+        <li>Descargá la plantilla y completala, o usá tu propia planilla con las columnas <b>Nombre</b> y <b>Precio</b>. También podés sumar Categoría, Costo, Stock, Aviso de stock y Variantes (separadas por coma).</li>
+        <li>Subí el archivo, o copiá las filas desde Excel o Google Sheets (con el encabezado) y pegalas abajo.</li>
+        <li>Revisá la vista previa y confirmá. Si un producto ya existe con el mismo nombre, se actualiza: no se duplica.</li>
+      </ol>
+      <div className="kf-pro-btns">
+        <button type="button" className="kf-btn kf-btn--soft kf-btn--sm" onClick={descargarPlantilla}>Descargar plantilla</button>
+        <label className="kf-btn kf-btn--outline kf-btn--sm kf-pro-file">Subir archivo (.xlsx o .csv)<input type="file" accept=".xlsx,.xlsm,.csv,.txt,.tsv" onChange={e => e.target.files[0] && leerArchivo(e.target.files[0])} /></label>
+      </div>
+      <label className="kf-field"><span>O pegá acá las filas</span>
+        <textarea className="kf-pro-paste" rows={4} value={pegado} placeholder={'Nombre\tPrecio\tStock\nPoncho\t95000\t8'} onChange={e => { setPegado(e.target.value); setFileErr(''); setRes(e.target.value.trim() ? parseProductRows(parseDelimited(e.target.value)) : null); }} />
+      </label>
+      {leyendo && <p>Leyendo el archivo…</p>}
+      {fileErr && <p className="kf-err" role="alert">{fileErr}</p>}
+      {res?.missing?.length > 0 && <p className="kf-err" role="alert">Falta la columna {res.missing.join(' y ')} en la primera fila (el encabezado).</p>}
+      {res && !res.missing.length && (
+        <>
+          <p className="kf-pro-sub">Vista previa: {nuevos} {nuevos === 1 ? 'producto nuevo' : 'productos nuevos'}, {plan.length - nuevos} {plan.length - nuevos === 1 ? 'se actualiza' : 'se actualizan'}{res.errors.length ? `, ${res.errors.length} con errores (no se importan)` : ''}</p>
+          {res.errors.length > 0 && <ul className="kf-pro-errs">{res.errors.slice(0, 20).map(e => <li key={e.fila}>Fila {e.fila}: {e.msg}</li>)}</ul>}
+          {plan.length > 0 && (
+            <div className="kf-pro-prev">
+              <table>
+                <thead><tr><th>Producto</th><th>Precio</th><th>Costo</th><th>Stock</th><th /></tr></thead>
+                <tbody>{plan.slice(0, 200).map(x => (
+                  <tr key={x.fila}><td>{x.nombre}{x.variantes.length ? <small> · {x.variantes.join(', ')}</small> : ''}</td><td>{fmt(x.precio)}</td><td>{x.costo ? fmt(x.costo) : '—'}</td><td>{x.stock ?? '—'}</td><td>{x.existente ? <span className="kf-pro-tag soft">actualiza</span> : <span className="kf-pro-tag">nuevo</span>}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+      <div className="kf-modal-act">
+        <button type="button" className="kf-btn kf-btn--soft kf-btn--sm" onClick={onClose}>Cancelar</button>
+        <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" disabled={!plan.length} onClick={confirmar}>Importar {plan.length || ''} {plan.length === 1 ? 'producto' : 'productos'}</button>
+      </div>
+    </div>
   );
 }
 
