@@ -7,8 +7,8 @@ export async function onRequestDelete(context) {
   const { DB } = context.env;
   // resource_state puede no existir si la migración 0003 todavía no se aplicó.
   await DB.prepare('DELETE FROM resource_state WHERE user_id = ?').bind(user.id).run().catch(() => {});
-  // Permisos, canjes y datos PRO (migraciones 0004 y 0005; pueden no existir todavía). Los usos del código no se descuentan.
-  for (const t of ['entitlements', 'redemptions', 'pro_rows']) {
+  // Permisos, canjes y datos PRO y registro (migraciones 0004 a 0006; pueden no existir todavía). Los usos del código no se descuentan.
+  for (const t of ['entitlements', 'redemptions', 'pro_rows', 'pro_registros']) {
     await DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(user.id).run().catch(() => {});
   }
   await DB.batch(['drafts', 'tag_sets', 'sessions'].map(t => DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(user.id))

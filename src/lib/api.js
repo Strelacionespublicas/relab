@@ -41,6 +41,8 @@ export const api = {
   // Acceso PRO (códigos de campaña) y panel de administración.
   proMe: () => call('GET', '/pro/me').catch(() => ({ pro: false })),
   proRedeem: code => ask('POST', '/pro/redeem', { code }),
+  proJoin: data => ask('POST', '/pro/join', data),
+  adminRegistros: () => ask('GET', '/admin/registros'),
   adminCodes: () => ask('GET', '/admin/codes'),
   adminCreateCode: data => ask('POST', '/admin/codes', data),
   adminSetCode: (id, active) => ask('POST', `/admin/codes/${encodeURIComponent(id)}`, { active }),

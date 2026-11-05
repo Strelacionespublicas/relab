@@ -28,6 +28,7 @@ function Admin() {
   const [nuevo, setNuevo] = useState(null);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [reg, setReg] = useState(null);
 
   const load = async () => {
     const r = await api.adminCodes();
@@ -36,6 +37,8 @@ function Admin() {
     if (r.status !== 200) return setState('error');
     setCodes(r.body.codes);
     setState('ok');
+    const g = await api.adminRegistros();
+    if (g.status === 200) setReg(g.body);
   };
   useEffect(() => { load(); }, []);
 
@@ -68,7 +71,7 @@ function Admin() {
       <main className="kf-wrap" style={{ paddingTop: 24, paddingBottom: 48, display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
           <p className="kf-kicker">Kit Feriante PRO</p>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', color: 'var(--st-petroleo)' }}>Códigos de acceso</h1>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', color: 'var(--st-petroleo)' }}>Registros y códigos</h1>
         </div>
 
         {state === 'cargando' && <p>Cargando…</p>}
@@ -92,6 +95,27 @@ function Admin() {
                 </div>
               </div>
             )}
+
+            <div className="kf-card">
+              <h3 className="kf-card-title">Registros desde /pro (lanzamiento gratis)</h3>
+              {!reg ? <p>Todavía no hay datos (o falta la migración 0006).</p> : (
+                <>
+                  <div className="kf-pro-nums" style={{ fontSize: 15 }}>
+                    <span>Registradas <b>{reg.total}</b></span>
+                    <span>Aceptaron novedades <b>{reg.acepta}</b></span>
+                    <span>Cuentas PRO con productos <b>{reg.conProductos}</b></span>
+                    <span>Cuentas PRO con ventas <b>{reg.conVentas}</b></span>
+                  </div>
+                  {reg.campanas.length > 0 && <p style={{ fontSize: 14 }}>Por campaña: {reg.campanas.map(c => `${c.campana} (${c.n})`).join(' · ')}</p>}
+                  {reg.rubros.length > 0 && <p style={{ fontSize: 14 }}>Rubros: {reg.rubros.map(c => `${c.rubro} (${c.n})`).join(' · ')}</p>}
+                  <div className="kf-modal-act" style={{ justifyContent: 'flex-start' }}>
+                    {reg.acepta > 0 && <a className="kf-btn kf-btn--coral kf-btn--sm" href="/api/admin/registros?formato=csv">Descargar contactos (Excel / CSV)</a>}
+                    <button type="button" className="kf-btn kf-btn--soft kf-btn--sm" onClick={() => copy(`${location.origin}/pro/?campana=`, setMsg)}>Copiar link de la landing</button>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>La descarga incluye solo a quienes aceptaron recibir novedades. Para saber de dónde vino cada persona, agregá el nombre de la campaña al final del link, por ejemplo <b>/pro/?campana=charla-nov</b>.</p>
+                </>
+              )}
+            </div>
 
             <form className="kf-card" onSubmit={crear} style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', alignItems: 'end' }}>
               <h3 className="kf-card-title" style={{ gridColumn: '1 / -1' }}>Nuevo código</h3>

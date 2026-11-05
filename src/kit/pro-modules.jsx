@@ -78,8 +78,9 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
     return (
       <div className="kf-card kf-pro-gate">
         <h3 className="kf-card-title">Activá Kit Feriante PRO</h3>
-        <p>Organizá tus ferias, tu catálogo, tus ventas con stock y tus resultados. Si recibiste un código en una capacitación o por mail, activalo acá.</p>
-        <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={access.openModal}>Tengo un código</button>
+        <p>Organizá tus ferias, tu catálogo, tus ventas con stock y tus resultados. Gratis por 12 meses durante el lanzamiento.</p>
+        <a className="kf-btn kf-btn--coral kf-btn--sm" href="/pro/">Activar PRO gratis</a>
+        <button type="button" className="kf-link" onClick={access.openModal}>Tengo un código</button>
       </div>
     );
   }
@@ -89,7 +90,7 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
     <>
       {!canEdit && (
         <div className="kf-tip kf-tip--celeste kf-pro-ro" role="status">
-          <span><strong>Modo lectura.</strong> Tu PRO no está activo: tus datos están guardados y podés verlos y exportarlos. Para seguir cargando, activá un código.</span>
+          <span><strong>Modo lectura.</strong> Tu PRO no está activo: tus datos están guardados y podés verlos y exportarlos. Para seguir cargando, volvé a activar PRO.</span>
           <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={access.openModal}>Tengo un código</button>
         </div>
       )}
