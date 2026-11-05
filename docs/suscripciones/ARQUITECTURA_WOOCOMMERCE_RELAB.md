@@ -1,165 +1,123 @@
 # Arquitectura · Suscripciones de Kit Feriante PRO (WooCommerce + RELAB + Mercado Pago)
 
-*Propuesta para aprobar. No hay nada implementado. Recomendación: **alternativa D** de la comparativa, con las suscripciones en la API oficial de Mercado Pago, controladas desde RELAB, y WooCommerce como vidriera. Al final hay un anexo con la variante centrada en WooCommerce, por si la preferís.*
+*Versión 2. Es una propuesta para aprobar: no hay nada implementado, instalado ni cobrado. Criterio de Stella:*
+- ***WooCommerce es el sistema comercial;***
+- ***RELAB gestiona el acceso y el uso;***
+- ***el login es con Google.***
 
-## 1. Reparto de responsabilidades
-Tu pedido original ponía las suscripciones en WooCommerce. Lo cambio por un motivo verificado: **Mercado Pago no soporta WooCommerce Subscriptions con su plugin oficial**, y las otras pasarelas no cobran ARS en forma recurrente (ver la auditoría). Así queda:
+## 1. Lo que condiciona el diseño (verificado)
+| Hecho | Estado | Consecuencia |
+|---|---|---|
+| El plugin oficial de Mercado Pago **no funciona con WooCommerce Subscriptions** | ✅ [Ayuda MP 36053](https://www.mercadopago.com.ar/ayuda/36053) | Con los plugins actuales, WooCommerce **no puede** renovar solo en ARS |
+| El plugin oficial de MP no tiene suscripciones propias | ✅ Foro oficial y reseña de 2025 | Lo mismo |
+| **Payway:** débito automático por archivos TXT por lotes | ✅ | No es un cobro automático por API: requiere operación mensual |
+| **GoCuotas:** cuotas de una compra, no suscripción | 🟡 | Sirve solo para un plan anual pagado de una vez, sin renovación |
+| **La API de Suscripciones de Mercado Pago** cobra sola en ARS, con webhooks firmados y cancelación por API | ✅ | Es la única vía oficial para la renovación automática |
 
+**Extensiones posibles**, si se quisiera que WooCommerce cobre la renovación (sin instalar nada):
+- **WooCommerce Subscriptions**: ✅ USD 279/año. Necesita una pasarela compatible, que hoy no existe en forma oficial para MP.
+- **Cujiware MercadoPago Tools Pro** (pago, de terceros): dice ser compatible con WCS. 🟡 Sin verificar.
+- **Inobarix Recurring Payments for Mercado Pago** (gratis, de terceros): usa la API de suscripciones de MP. 🟡 Joven, y sin documentación sobre cancelaciones.
+- **YITH Subscription**: renovación automática solo con Stripe o PayPal. ❌ Descartada para ARS.
+
+## 2. Dos variantes que respetan "WooCommerce = sistema comercial"
+| | **H. Híbrida (recomendada)** | **W. Todo en WooCommerce** |
+|---|---|---|
+| Página de producto, precios y condiciones | WooCommerce | WooCommerce |
+| Clientes y pedidos (registro comercial, facturación, "Mis pedidos") | **WooCommerce**: RELAB crea un pedido en Woo por cada cobro aprobado, por la REST API | WooCommerce |
+| Quién cobra la renovación | Mercado Pago Suscripciones (API oficial), iniciada desde RELAB | WCS + un plugin de terceros |
+| Plugins nuevos | **Ninguno** | WCS (USD 279/año) + Cujiware o Inobarix |
+| Permiso PRO | RELAB, con aviso directo de MP | RELAB, con aviso de Woo (puente firmado) |
+| Puntos de falla en el camino del dinero | MP → RELAB | MP → plugin de terceros → WCS → puente → RELAB |
+| Riesgo | Medio: es código propio, con pruebas y sandbox | Alto: una actualización de un plugin no oficial puede cortar renovaciones |
+
+**Recomiendo H.** WooCommerce sigue siendo el sistema comercial (vidriera, clientes, pedidos, contabilidad), sin poner un plugin no oficial en el medio del cobro. **W** queda como alternativa si en la auditoría de WordPress aparece algo que la haga viable: por ejemplo, que Cujiware esté probado con WCS en tu versión.
+
+**El código de RELAB no depende de la variante.** Los permisos se calculan igual y solo cambia de dónde viene el aviso: `billing_source` = `mercadopago` o `woocommerce`.
+
+## 3. Reparto de responsabilidades (variante H)
 | Pieza | Hace | No hace |
 |---|---|---|
-| **WooCommerce** (strelacionespublicas.com.ar) | Vidriera: la página de producto "Kit Feriante PRO" con planes, precios y condiciones, y botones que llevan a RELAB. Sigue vendiendo cursos y productos únicos como hoy. | No cobra la suscripción ni guarda su estado |
-| **Mercado Pago (Suscripciones)** | Planes mensual, anual y anual promocional (`preapproval_plan`); autorización y cobros automáticos; reintentos de cobro; cancelación; avisos por webhook | No decide quién tiene PRO |
-| **RELAB** (Cloudflare Pages + Functions + D1) | Login con Google; pruebas gratis de 30 y 90 días; **permisos PRO**; panel "Mi suscripción" (estado, próximo cobro, cancelar, cambiar plan); recibe y verifica los webhooks; conciliación periódica | No guarda tarjetas ni datos de pago |
-| **Worker con Cron** (Cloudflare) | Conciliación diaria con Mercado Pago y vencimiento de pruebas | — |
+| **WooCommerce** | Página "Kit Feriante PRO"; registra **clientes y pedidos** (uno por cobro, con número de suscripción); base para la facturación; enlace "Gestionar mi suscripción" en Mi cuenta | No cobra la renovación ni decide quién tiene PRO |
+| **Mercado Pago** | Planes mensual, anual y promocional (`preapproval_plan`); primer cobro y renovaciones; reintentos; avisos firmados | No sabe de cuentas RELAB, salvo el `external_reference` |
+| **RELAB** | Login con Google; pruebas de 30 y 90 días; **permisos**; checkout; webhook; "Mi suscripción" (estado, próximo cobro, **cancelar**); panel de administración de códigos; alta de pedidos en Woo | No guarda tarjetas ni datos de pago |
+| **Worker con Cron** | Conciliación diaria con MP y con Woo; vencimiento de pruebas; reintento de pedidos Woo pendientes | — |
 
-**La misma pieza sirve para otros productos de RELAB:** cada uno tiene su id (`kit-feriante-pro`, …) y sus planes.
-
-## 2. Diagrama de integración
+## 4. Diagrama (variante H)
 ```
-  strelacionespublicas.com.ar (WooCommerce)          relab.strelacionespublicas.com.ar (RELAB)
-  ┌──────────────────────────────┐                   ┌──────────────────────────────────────────┐
-  │ Página "Kit Feriante PRO"     │──── botón ───────▶│ /pro  (elige plan; login con Google)      │
-  │ (planes, precios, condiciones)│                   │   POST /api/billing/checkout ─┐           │
-  └──────────────────────────────┘                   │                               │           │
-                                                     │   D1: users · entitlements ·   │           │
-                                                     │       subscriptions · events · │           │
-                                                     │       trial_codes · redemptions│           │
-                                                     │   POST /api/billing/webhook ◀──┼──┐        │
-                                                     │   GET  /api/billing/me         │  │        │
-                                                     │   POST /api/billing/cancel ────┼──┼──┐     │
-                                                     └───────────────────────────────┼──┼──┼─────┘
-                                                                                     │  │  │
-                                     crea preapproval (external_reference) ──────────▼  │  │
-                                   ┌─────────────────────────────────────────────────────┴──┴──┐
-                                   │ Mercado Pago · API Suscripciones (preapproval / plan)      │
-                                   │ checkout de la suscripción · cobros recurrentes · webhooks │
-                                   └────────────────────────────────────────────────────────────┘
-       Cron diario (Worker) ── GET /preapproval/search · /authorized_payments ──▶ concilia D1
+ WooCommerce (strelacionespublicas.com.ar)            RELAB (relab.strelacionespublicas.com.ar)
+ ┌────────────────────────────────┐                   ┌─────────────────────────────────────────┐
+ │ Página "Kit Feriante PRO"       │── "Contratar" ───▶│ /pro  · login con Google · elige plan    │
+ │ Mi cuenta → Mis pedidos         │                   │ POST /api/billing/checkout ──┐           │
+ │ Pedidos (uno por cobro) ◀───────┼── REST API ───────│ D1: entitlements · subscriptions ·      │
+ └────────────────────────────────┘   (clave propia)   │     checkouts · billing_events ·        │
+                                                      │     trial_codes · redemptions           │
+                                                      │ POST /api/billing/webhook ◀──┐           │
+                                                      │ POST /api/billing/cancel ────┼──┐        │
+                                                      └──────────────────────────────┼──┼───────┘
+                         crea preapproval (external_reference = checkout) ───────────▼  │
+                      ┌──────────────────────────────────────────────────────────────┴──┴──┐
+                      │ Mercado Pago · Suscripciones: cobros recurrentes · webhooks firmados │
+                      └─────────────────────────────────────────────────────────────────────┘
+          Cron diario (Worker): concilia MP ↔ D1 ↔ pedidos de Woo, y vence pruebas
 ```
 
-## 3. Modelo de datos (RELAB, D1)
-Tablas nuevas, con una **migración aditiva** que solo crea tablas: no toca ni borra nada. Se aplica recién con tu aprobación.
-| Tabla | Campos principales | Para qué |
+## 5. Vinculación segura de cuentas
+1. **La contratación empieza siempre en RELAB, con sesión de Google.** El botón de WooCommerce lleva a `/pro`, y si no hay sesión, pide el login primero.
+2. RELAB crea un **checkout** con un id aleatorio, **de un solo uso, con vencimiento** (2 h) y atado al `user_id` de la sesión del servidor.
+3. Ese id viaja como `external_reference` a Mercado Pago y vuelve en cada aviso. Así se sabe **qué cuenta RELAB** contrató, aunque el pagador use otro email.
+4. **Nunca se activa PRO por coincidencia de email,** ni por la vuelta del navegador.
+5. **Cliente de WooCommerce:** RELAB crea o reutiliza el cliente en Woo con el email de Google de la cuenta RELAB. Es solo un registro comercial, no un permiso, y guarda el `relab_user_id` como metadato.
+6. **Si llega un pago con referencia desconocida o ya usada**, queda "huérfano" en `billing_events` y no activa nada.
+
+*Variante W:* el id del checkout viaja en el link al carrito de Woo y se guarda en el pedido. El webhook de Woo, firmado con `X-WC-Webhook-Signature`, lo devuelve, y RELAB confirma el estado por la REST API.
+
+## 6. Activación, renovación, cancelación y reembolso
+| Evento | Cómo se entera RELAB | Qué hace |
 |---|---|---|
-| `entitlements` | `user_id`, `product`, `source` (`trial`, `trial_code`, `subscription`), `starts_at`, `ends_at`, `status` | **La única fuente de "¿tiene PRO?"**: PRO = existe un permiso vigente (`now` entre `starts_at` y `ends_at`, y `status` activo) |
-| `subscriptions` | `id`, `user_id`, `product`, `plan`, `mp_preapproval_id` (único), `status` (`pending`, `authorized`, `paused`, `cancelled`), `next_payment_date`, `current_period_end`, `cancel_at_period_end`, `updated_at` | Espejo de lo que dice Mercado Pago, con lo mínimo necesario |
-| `checkouts` | `id` (aleatorio), `user_id`, `product`, `plan`, `created_at`, `expires_at`, `used_at` | **Vincula la compra con la cuenta RELAB** (ver sección 5) |
-| `billing_events` | `id` (de MP o derivado), `topic`, `resource_id`, `received_at`, `processed_at`, `result` | **Idempotencia y registro**: cada evento se procesa una sola vez |
-| `trial_codes` | `code_hash`, `product`, `days` (ej. 90), `redeem_until`, `max_uses`, `uses`, `label` | Códigos para capacitaciones |
-| `redemptions` | `user_id`, `product`, `kind` (`general`, `code`), `code_hash`, `at` | Una prueba general por persona y producto; los canjes de código, con su límite |
+| **Primer pago aprobado** | Webhook `subscription_preapproval` / `subscription_authorized_payment`. Se verifica la firma y **se consulta la API de MP** (nunca se confía en el contenido del aviso). | Comprueba checkout, plan y monto → crea `subscription` → **permiso PRO hasta el fin del período** → crea el pedido en Woo (estado completado, con el id de pago de MP) |
+| **Renovación aprobada** | `subscription_authorized_payment`, verificado | Extiende `ends_at` desde la fecha del pago (no "sumando 30 días") → nuevo pedido en Woo |
+| **Renovación rechazada** | Aviso y Cron | PRO sigue hasta `ends_at` más una gracia de 3 días (configurable). Aviso "actualizá tu medio de pago". Si no se cobra, pasa a modo lectura. |
+| **Cancelación del cliente** | Botón **Cancelar** en RELAB → `PUT /preapproval/{id}` `status: canceled`. También si cancela desde su cuenta de MP (llega el aviso). | **Sin cobros nuevos desde ese momento.** PRO hasta el fin del período pagado; después, modo lectura. Nota en el último pedido de Woo. |
+| **Reembolso o contracargo** | Aviso de MP verificado (el reembolso lo hacés desde MP) | Termina el permiso en el momento → pedido Woo "Reembolsado" |
+| **Cambio de plan** | Desde "Mi suscripción" | Se cancela el actual al fin del período y el nuevo arranca después: sin cobros dobles |
 
-**Lo que no se guarda:** ningún dato de tarjeta. Tampoco el email del pagador de Mercado Pago, salvo que haga falta para soporte (⏳ decidir). El vínculo con MP es el `preapproval_id`.
+**La vuelta del navegador** (`/pro/gracias`) **no activa nada**: muestra "Confirmando tu pago…" y consulta el estado hasta verlo activo.
 
-## 4. Flujo de compra
-1. La persona entra a **RELAB → Kit Feriante PRO** y, si no lo hizo, inicia sesión con Google. Puede llegar desde la página de WooCommerce o desde el kit.
-2. Elige un plan: mensual, anual, o anual promocional si tiene el código de la capacitación.
-3. RELAB (`POST /api/billing/checkout`) crea un `checkout` con un id aleatorio y crea la suscripción en Mercado Pago:
-   - con `preapproval_plan_id` del plan;
-   - con `external_reference` = id del checkout;
-   - con `back_url` = `/pro/gracias`.
+**Si falla el alta del pedido en Woo**, el permiso PRO **no se demora**. El pedido queda pendiente y el Cron lo reintenta.
 
-   Después redirige al checkout de Mercado Pago (`init_point`).
-4. En Mercado Pago, la persona autoriza la suscripción y se hace el **primer cobro**. ⏳ Hay que confirmar en sandbox si exige cuenta de MP.
-5. Mercado Pago avisa por **webhook** (`subscription_preapproval` y `subscription_authorized_payment`).
-6. RELAB **verifica la firma**, **consulta el recurso a la API** de MP (nunca confía en el contenido del aviso) y comprueba que:
-   - el `external_reference` corresponde a un checkout válido y no usado;
-   - el plan y el monto coinciden.
+## 7. Permisos en el servidor
+- `GET /api/pro/me` → `{ pro, plan, source, ends_at, next_payment_date, cancel_at_period_end, readOnly }`.
+- **Cada escritura PRO** pasa por `requirePro(user)` en el servidor. Si no hay PRO, responde 403 `pro_required` y no escribe nada.
+- **La lectura y la exportación de los datos propios no requieren PRO**: ver la conservación de datos en `MODELO_FREEMIUM_KIT_PRO.md`.
+- Las herramientas gratis no pasan por este control.
 
-   Si todo coincide, crea o actualiza `subscriptions` y el **permiso PRO** hasta el fin del período pagado.
-7. **La vuelta del navegador** (`/pro/gracias`) **no activa nada**: muestra "Confirmando tu pago…" y consulta `/api/billing/me` cada pocos segundos hasta ver PRO activo, o avisa que puede tardar.
+## 8. Panel de administración mínimo
+- **Acceso:** solo los emails de la variable `ADMIN_EMAILS` de Cloudflare, comprobados contra la sesión del servidor.
+- **Qué hace:**
+  - crear códigos de prueba (días, fecha límite de canje, cupo, etiqueta como "Charla feriantes nov");
+  - desactivar códigos;
+  - ver usos (cantidad, sin nombres).
+- **Más adelante:** configurar los días de la prueba general, ver suscripciones (estado y fechas, sin contenido) y resolver huérfanos.
+- **Lo que nunca muestra:** ferias, productos, ventas ni ningún contenido de las personas.
+- Cada acción queda en `admin_audit`.
 
-## 5. Vinculación de cuentas (sin depender del email)
-- La compra **empieza siempre dentro de RELAB, con sesión iniciada.** El id de usuario sale de la sesión del servidor, no de un parámetro.
-- Cada checkout tiene un id **aleatorio, de un solo uso y con vencimiento** (por ejemplo, 2 horas). Viaja como `external_reference` a Mercado Pago y vuelve en la suscripción. Así se sabe **qué cuenta RELAB** inició la compra, aunque el pagador use otro email en Mercado Pago.
-- **Nunca** se activa PRO por coincidencia de email.
-- Si llegara un pago con un `external_reference` desconocido o ya usado, se registra en `billing_events` como "huérfano" y no se activa nada. Lo resolvés desde el panel de soporte.
-
-## 6. Flujo de renovación
-1. Mercado Pago cobra solo en cada período (mensual o anual).
-2. Llega `subscription_authorized_payment`. RELAB verifica, consulta `GET /authorized_payments/{id}`, y si el pago está **aprobado** extiende `entitlements.ends_at` hasta el nuevo fin de período y guarda `next_payment_date`.
-3. **Renovación rechazada:** Mercado Pago reintenta según su política (⏳ confirmar cuántos intentos y cada cuánto).
-   - Mientras tanto RELAB mantiene PRO hasta `ends_at`, más un margen de gracia configurable (por ejemplo, 3 días).
-   - Si al final del margen no hubo cobro aprobado, PRO vence solo.
-   - RELAB avisa en el panel: "No pudimos cobrar tu suscripción: actualizá tu medio de pago".
-4. **Cambio de tarjeta:** desde la cuenta de Mercado Pago de la persona o desde un botón en RELAB, si la API lo permite (⏳ `PUT /preapproval/{id}`).
-
-## 7. Flujo de cancelación
-1. En **RELAB → Mi suscripción → Cancelar**, se pide una confirmación simple (botón de baja, ⏳ revisión legal).
-2. RELAB llama `PUT /preapproval/{id}` con `status: canceled`. **Desde ese momento no hay nuevos cobros.**
-3. PRO se mantiene **hasta el fin del período ya pagado** (`cancel_at_period_end`) y después vence solo.
-4. Si la persona cancela desde Mercado Pago, llega el webhook y RELAB hace lo mismo.
-5. **Reembolsos** (por ejemplo, el botón de arrepentimiento dentro de los 10 días, ⏳ revisión legal): lo hacés desde Mercado Pago. El aviso de reembolso o contracargo termina el permiso en el momento.
-6. **Cambio de plan** (mensual ↔ anual): se cancela el actual al fin del período y se crea uno nuevo que arranca cuando termina el anterior. Así no hay cobros dobles ni prorrateos complicados.
-
-## 8. Pruebas gratuitas (sin tarjeta ni cobro)
-- **General, 30 días:** botón "Probar PRO gratis 30 días" en RELAB, una vez por persona y producto (`redemptions`). Crea un permiso `trial` de 30 días. No crea nada en Mercado Pago.
-- **Capacitaciones, 90 días:** la persona ingresa un código.
-  - RELAB valida el código (se guarda solo su hash), la fecha límite de canje (`redeem_until`) y los usos (`uses < max_uses`, incrementado en la misma sentencia para que no se pase del cupo).
-  - Si todo está bien, crea un permiso `trial_code` de 90 días.
-- **Al vencer:** PRO se apaga solo. Unos días antes, RELAB muestra "Tu prueba termina el …: elegí un plan para seguir". Nunca cobra.
-- **Si contrata durante la prueba:** la suscripción empieza en ese momento. ⏳ Decisión comercial: también se podría usar el `free_trial` de Mercado Pago para que el primer cobro sea al terminar la prueba.
-
-## 9. Permisos PRO en las herramientas
-- `GET /api/billing/me` → `{ pro: true/false, source, ends_at, plan, next_payment_date, cancel_at_period_end }`.
-- El Kit consulta eso al iniciar sesión y habilita las funciones y módulos PRO definidos en `MODELO_FREEMIUM_KIT_PRO.md`. **Todo lo que hoy es gratis sigue gratis.** Si PRO vence, los datos PRO quedan visibles en modo lectura y exportables; no se borra nada.
-- **El permiso se comprueba también en el servidor** en cualquier endpoint que guarde datos PRO: no alcanza con ocultar botones.
-- **Sin conexión:** se usa el último permiso conocido hasta su `ends_at`. Nunca se extiende en el dispositivo.
-
-## 10. Seguridad
+## 9. Seguridad
 | Tema | Medida |
 |---|---|
-| Autenticación de webhooks | Firma HMAC-SHA256 de `x-signature` (`ts`, `v1`) sobre `data.id`, `x-request-id` y `ts`, con la clave secreta de la aplicación. Se rechaza si no coincide o si `ts` es viejo (por ejemplo, más de 5 minutos). ✅ Documentado por MP. ⏳ Armado exacto del manifest a confirmar. |
-| Verificación de estado | El aviso se usa solo para saber **qué** cambió. El estado real se lee siempre con `GET /preapproval/{id}` o `/authorized_payments/{id}` con el token del servidor. |
-| Credenciales | `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` solo como **Secretos de Cloudflare**, igual que `GOOGLE_CLIENT_SECRET` y `TEXT_KEY`. Nunca en el repo ni en el chat. Nunca llegan al navegador. |
-| Idempotencia | `billing_events.id` es único y el `INSERT` marca "procesando". Un aviso repetido no vuelve a activar ni a extender. Las extensiones se calculan desde la fecha del pago, no "sumando 30 días" cada vez. |
-| Registro de eventos | `billing_events` guarda tópico, recurso, resultado y error, sin datos personales ni de tarjeta. Retención limitada (⏳, por ejemplo 12 meses). |
-| Reintentos | Mercado Pago reintenta los avisos que no recibieron 200. RELAB responde 200 recién después de registrar el evento. Si falla el procesamiento, el Cron lo retoma. |
-| Conciliación | Worker con Cron diario: recorre suscripciones activas, compara con `GET /preapproval/search` y corrige `subscriptions`/`entitlements`. También vence pruebas. Lo que encuentra se registra. |
-| Entornos | **Aplicación de prueba de Mercado Pago**, con credenciales y usuarios de prueba, en las vistas previas de Cloudflare. **Producción** solo en `main`. Base D1 separada para pruebas (⏳ crear `relab-test`). |
-| Cloudflare | Pages Functions para el webhook y la API. Un Worker aparte con **Cron Triggers** para la conciliación, porque Pages no tiene cron. La URL del webhook no depende de cookies: queda fuera del chequeo de Origin del middleware y valida su propia firma. |
-| Minimización de datos | Solo `user_id` de RELAB, `preapproval_id`, plan, estado y fechas. Sin tarjetas, sin DNI y sin el email del pagador salvo decisión explícita. Hay que actualizar la **Política de privacidad**. |
-| Fraude o abuso de pruebas | Una prueba general por cuenta; códigos con hash, fecha y cupo; límite de pedidos de canje por cuenta. |
+| Webhooks de MP | Firma HMAC-SHA256 de `x-signature` (`ts`, `v1`) con `data.id`, `x-request-id` y `ts`. Se rechaza si `ts` tiene más de 5 minutos. ✅ Documentado. ⏳ El formato exacto se confirma en sandbox. |
+| Estado real | Siempre por la API (`GET /preapproval/{id}`, `/authorized_payments/{id}`) |
+| Idempotencia | `billing_events.id` único: un aviso repetido no extiende dos veces. Los pedidos de Woo llevan el id de pago de MP para no duplicarse. |
+| Credenciales | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`, y `WC_KEY`/`WC_SECRET` (una clave REST de Woo **solo con permiso para pedidos y clientes**). Todas como Secretos de Cloudflare, cargados por vos, nunca en el repo ni en el chat. |
+| Tarjetas | Nunca pasan por RELAB ni por Woo: las maneja Mercado Pago |
+| Entornos | Una aplicación de prueba de MP y una base D1 de prueba para las vistas previas. Producción solo en `main`. |
+| Minimización | En D1: `user_id`, `preapproval_id`, plan, estado y fechas. En Woo: lo necesario para facturar. Hay que actualizar la Política de privacidad. |
 
-## 11. Manejo de errores
-| Situación | Qué pasa |
-|---|---|
-| **Pago rechazado** en el primer cobro | No se activa PRO. `/pro/gracias` muestra "El pago no se aprobó" y permite reintentar con otro medio. |
-| **Renovación fallida** | PRO hasta `ends_at` + gracia; aviso en el panel; vence solo si no se cobra. |
-| **Cambio de tarjeta** | En la cuenta de MP, o desde RELAB si la API lo permite (⏳). |
-| **Cancelación** | Sin nuevos cobros desde la confirmación; PRO hasta el fin del período. |
-| **Reembolso o contracargo** | El permiso termina al recibir el aviso, verificado con la API. |
-| **Cambio de plan** | El actual se cancela al fin del período y el nuevo arranca después. |
-| **El webhook no llega o falla** | Mercado Pago reintenta, y el Cron diario concilia. El panel tiene "Actualizar estado", que consulta a MP en el momento. |
-| **Webhook con firma inválida** | Se responde 401 y no se procesa; queda registrado. |
-| **Mercado Pago caído** | El checkout muestra un error claro. Los permisos vigentes siguen funcionando. |
-| **La persona pagó pero no ve PRO** | Recuperación del acceso: `/api/billing/me` con "Actualizar estado", que consulta a MP por los `preapproval_id` del usuario. Si no se resuelve, soporte busca el `external_reference` en `billing_events`. |
-| **Ingresó con otra cuenta de Google** | La compra está atada a la cuenta que la inició. El panel muestra con qué cuenta está activo PRO. Soporte puede mover el permiso tras verificar la identidad (⏳ procedimiento). |
-
-## 12. Recorrido de la persona (resumen)
-1. Inicia sesión en RELAB con Google.
-2. Abre **Kit Feriante PRO**.
-3. Elige mensual o anual.
-4. Pasa al checkout de Mercado Pago y autoriza.
-5. Paga el primer período.
-6. Mercado Pago avisa y RELAB verifica.
-7. **PRO se activa solo.**
-8. Los cobros siguientes se hacen solos.
-9. En **Mi suscripción** ve el plan, el próximo cobro y el botón **Cancelar**.
-
-Tu pedido decía "checkout de WooCommerce" en el paso 4. En esta arquitectura el checkout es de Mercado Pago, que es lo que permite el cobro automático en ARS. WooCommerce queda como la página donde se presenta y se explica el producto.
-
----
-
-## Anexo · Variante centrada en WooCommerce (no recomendada)
-Si preferís que el estado de la suscripción viva en WooCommerce:
-1. **Pieza de cobro:**
-   - WooCommerce Subscriptions (USD 279/año) más un plugin de terceros que conecte WCS con Mercado Pago (⏳ sin verificar), o
-   - un plugin de suscripciones de MP como Inobarix (🟡 joven).
-2. **Vinculación:** RELAB genera un **token firmado de un solo uso** (el id de checkout) y lo pasa en el link al checkout de WooCommerce. WooCommerce lo guarda en el pedido.
-3. **Puente WooCommerce → RELAB:** un webhook de WooCommerce (pedido pagado, renovación, cancelación, reembolso), firmado con HMAC y verificado en RELAB con `X-WC-Webhook-Signature`. RELAB, además, consulta la REST API de WooCommerce con una clave de solo lectura para confirmar el estado.
-4. **Conciliación** diaria contra la REST API de WooCommerce.
-
-**Por qué no la recomiendo:**
-- suma dos licencias y un plugin no oficial en el camino del dinero;
-- deja dos sistemas que pueden desincronizarse;
-- Mercado Pago dice que su plugin no funciona con WooCommerce Subscriptions.
+## 10. Lo que falta de WordPress para cerrar (sin contraseñas ni claves)
+1. "Salud del sitio → Información" copiado: versiones de WP, PHP y WooCommerce, y los plugins activos.
+2. Captura de **Plugins instalados**.
+3. Captura de **WooCommerce → Ajustes → Pagos**: si Payway y GoCuotas están como plugins, y sus versiones.
+4. Si HPOS (almacenamiento de pedidos de alto rendimiento) está activo.
+5. Si en tu panel de MP aparece **Suscripciones** y si tenés una aplicación en **Tus integraciones**.
+6. Cómo facturás hoy (ARCA): a mano o con un plugin. Define si el pedido de Woo dispara la factura.
+7. Si permitís crear una **clave REST de WooCommerce** con permisos limitados, a cargar vos en Cloudflare (en la Etapa 4).

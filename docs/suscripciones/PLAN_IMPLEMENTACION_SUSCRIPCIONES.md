@@ -1,130 +1,69 @@
-# Plan de implementación · Suscripciones de Kit Feriante PRO
+# Plan de implementación · Kit Feriante PRO
 
-*Propuesta para aprobar. No hay nada implementado. La base es la arquitectura recomendada (alternativa D). Cada etapa va en su propia rama, con vista previa, pruebas y tu OK antes de pasar a `main`.*
-
-## Recomendación final
-1. **¿Necesitamos instalar un plugin adicional?**
-   **No**, con la opción recomendada. Las suscripciones se hacen con la API oficial de Mercado Pago, desde RELAB. WooCommerce sigue con sus plugins actuales y solo suma una página de producto que lleva a RELAB.
-2. **¿Cuál es la mejor opción para nuestra instalación?**
-   **Suscripciones de Mercado Pago controladas desde RELAB** (alternativa D).
-   - Es la única que cobra sola en ARS con una API oficial.
-   - No suma licencias.
-   - El permiso PRO vive donde se usa.
-
-   *Verificado:* el plugin oficial de MP no funciona con WooCommerce Subscriptions, y YITH solo renueva sola con Stripe o PayPal.
-3. **¿Qué pasarela permite cobrar automáticamente todos los meses?**
-   - **Mercado Pago Suscripciones** (✅ oficial, ARS, tarjeta de crédito, débito o dinero en cuenta).
-   - Payway tiene débito automático, pero por **archivos TXT por lotes**, con trabajo manual cada mes.
-   - **GoCuotas no hace cobros recurrentes**: son cuotas de una compra.
-4. **¿Podemos ofrecer planes mensuales y anuales?**
-   - Mensual: ✅ sí.
-   - Anual: muy probable con `frequency: 12, frequency_type: months`. ⏳ Se confirma en sandbox en la Etapa 2 antes de ofrecerlo.
-   - El anual promocional es otro plan de Mercado Pago, que solo se ofrece con el código de la capacitación.
-5. **¿Cómo se cancela una suscripción?**
-   - Desde **RELAB → Mi suscripción → Cancelar** (un clic y una confirmación), o desde la cuenta de Mercado Pago.
-   - No hay más cobros desde ese momento.
-   - PRO sigue hasta el fin del período ya pagado.
-6. **¿Cómo se activa automáticamente PRO en RELAB?**
-   - Mercado Pago avisa por webhook firmado.
-   - RELAB verifica la firma, consulta el estado real a la API de MP y comprueba que la compra corresponde a la cuenta que la inició.
-   - Recién entonces activa PRO hasta el fin del período.
-   - La vuelta del navegador desde el pago no activa nada.
-7. **¿Cuál es el costo de implementación y mantenimiento?** Ver la sección "Costos estimados". En resumen:
-   - **USD 0 en licencias**;
-   - Cloudflare dentro del plan gratis con este volumen (⏳ confirmar);
-   - las comisiones de Mercado Pago por cobro (⏳ ver tu panel);
-   - y unas 50 a 75 horas de desarrollo y pruebas, en etapas.
-8. **¿Qué debemos configurar antes de vender?** Ver "Antes de vender", al final.
-
-**Qué es verificado y qué no.** Lo marcado ✅ está en documentación oficial (vía buscador). Lo marcado ⏳ se confirma en la Etapa 2, en el sandbox de Mercado Pago, o con vos:
-- plan anual;
-- si suscribirse exige cuenta de Mercado Pago;
-- cambio de tarjeta y de monto;
-- política de reintentos;
-- comisiones;
-- requisitos legales.
+*Versión 2, con el orden de etapas definido por Stella. No hay nada implementado. Cada etapa va en su propia rama, con vista previa, pruebas y tu OK antes de pasar a `main`. **Ninguna migración se ejecuta sin tu aprobación.***
 
 ## Etapas
-| # | Etapa | Qué incluye | Prioridad | Depende de |
-|---|---|---|---|---|
-| 0 | **Decisiones** | ~~Qué es PRO~~: resuelto en `MODELO_FREEMIUM_KIT_PRO.md` (todo lo actual sigue gratis); precios finales; condiciones de cancelación y reembolso; textos legales (botón de baja y de arrepentimiento, con asesoría); facturación (ARCA); datos de la auditoría de WordPress | Bloqueante | Vos |
-| 1 | **Permisos y pruebas gratis** | Migración aditiva (`entitlements`, `trial_codes`, `redemptions`); `GET /api/billing/me`; prueba de 30 días; canje de códigos de 90 días con fecha y cupo; marca PRO en el Kit y en la vitrina; panel mínimo "Mi plan"; privacidad actualizada. **Sin quitar nada gratis.** | Alta: ya sirve para las capacitaciones, sin cobrar nada | 0 |
-| PRO-A | **Base de PRO** | Almacenamiento propio de los módulos PRO (diseño aparte para aprobar, porque cambia el esquema); **Mis productos** y **Mis ferias**; modo lectura y exportación cuando PRO vence | Alta: sin esto PRO no tiene valor | 1 |
-| PRO-B | **Mejoras PRO** | Ventas del día (producto del catálogo, cantidad, descuentos, editar, feria, comisión real, cierre de caja); Calculadora (escenarios, comisión por medio, precio sugerido); ROI por feria y comparativo; **Stock** | Alta: hay que tenerla antes de cobrar | PRO-A |
-| PRO-C | **Estadísticas e Informes** | Estadísticas avanzadas; informes PDF/Excel por feria y anual | Media: puede salir después del lanzamiento | PRO-B |
-| 2 | **Mercado Pago en sandbox** | Aplicación de prueba; planes de prueba; confirmar los ⏳ (anual, cuenta obligatoria, cambio de tarjeta, reintentos, firma); `checkouts`, `subscriptions` y `billing_events`; `POST /api/billing/checkout`; webhook con firma e idempotencia; `/pro/gracias` con espera del estado | Alta | 1, y credenciales de prueba cargadas por vos como Secretos |
-| 3 | **Gestión de la suscripción** | Panel "Mi suscripción" con plan, próximo cobro, cancelar, cambiar de plan y actualizar estado; renovaciones, rechazos, gracia, reembolsos y contracargos | Alta | 2 |
-| 4 | **Conciliación y soporte** | Worker con Cron diario; registro de eventos con retención; vista de soporte mínima (sin datos personales innecesarios) para casos huérfanos y para mover un permiso | Media | 2 |
-| 5 | **Vidriera en WooCommerce** | Página de producto "Kit Feriante PRO" en el tema `st-rp`, con planes, condiciones, preguntas frecuentes y botones a RELAB | Media | 0 (precios y textos) |
-| 6 | **Producción** | Aplicación de producción de MP, planes reales, webhook de producción, compra real de bajo monto, monitoreo de la primera semana | — | 1 a 5 y tu OK |
+| # | Etapa | Qué incluye | Estimación | Depende de | Sale a producción |
+|---|---|---|---|---|---|
+| **1** | **Cierre de arquitectura** | Estos 5 documentos; tu aprobación del modelo, de los datos, de la variante H/W y del MVP; datos de WordPress | — | Vos | — |
+| **2** | **Acceso PRO** | Migración `0004` (permisos, códigos, canjes, auditoría); `requirePro`; `GET /api/pro/me`; prueba de 30 días con botón; canje de códigos de 90 días; **panel de administración mínimo** de códigos; indicador de plan y vencimiento en el Kit; Política de privacidad actualizada | 10–14 h | 1 | **Sí, sola**: no cobra nada y ya permite dar códigos |
+| **3** | **MVP** | Migración `0005`; API `/api/pro/sync`, `/ops` y `/export`; **Mis ferias**, **Mis productos**, **Ventas PRO** y **Stock**; cola sin conexión; modo lectura al vencer; importar ventas gratis a una feria (opcional) | 30–45 h | 2 | Sí, para la charla (con códigos de 90 días) |
+| **4** | **Comercialización** | Migración `0006`; Mercado Pago en sandbox (confirmar los ⏳); checkout; webhook; "Mi suscripción" con cancelar; renovaciones, rechazos, reembolsos; pedidos en WooCommerce por la REST API (variante H); Worker de conciliación; página de producto en Woo; compra real de bajo monto | 35–50 h | 2, y las decisiones legales y de facturación | Con los cobros **apagados** hasta terminar el sandbox y tu OK |
+| **5** | **Avanzado** | Calculadora PRO, ROI PRO, estadísticas, informes PDF/Excel, cierre de caja; copia semanal a R2 | 25–40 h | 3 | Por partes |
 
-## Costos estimados
-| Concepto | Alternativa D (recomendada) | Alternativa A (WCS + pasarela de terceros) |
+**Total hasta poder cobrar** (etapas 2 a 4): **≈ 75–110 h**. Para la charla alcanza con las etapas 2 y 3: **≈ 40–60 h**, más las pruebas de `PLAN_MVP_CHARLA_FERIANTES.md`.
+
+*Las horas son una estimación de esfuerzo, no un presupuesto: dependen de las decisiones pendientes y de lo que se confirme en sandbox.*
+
+**Por qué este orden es bueno:**
+- La Etapa 2 sale sola y no tiene riesgo de dinero.
+- La Etapa 3 se valida con feriantes reales antes de cobrar.
+- La Etapa 4 llega con un producto que ya probó su valor.
+
+## Costos
+| Concepto | Variante H (recomendada) | Variante W |
 |---|---|---|
-| Licencias | USD 0 | ✅ USD 279/año (WooCommerce Subscriptions), más ⏳ el plugin de pasarela de terceros |
-| Infraestructura | Cloudflare Pages, D1 y Workers: dentro del plan gratis con este volumen (⏳ confirmar límites en el panel) | Hosting actual |
-| Comisiones por cobro | ⏳ Las de Mercado Pago (ver tu panel o la página de costos). Se suma IVA. | Las de la pasarela, más lo mismo de MP |
-| Desarrollo (estimación de horas de trabajo) | Etapa 1: 8–12 h · Etapa 2: 12–18 h · Etapa 3: 8–12 h · Etapa 4: 6–10 h · Etapa 5: 4–6 h · pruebas y producción: 8–12 h. **Total ≈ 46–70 h** | Configuración, puente firmado y conciliación con WooCommerce: 30–50 h, más pruebas de compatibilidad en cada actualización |
-| Mantenimiento | Revisar cambios de la API de MP; conciliación automática; seguir las pruebas automáticas | Actualizar 3 plugins con dinero real en juego; riesgo de que una actualización rompa renovaciones |
+| Licencias | USD 0 | ✅ USD 279/año (WCS), más ⏳ el plugin de pasarela |
+| Infraestructura | Cloudflare Pages, D1 y Workers. ⏳ Confirmar el plan: el gratis tiene límites de escritura diaria en D1 y 7 días de Time Travel; el pago (USD 5/mes) da 30 días. Para datos de ventas, **recomiendo el pago**. | Ídem + hosting actual |
+| Comisiones | ⏳ Las de Mercado Pago por cobro (ver tu panel), más IVA | Ídem + pasarela |
+| Mantenimiento | Seguir la API de MP y la REST API de Woo; pruebas automáticas | Actualizar 3 plugins con dinero real en juego |
 
-*Las horas son una estimación de esfuerzo, no un presupuesto: dependen de las decisiones de la Etapa 0 y de lo que se confirme en sandbox.*
+## Decisiones pendientes (tuyas)
+1. **Variante de cobro H o W:** recomiendo H.
+2. **Fecha de la charla:** define si llegamos con el MVP completo o con un MVP reducido (ver el plan del MVP).
+3. **Promo anual 24.900:** ¿quién accede, hasta cuándo, y si renueva a 24.900 o a 29.900?
+4. **Diferencia entre mensual y anual** (hoy 49%): ver mi sugerencia en el modelo freemium.
+5. **Cuando la persona contrata durante la prueba:** ¿el cobro arranca ya o al terminar la prueba (`free_trial` de MP)? Recomiendo **al terminar**, porque evita la sensación de perder días.
+6. **Política de reembolsos** y de cambio de plan.
+7. **Revisión legal:** botón de baja, botón de arrepentimiento, términos y privacidad.
+8. **Facturación (ARCA)** de cada cobro.
+9. **Plan de Cloudflare:** gratis o Workers Paid.
 
-## Pruebas necesarias
-**Automáticas (Vitest, en el repo):**
-- verificación de firma del webhook: válida, inválida y con `ts` vencido;
-- idempotencia: el mismo evento dos veces;
-- cálculo de períodos: mensual, anual, fin de mes y años bisiestos;
-- canje de códigos: fecha, cupo y usos simultáneos;
-- una sola prueba general por persona;
-- estados de suscripción → permisos;
-- cancelación al fin del período;
-- renovación rechazada con gracia;
-- reembolso;
-- conciliación.
+## Riesgos
+| Riesgo | Impacto | Mitigación |
+|---|---|---|
+| No llegar a la charla con todo el MVP | Alto | MVP reducido definido (ferias, productos y ventas PRO; stock simple) |
+| Error de stock o ventas duplicadas con datos reales | Alto | Ids idempotentes, libro de movimientos, `batch` atómico y pruebas de concurrencia (ver la arquitectura de datos) |
+| Pérdida de `TEXT_KEY` | Crítico | Ya está en tu gestor de contraseñas: verificarlo antes de la Etapa 3 |
+| Algo de MP no confirmado (plan anual, cuenta obligatoria) | Medio | Sandbox al inicio de la Etapa 4, antes de construir la interfaz de pago |
+| Desincronización con los pedidos de Woo | Bajo | El permiso no depende de Woo; el Cron reintenta |
+| Requisitos legales | Medio | Revisión antes de activar cobros |
+| Precio en ARS desactualizado por inflación | Medio | Revisión periódica y aviso previo a quien ya está suscripto |
 
-**Sandbox de Mercado Pago, con usuarios de prueba:**
-- alta mensual y anual;
-- primer pago aprobado y rechazado;
-- renovación, simulada o con frecuencia en días para probar rápido;
-- cancelación desde RELAB y desde MP;
-- cambio de tarjeta;
-- reembolso;
-- webhook caído y recuperado por el Cron.
+## Pruebas necesarias (resumen)
+- **Automáticas:** permisos (`requirePro`, lectura permitida sin PRO); canje de códigos (fecha, cupo, simultáneos); una prueba general por persona; aislamiento entre cuentas; idempotencia de ventas y stock; ediciones con conflicto; webhooks (firma, repetidos, desordenados); períodos (mensual, anual, fin de mes).
+- **Sandbox MP:** alta mensual y anual, rechazo, renovación, cancelación desde RELAB y desde MP, reembolso, webhook caído.
+- **En el navegador:** celular y computadora; sin conexión; otra cuenta de Google; vencimiento con modo lectura.
+- **Regresión:** las 123 pruebas automáticas actuales y los e2e del Kit.
 
-**En el navegador:** el recorrido completo en celular y computadora; la vuelta desde el pago sin activar antes de tiempo; otra cuenta de Google; sin conexión con PRO vigente.
-
-**Regresión:** las pruebas actuales del Kit (123 automáticas y los e2e).
-
-## Criterios de aceptación
-- PRO se activa **solo** con un pago aprobado verificado contra la API, y **nunca** por la vuelta del navegador ni por coincidencia de email.
-- La persona contrata una vez y se le cobra sola cada mes o año. Ve el próximo cobro y puede cancelar en un clic.
-- Después de cancelar **no hay nuevos cobros**, y PRO dura hasta el fin del período pagado.
-- Las pruebas gratis de 30 y 90 días no piden tarjeta, no crean nada en Mercado Pago y vencen solas.
-- Los códigos respetan la fecha límite y el cupo, aunque haya canjes simultáneos.
-- Un webhook repetido, desordenado o perdido no duplica ni pierde permisos: el Cron corrige en menos de 24 h.
-- Ningún dato de tarjeta pasa por RELAB, y las credenciales están solo en Secretos de Cloudflare.
-- Prueba y producción están separadas: credenciales, base y URLs de webhook.
-- Todas las pruebas automáticas y e2e en verde.
-
-## Estrategia de despliegue
-1. Cada etapa en su rama, con vista previa de Cloudflare (credenciales de **prueba**) y tu OK para integrar.
-2. **La Etapa 1 puede salir sola** a producción: permisos y pruebas gratis, sin cobros. Así ya podés dar códigos de 90 días en las capacitaciones.
-3. **Etapas 2 a 4** en producción con los cobros **apagados** (sin botón de compra visible), hasta terminar el sandbox.
-4. **Activación:**
-   - credenciales de producción de MP como Secretos;
-   - planes reales creados por vos en MP o por la API con tu OK;
-   - URL del webhook de producción;
-   - **una compra real de bajo monto**, cancelada y reembolsada después.
-5. Lanzamiento con monitoreo diario de `billing_events` y de la conciliación durante la primera semana.
-6. **Reversión:** apagar el botón de compra (una variable). Los permisos vigentes siguen. Las suscripciones activas se pueden pausar o cancelar desde MP si hiciera falta.
-
-## Antes de vender (lista de configuración)
-- [x] Qué es PRO: definido en `MODELO_FREEMIUM_KIT_PRO.md`. Las 7 herramientas actuales siguen gratis.
-- [ ] Precios finales y condiciones: cancelación, reembolsos y cambio de plan.
-- [ ] Revisión legal: botón de baja, botón de arrepentimiento, términos del servicio y Política de privacidad actualizada.
-- [ ] Facturación electrónica de cada cobro (ARCA): cómo y con qué sistema.
-- [ ] Cuenta de Mercado Pago de vendedor con Suscripciones habilitadas; **dos aplicaciones** en Tus integraciones (prueba y producción); webhook configurado con los tópicos de suscripciones.
-- [ ] Secretos en Cloudflare, cargados por vos: `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (prueba en vista previa, producción en `main`).
-- [ ] Base D1 de prueba separada.
-- [ ] Página de producto en WooCommerce con textos aprobados.
-- [ ] Los datos de la auditoría de WordPress (sección 1 de `AUDITORIA_WOOCOMMERCE_SUSCRIPCIONES.md`).
+## Despliegue
+1. Cada etapa en su rama, con vista previa y tu OK.
+2. **Antes de cada migración:**
+   - marcador de Time Travel;
+   - `wrangler d1 export`;
+   - revisión del SQL con vos;
+   - `migrations apply` con tu OK.
+3. **Etapa 4:** cobros apagados con una variable hasta terminar el sandbox. Después, una compra real de bajo monto, cancelada y reembolsada.
+4. **Reversión:**
+   - apagar la variable de cobros o de PRO, y los datos quedan intactos;
+   - para la base, restaurar Time Travel al marcador previo.
