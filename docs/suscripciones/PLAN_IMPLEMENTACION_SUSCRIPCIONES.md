@@ -47,8 +47,11 @@
 ## Etapas
 | # | Etapa | Qué incluye | Prioridad | Depende de |
 |---|---|---|---|---|
-| 0 | **Decisiones** | Qué funciones del Kit son PRO; precios finales; condiciones de cancelación y reembolso; textos legales (botón de baja y de arrepentimiento, con asesoría); facturación (ARCA); datos de la auditoría de WordPress | Bloqueante | Vos |
-| 1 | **Permisos y pruebas gratis** | Migración aditiva (`entitlements`, `trial_codes`, `redemptions`); `GET /api/billing/me`; prueba de 30 días; canje de códigos de 90 días con fecha y cupo; marca PRO en el Kit y en la vitrina; panel mínimo "Mi plan"; privacidad actualizada | Alta: ya sirve para las capacitaciones, sin cobrar nada | 0 (qué es PRO) |
+| 0 | **Decisiones** | ~~Qué es PRO~~: resuelto en `MODELO_FREEMIUM_KIT_PRO.md` (todo lo actual sigue gratis); precios finales; condiciones de cancelación y reembolso; textos legales (botón de baja y de arrepentimiento, con asesoría); facturación (ARCA); datos de la auditoría de WordPress | Bloqueante | Vos |
+| 1 | **Permisos y pruebas gratis** | Migración aditiva (`entitlements`, `trial_codes`, `redemptions`); `GET /api/billing/me`; prueba de 30 días; canje de códigos de 90 días con fecha y cupo; marca PRO en el Kit y en la vitrina; panel mínimo "Mi plan"; privacidad actualizada. **Sin quitar nada gratis.** | Alta: ya sirve para las capacitaciones, sin cobrar nada | 0 |
+| PRO-A | **Base de PRO** | Almacenamiento propio de los módulos PRO (diseño aparte para aprobar, porque cambia el esquema); **Mis productos** y **Mis ferias**; modo lectura y exportación cuando PRO vence | Alta: sin esto PRO no tiene valor | 1 |
+| PRO-B | **Mejoras PRO** | Ventas del día (producto del catálogo, cantidad, descuentos, editar, feria, comisión real, cierre de caja); Calculadora (escenarios, comisión por medio, precio sugerido); ROI por feria y comparativo; **Stock** | Alta: hay que tenerla antes de cobrar | PRO-A |
+| PRO-C | **Estadísticas e Informes** | Estadísticas avanzadas; informes PDF/Excel por feria y anual | Media: puede salir después del lanzamiento | PRO-B |
 | 2 | **Mercado Pago en sandbox** | Aplicación de prueba; planes de prueba; confirmar los ⏳ (anual, cuenta obligatoria, cambio de tarjeta, reintentos, firma); `checkouts`, `subscriptions` y `billing_events`; `POST /api/billing/checkout`; webhook con firma e idempotencia; `/pro/gracias` con espera del estado | Alta | 1, y credenciales de prueba cargadas por vos como Secretos |
 | 3 | **Gestión de la suscripción** | Panel "Mi suscripción" con plan, próximo cobro, cancelar, cambiar de plan y actualizar estado; renovaciones, rechazos, gracia, reembolsos y contracargos | Alta | 2 |
 | 4 | **Conciliación y soporte** | Worker con Cron diario; registro de eventos con retención; vista de soporte mínima (sin datos personales innecesarios) para casos huérfanos y para mover un permiso | Media | 2 |
@@ -116,7 +119,7 @@
 6. **Reversión:** apagar el botón de compra (una variable). Los permisos vigentes siguen. Las suscripciones activas se pueden pausar o cancelar desde MP si hiciera falta.
 
 ## Antes de vender (lista de configuración)
-- [ ] Definir qué es PRO y qué queda gratis en el Kit.
+- [x] Qué es PRO: definido en `MODELO_FREEMIUM_KIT_PRO.md`. Las 7 herramientas actuales siguen gratis.
 - [ ] Precios finales y condiciones: cancelación, reembolsos y cambio de plan.
 - [ ] Revisión legal: botón de baja, botón de arrepentimiento, términos del servicio y Política de privacidad actualizada.
 - [ ] Facturación electrónica de cada cobro (ARCA): cómo y con qué sistema.

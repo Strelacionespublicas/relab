@@ -101,7 +101,7 @@ Tablas nuevas, con una **migración aditiva** que solo crea tablas: no toca ni b
 
 ## 9. Permisos PRO en las herramientas
 - `GET /api/billing/me` → `{ pro: true/false, source, ends_at, plan, next_payment_date, cancel_at_period_end }`.
-- El Kit consulta eso al iniciar sesión y muestra u oculta las funciones PRO. ⏳ Falta definir cuáles son PRO.
+- El Kit consulta eso al iniciar sesión y habilita las funciones y módulos PRO definidos en `MODELO_FREEMIUM_KIT_PRO.md`. **Todo lo que hoy es gratis sigue gratis.** Si PRO vence, los datos PRO quedan visibles en modo lectura y exportables; no se borra nada.
 - **El permiso se comprueba también en el servidor** en cualquier endpoint que guarde datos PRO: no alcanza con ocultar botones.
 - **Sin conexión:** se usa el último permiso conocido hasta su `ends_at`. Nunca se extiende en el dispositivo.
 
