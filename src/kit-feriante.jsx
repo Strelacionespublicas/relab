@@ -190,7 +190,7 @@ function Kit() {
   const set = (key, fn) => sync.update(s => ({ ...s, [key]: fn(s[key]) }));
   const firstName = user?.name ? user.name.split(' ')[0] : '';
   const [statusText, statusCls] = SAVE_STATUS[snap.status] || SAVE_STATUS.cargando;
-  const retry = snap.status === 'error' && <button type="button" onClick={() => sync.syncNow()}>Reintentar</button>;
+  const retry = (snap.status === 'error' || snap.status === 'conflicto') && <button type="button" onClick={() => sync.syncNow()}>Reintentar</button>;
   const relogin = snap.status === 'sesion' && <button type="button" onClick={() => setLoginOpen(true)}>Ingresar</button>;
 
   const checksDone = CHECK_IDS.filter(id => st.checks[id]).length;
@@ -313,6 +313,7 @@ const SAVE_STATUS = {
   guardado: ['✓ Guardado en tu cuenta', 'ok'],
   'sin-conexion': ['Sin conexión. Guardado en este dispositivo.', 'warn'],
   sesion: ['Tu sesión venció. Guardado en este dispositivo.', 'warn'],
+  conflicto: ['Hubo cambios en otro dispositivo al mismo tiempo. Guardado en este dispositivo.', 'warn'],
   error: ['No se pudo sincronizar.', 'err'],
 };
 

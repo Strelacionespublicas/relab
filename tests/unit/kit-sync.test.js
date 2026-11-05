@@ -17,9 +17,15 @@ function makeServer() {
     failPut: 0, // cuántos PUT fallan con 500
     loseResponse: 0, // PUT que se guarda pero la respuesta no llega (red cortada)
     puts: 0,
+    conflicts: 0, // 409 respondidos
+    legacy: false, // servidor anterior: ignora baseUpdatedAt y no devuelve versión
+    forceConflict: 0, // cuántos PUT con versión se rechazan con 409 aunque coincida
+    gate: null, // si hay una promesa, los PUT esperan a que se resuelva (para soltarlos juntos)
     rows,
+    hold() { let open; srv.gate = new Promise(r => { open = r; }); return () => { srv.gate = null; open(); }; },
     async fetch(path, init = {}) {
       if (srv.down) throw new TypeError('Failed to fetch');
+      if ((init.method || 'GET') === 'PUT' && srv.gate) await srv.gate;
       const method = init.method || 'GET';
       const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
       if (path === '/api/me') return res(200, { user: srv.session ? { name: 'Persona ' + srv.session, email: srv.session } : null });
@@ -28,10 +34,15 @@ function makeServer() {
       if (method === 'GET') return res(200, rows.get(srv.session) ? { data: rows.get(srv.session).data, updatedAt: rows.get(srv.session).updatedAt } : { data: null });
       if (srv.failPut > 0) { srv.failPut--; return res(500, { error: 'server_error' }); }
       const body = JSON.parse(init.body);
+      // Misma regla que functions/api/state/[resource].js: con baseUpdatedAt solo se guarda si es la versión actual.
+      if (!srv.legacy && 'baseUpdatedAt' in body) {
+        const current = rows.get(srv.session)?.updatedAt ?? null;
+        if (srv.forceConflict > 0 || body.baseUpdatedAt !== current) { if (srv.forceConflict > 0) srv.forceConflict--; srv.conflicts++; return res(409, { error: 'conflict' }); }
+      }
       rows.set(srv.session, { data: JSON.parse(JSON.stringify(body.data)), updatedAt: ++clock });
       srv.puts++;
       if (srv.loseResponse > 0) { srv.loseResponse--; throw new TypeError('network'); }
-      return res(200, { ok: true });
+      return res(200, srv.legacy ? { ok: true } : { ok: true, updatedAt: clock });
     },
     remote: email => normalize(rows.get(email)?.data),
   };
@@ -43,7 +54,7 @@ const memStorage = () => {
 };
 function device(srv, storage = memStorage(), session = memStorage()) {
   let online = true;
-  const sync = createKitSync({ storage, session, fetchImpl: (...a) => srv.fetch(...a), isOnline: () => online && !srv.down, autoSync: false });
+  const sync = createKitSync({ storage, session, fetchImpl: (...a) => srv.fetch(...a), isOnline: () => online && !srv.down, autoSync: false, conflictDelay: () => 0 });
   return { sync, storage, session, setOnline: v => { online = v; }, data: () => sync.snapshot().data, status: () => sync.snapshot().status };
 }
 const addVenta = (d, v) => d.sync.update(s => ({ ...s, ventas: [...s.ventas, v] }));
@@ -412,5 +423,181 @@ describe('Compatibilidad con los datos existentes', () => {
     expect(d.data().ventas.map(v => v.id)).toEqual(['R1']);
     expect(srv.puts).toBe(1); // solo se normaliza una vez (agrega un producto vacío), sin cambiar datos
     expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'roi', 'ventas']); // misma forma
+  });
+});
+
+describe('Concurrencia con versión en el servidor (409)', () => {
+  // Dos dispositivos de la misma cuenta, sincronizados y con la misma versión.
+  async function dos() {
+    srv.session = 'a@x.com';
+    const a = device(srv);
+    const b = device(srv);
+    await a.sync.start();
+    addVenta(a, venta('base', 1, 0));
+    await a.sync.syncNow();
+    await b.sync.start();
+    return { a, b };
+  }
+  // Los dos guardan "a la vez": los PUT quedan retenidos y se sueltan juntos.
+  async function juntos(a, b) {
+    const soltar = srv.hold();
+    const pa = a.sync.syncNow();
+    const pb = b.sync.syncNow();
+    await new Promise(r => setTimeout(r, 0));
+    soltar();
+    await Promise.all([pa, pb]);
+  }
+
+  it('A y B leen la misma versión, registran una venta cada uno y guardan juntos: quedan las dos', async () => {
+    const { a, b } = await dos();
+    addVenta(a, venta('A', 100, 1));
+    addVenta(b, venta('B', 200, 2));
+    await juntos(a, b);
+    expect(srv.conflicts).toBe(1); // el servidor aceptó una escritura y rechazó la otra
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['base', 'A', 'B']);
+    expect(a.status()).toBe('guardado');
+    expect(b.status()).toBe('guardado');
+    await a.sync.syncNow();
+    expect(a.data().ventas.map(v => v.id)).toEqual(['base', 'A', 'B']);
+    expect(b.data().ventas.map(v => v.id)).toEqual(['base', 'A', 'B']);
+  });
+
+  it('borrado simultáneo: una venta borrada en A no reaparece aunque B guarde a la vez', async () => {
+    const { a, b } = await dos();
+    a.sync.update(s => ({ ...s, ventas: s.ventas.filter(v => v.id !== 'base') }));
+    addVenta(b, venta('B', 1, 2));
+    await juntos(a, b);
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['B']);
+    await a.sync.syncNow();
+    expect(a.data().ventas.map(v => v.id)).toEqual(['B']);
+    expect(b.data().ventas.map(v => v.id)).toEqual(['B']);
+  });
+
+  it('borrado simultáneo de ventas distintas: se respetan los dos borrados', async () => {
+    srv.session = 'a@x.com';
+    const a = device(srv);
+    const b = device(srv);
+    await a.sync.start();
+    addVenta(a, venta('x', 1, 1));
+    addVenta(a, venta('y', 1, 2));
+    addVenta(a, venta('z', 1, 3));
+    await a.sync.syncNow();
+    await b.sync.start();
+    a.sync.update(s => ({ ...s, ventas: s.ventas.filter(v => v.id !== 'x') }));
+    b.sync.update(s => ({ ...s, ventas: s.ventas.filter(v => v.id !== 'y') }));
+    await juntos(a, b);
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['z']);
+  });
+
+  it('checklist concurrente: ítems distintos se suman; el mismo ítem queda como lo dejó el último en guardar', async () => {
+    const { a, b } = await dos();
+    a.sync.update(s => ({ ...s, checks: { ...s.checks, 'pre-1': true } }));
+    b.sync.update(s => ({ ...s, checks: { ...s.checks, 'pre-2': true } }));
+    await juntos(a, b);
+    expect(srv.remote('a@x.com').checks).toEqual({ 'pre-1': true, 'pre-2': true });
+    a.sync.update(s => ({ ...s, checks: { ...s.checks, 'pre-3': true } }));
+    await a.sync.syncNow();
+    await b.sync.syncNow();
+    b.sync.update(s => ({ ...s, checks: { ...s.checks, 'pre-3': false } })); // B lo desmarca después
+    await b.sync.syncNow();
+    expect(srv.remote('a@x.com').checks['pre-3']).toBeFalsy();
+  });
+
+  it('calculadora y ROI concurrentes: campos distintos se combinan', async () => {
+    const { a, b } = await dos();
+    a.sync.update(s => ({ ...s, calc: { ...s.calc, fijos: { ...s.calc.fijos, alquiler: '120.000' } }, roi: { ...s.roi, stand: '120.000' } }));
+    b.sync.update(s => ({ ...s, calc: { ...s.calc, comision: '4' }, roi: { ...s.roi, ef: '50.000' } }));
+    await juntos(a, b);
+    const r = srv.remote('a@x.com');
+    expect(r.calc.fijos.alquiler).toBe('120.000');
+    expect(r.calc.comision).toBe('4');
+    expect(r.roi).toMatchObject({ stand: '120.000', ef: '50.000' });
+  });
+
+  it('mismo campo cambiado en los dos a la vez: gana el que concilia último y nadie queda con un valor distinto', async () => {
+    const { a, b } = await dos();
+    a.sync.update(s => ({ ...s, calc: { ...s.calc, fijos: { alquiler: '100' } } }));
+    b.sync.update(s => ({ ...s, calc: { ...s.calc, fijos: { alquiler: '200' } } }));
+    await juntos(a, b);
+    await a.sync.syncNow();
+    const final = srv.remote('a@x.com').calc.fijos.alquiler;
+    expect(['100', '200']).toContain(final);
+    expect(a.data().calc.fijos.alquiler).toBe(final);
+    expect(b.data().calc.fijos.alquiler).toBe(final);
+  });
+
+  it('reconexión después de trabajar sin señal mientras el otro guardaba', async () => {
+    const { a, b } = await dos();
+    b.setOnline(false);
+    addVenta(b, venta('sinSenal1', 1, 5));
+    addVenta(b, venta('sinSenal2', 1, 6));
+    addVenta(a, venta('conSenal', 1, 7));
+    await a.sync.syncNow();
+    a.sync.update(s => ({ ...s, ventas: s.ventas.filter(v => v.id !== 'base') })); // A borra una mientras B no tiene señal
+    await a.sync.syncNow();
+    b.setOnline(true);
+    await b.sync.resume();
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['sinSenal1', 'sinSenal2', 'conSenal']);
+    expect(b.status()).toBe('guardado');
+  });
+
+  it('un cliente anterior sin baseUpdatedAt guarda en el medio: el nuevo lo detecta y no pierde nada', async () => {
+    const { a } = await dos();
+    addVenta(a, venta('nueva', 1, 3));
+    // Cliente anterior: escribe todo sin versión (sumó una venta propia sobre lo que leyó).
+    await srv.fetch('/api/state/kit-feriante', { method: 'PUT', body: JSON.stringify({ data: { ...srv.remote('a@x.com'), ventas: [venta('base', 1, 0), venta('vieja', 1, 2)] } }) });
+    await a.sync.syncNow();
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['base', 'vieja', 'nueva']);
+  });
+
+  it('contra un servidor anterior (sin versión) sigue funcionando como en la Corrección 2', async () => {
+    srv.legacy = true;
+    const { a, b } = await dos();
+    addVenta(a, venta('A', 1, 1));
+    await a.sync.syncNow();
+    addVenta(b, venta('B', 1, 2));
+    await b.sync.syncNow();
+    await a.sync.syncNow();
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['base', 'A', 'B']);
+    expect(srv.conflicts).toBe(0);
+  });
+
+  it('reintentos repetidos: con 409 permanente corta a los 5 intentos, avisa y luego se resuelve sin duplicar', async () => {
+    const { a } = await dos();
+    srv.forceConflict = 1000;
+    addVenta(a, venta('R', 1, 4));
+    await a.sync.syncNow();
+    expect(srv.conflicts).toBe(5); // no hay bucle infinito
+    expect(a.status()).toBe('conflicto');
+    expect(a.sync.snapshot().dirty).toBe(true);
+    await a.sync.syncNow();
+    expect(srv.conflicts).toBe(10);
+    srv.forceConflict = 0;
+    await a.sync.syncNow();
+    expect(a.status()).toBe('guardado');
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['base', 'R']);
+  });
+
+  it('un 409 aislado se resuelve solo en el mismo guardado', async () => {
+    const { a } = await dos();
+    srv.forceConflict = 2;
+    addVenta(a, venta('S', 1, 4));
+    await a.sync.syncNow();
+    expect(a.status()).toBe('guardado');
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['base', 'S']);
+  });
+
+  it('tres dispositivos guardando juntos: no se pierde ninguna venta', async () => {
+    srv.session = 'a@x.com';
+    const ds = [device(srv), device(srv), device(srv)];
+    for (const d of ds) await d.sync.start();
+    ds.forEach((d, i) => addVenta(d, venta('t' + i, 1, i + 1)));
+    const soltar = srv.hold();
+    const ps = ds.map(d => d.sync.syncNow());
+    await new Promise(r => setTimeout(r, 0));
+    soltar();
+    await Promise.all(ps);
+    expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['t0', 't1', 't2']);
+    expect(ds.every(d => d.status() === 'guardado')).toBe(true);
   });
 });

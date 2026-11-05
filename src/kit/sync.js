@@ -125,6 +125,8 @@ class SyncError extends Error {
  *  'guardado'  el servidor confirmó el último cambio
  *  'sin-conexion' sin red: guardado en este dispositivo, se sube cuando vuelva
  *  'sesion'    la sesión venció: guardado en este dispositivo hasta volver a ingresar
+ *  'conflicto' otro dispositivo guardaba al mismo tiempo y no se pudo conciliar tras varios intentos
+ *              (se reintenta solo; también a mano)
  *  'error'     no se pudo sincronizar (se reintenta solo; también a mano)
  */
 export function createKitSync({
@@ -138,6 +140,8 @@ export function createKitSync({
   debounce = 800,
   retryDelays = [3000, 10000, 30000, 60000],
   autoSync = true,
+  maxConflicts = 5, // intentos ante 409 en una misma sincronización
+  conflictDelay = n => 100 * n + Math.random() * 150, // espera creciente y aleatoria entre intentos
 } = {}) {
   const K = { v2: `${key}:v2`, anon: `${key}:sin-cuenta`, stash: o => `${key}:resguardo:${o}`, legacy: key, intent: `${key}:ingreso` };
   const read = k => { try { return JSON.parse(storage.getItem(k)); } catch { return null; } };
@@ -217,11 +221,14 @@ export function createKitSync({
     let res;
     try { res = await fetchImpl(path, { credentials: 'same-origin', ...init }); } catch { throw new SyncError('offline'); }
     if (res.status === 401) throw new SyncError('session', 401);
+    if (res.status === 409) throw new SyncError('conflict', 409);
     if (!res.ok) throw new SyncError('http', res.status);
     return res.status === 204 ? null : res.json();
   }
   const getRemote = () => call(`/api/state/${resource}`);
-  const putRemote = data => call(`/api/state/${resource}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) });
+  // baseUpdatedAt: la versión leída (null si la cuenta no tenía nada). El servidor responde 409 si cambió.
+  const putRemote = (data, baseUpdatedAt) => call(`/api/state/${resource}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data, baseUpdatedAt }) });
+  const wait = ms => new Promise(r => timers.setTimeout(r, ms));
 
   async function whoAmI() {
     try {
@@ -248,16 +255,35 @@ export function createKitSync({
     const rev0 = rev;
     const local0 = local.data;
     setStatus('guardando');
-    const r = await getRemote();
-    const remote = r?.data ? normalize(r.data) : null;
+    let r;
+    let remote;
     let merged;
-    if (!remote) merged = local0;
-    else if (!local.base) merged = mergeFirst(local0, remote);
-    else if (r.updatedAt != null && r.updatedAt === local.base.updatedAt) merged = local0;
-    else merged = merge3(local.base, local0, remote);
-    const needPut = !remote || !same(merged, remote);
-    if (needPut) await putRemote(merged);
-    local.base = { data: merged, updatedAt: needPut ? null : r.updatedAt, confirmed: remote ? remote.ventas.map(v => v.id) : [] };
+    let needPut;
+    let saved = null;
+    // Leer → conciliar → guardar con la versión leída. Si otro dispositivo guardó en el medio (409),
+    // se vuelve a leer y a conciliar desde la misma base, con un máximo de intentos.
+    for (let n = 1; ; n++) {
+      r = await getRemote();
+      remote = r?.data ? normalize(r.data) : null;
+      if (!remote) merged = local0;
+      else if (!local.base) merged = mergeFirst(local0, remote);
+      else if (r.updatedAt != null && r.updatedAt === local.base.updatedAt) merged = local0;
+      else merged = merge3(local.base, local0, remote);
+      needPut = !remote || !same(merged, remote);
+      if (!needPut) break;
+      try {
+        saved = await putRemote(merged, r?.updatedAt ?? null);
+        break;
+      } catch (e) {
+        if (e.kind !== 'conflict' || n >= maxConflicts) throw e;
+        await wait(conflictDelay(n));
+      }
+    }
+    // Con la versión que devolvió el servidor, la cuenta quedó exactamente igual a `merged`: todas sus
+    // ventas están confirmadas. Un servidor anterior no devuelve versión: se sigue como antes.
+    const version = needPut ? (saved?.updatedAt ?? null) : r.updatedAt;
+    const confirmed = needPut && saved?.updatedAt != null ? merged.ventas.map(v => v.id) : remote ? remote.ventas.map(v => v.id) : [];
+    local.base = { data: merged, updatedAt: version, confirmed };
     if (rev !== rev0) {
       // Hubo cambios mientras se sincronizaba: se aplican sobre lo conciliado y se vuelve a subir.
       local.data = merge3({ data: local0, confirmed: local0.ventas.map(v => v.id) }, local.data, merged);
@@ -291,6 +317,7 @@ export function createKitSync({
         persist();
         if (e.kind === 'offline') setStatus('sin-conexion');
         else if (e.kind === 'session') { setStatus('sesion'); return; }
+        else if (e.kind === 'conflict') setStatus('conflicto');
         else setStatus('error', e.status === 400 ? 'limite' : null);
         scheduleRetry();
       } finally {
