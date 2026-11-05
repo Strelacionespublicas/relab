@@ -7,6 +7,21 @@
 - Que salga con **PRO activado por 90 días con un código**, sin tarjeta.
 - Para vos, el objetivo comercial es **validar PRO con uso real** antes de cobrar, y llegar al fin de los 90 días con personas que ya cargaron su catálogo y sus ferias. Esas son las que convierten.
 
+## 1b. Etapa 0: validación antes de programar el MVP
+**5 a 8 conversaciones cortas** (15 minutos, por WhatsApp o en una feria) con feriantes de distintos rubros. Se hacen mientras se desarrolla la Etapa 2.
+
+**Qué preguntar:**
+1. ¿Cómo llevás hoy el stock y las ventas: cuaderno, Excel, una app, nada?
+2. ¿Qué te pasó la última vez que se te descontroló? Por ejemplo, te quedaste sin un producto o no supiste si ganaste.
+3. ¿Cuántos productos y variantes manejás, y en cuántas ferias por mes estás?
+4. Si una app te resolviera eso, ¿pagarías ARS 3.900 a 4.900 por mes? ¿Y 29.900 por año?
+5. ¿Qué no puede faltar el primer día?
+
+**Cómo se usa el resultado:**
+- Si **stock** aparece como dolor principal, va primero.
+- Si casi nadie usa variantes, se postergan.
+- Si la respuesta al precio es "no" en la mayoría, se revisan los precios **antes** de la Etapa 4, no después.
+
 ## 2. Qué se puede mostrar
 | Bloque | Qué se muestra | Estado |
 |---|---|---|
@@ -86,7 +101,7 @@ Orden de recorte, de lo último a sacar a lo primero:
   - uso en la semana 2 y en la semana 8.
 
   Son números, sin leer contenido.
-- **Antes del día 80 de los 90:** la Etapa 4 lista, con la promo anual de 24.900 para quienes canjearon el código. Ese es el momento de mayor conversión.
+- **Antes del día 80 de los 90:** la Etapa 4a lista (es una fecha límite, no una mejora), con la promo anual de 24.900 para quienes canjearon el código. Ese es el momento de mayor conversión.
 - **Encuesta corta** a las 2 semanas: qué usaron y qué les falta. Eso ordena la Etapa 5.
 
 ## 7. Pendientes para cerrar este plan

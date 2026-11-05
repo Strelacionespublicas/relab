@@ -104,6 +104,19 @@ Todas las tablas tienen:
 
 **Al vencer PRO:** las herramientas gratis siguen igual. Lo PRO queda **visible y exportable**, y **solo** se bloquea crear y editar. Al reactivarse, vuelve la edición. **Nada se borra.**
 
+## 6b. Primera carga guiada y métricas de uso
+**Primera carga guiada (Etapa 3).** Al activar PRO por primera vez, se arma la base en 3 pasos:
+1. "Creá tu próxima feria".
+2. "Cargá tus 3 productos más vendidos", con costo, precio y existencias.
+3. "Hacé una venta de prueba", que se puede borrar.
+
+Se puede saltear y retomar. Si alguien no carga su primera feria y su primer producto el primer día, es muy probable que no vuelva.
+
+**Métricas de uso agregadas.** Para que puedas medir la charla y la conversión **sin leer contenido de nadie**:
+- conteos por cuenta, guardados en claro y sin contenido: cantidad de ferias, productos y ventas PRO, y la fecha de la última actividad;
+- en el panel de administración se ven **solo totales**: canjes por código, cuentas con al menos 1 producto, cuentas con al menos 1 venta PRO, y activas en la semana 2 y en la semana 8;
+- no se muestran nombres, emails ni montos.
+
 ## 7. Compatibilidad con los registros existentes
 - `resource_state` (el Kit gratis, Cyber y la guía) **no cambia**: misma forma, mismo cifrado y mismas pruebas.
 - **Importar ventas gratis a una feria PRO** (opcional, a pedido de la persona): copia las ventas del tracker gratis a `pro_ventas`, con id derivado del id original. Así no se duplica si se repite, y **el original gratis queda intacto**.

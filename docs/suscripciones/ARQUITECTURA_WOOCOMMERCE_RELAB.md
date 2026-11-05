@@ -86,6 +86,8 @@
 
 **Si falla el alta del pedido en Woo**, el permiso PRO **no se demora**. El pedido queda pendiente y el Cron lo reintenta.
 
+**El alta de pedidos en Woo es opcional (Etapa 4b).** Se hace solo si la facturación ARCA va a salir desde WooCommerce. Si facturás por otro medio, en la Etapa 4a Woo queda como vidriera y "Gestionar mi suscripción", y los cobros se ven en Mercado Pago y en RELAB. El cobro y los permisos funcionan igual con o sin la 4b.
+
 ## 7. Permisos en el servidor
 - `GET /api/pro/me` → `{ pro, plan, source, ends_at, next_payment_date, cancel_at_period_end, readOnly }`.
 - **Cada escritura PRO** pasa por `requirePro(user)` en el servidor. Si no hay PRO, responde 403 `pro_required` y no escribe nada.
