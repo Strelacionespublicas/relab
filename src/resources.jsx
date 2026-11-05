@@ -44,4 +44,12 @@ export const RESOURCES = [
     cta: 'Abrir kit',
     status: 'activo',
   },
+  {
+    href: '/pro/',
+    badge: 'Nuevo',
+    name: <span><span style={{ fontWeight: 800 }}>kit feriante</span> <span style={{ fontWeight: 400, fontStyle: 'italic', color: 'var(--st-coral)' }}>pro</span></span>,
+    desc: 'Tus ferias, tu catálogo, tus ventas con stock y tus resultados en el celular. Gratis por 12 meses durante el lanzamiento.',
+    cta: 'Activar gratis',
+    status: 'activo',
+  },
 ];

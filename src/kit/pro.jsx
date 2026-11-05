@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api.js';
 
-// El botón "Tengo un código" se muestra recién cuando los módulos PRO estén listos (Paso 3).
-// El link con ?codigo= y la insignia funcionan siempre.
-export const PRO_ENABLED = import.meta.env.VITE_PRO_ENABLED === '1';
+// Lanzamiento abierto: el Kit muestra Kit PRO y la invitación a todos. Con VITE_PRO_ENABLED=0 se
+// vuelve a ocultar (solo lo ve quien ya tiene PRO). El link con ?codigo= y la insignia funcionan siempre.
+export const PRO_ENABLED = import.meta.env.VITE_PRO_ENABLED !== '0';
 const PENDING = 'relab-kit-feriante:codigo';
 
 export const fecha = ms => new Date(ms).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });

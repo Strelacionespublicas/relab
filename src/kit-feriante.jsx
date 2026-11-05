@@ -278,7 +278,7 @@ function Kit() {
           <div className="kf-bar-r">
             <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
-              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && !access.pro?.pro && <button type="button" onClick={access.openModal}>Tengo un código</button>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && access.pro && !access.pro.pro && <a className="kf-pro-get" href="/pro/">PRO gratis</a>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
@@ -288,7 +288,7 @@ function Kit() {
       <Avisos snap={snap} sync={sync} />
 
       {!sec ? (
-        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} moments={MOMS} sections={SECS} />
+        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} moments={MOMS} sections={SECS} proBanner={PRO_ENABLED && !access.pro?.pro} />
       ) : (
         <>
           <div className="kf-sub">
@@ -385,7 +385,7 @@ function Avisos({ snap, sync }) {
   return items.length ? <div className="kf-aviso">{items}</div> : null;
 }
 
-function Home({ status, pct, st, saveLine, open, moments, sections }) {
+function Home({ status, pct, st, saveLine, open, moments, sections, proBanner }) {
   const hoy = dayKey(Date.now());
   const hoyTotal = st.ventas.filter(v => dayKey(v.ts) === hoy).reduce((a, v) => a + v.monto, 0);
   return (
@@ -408,6 +408,13 @@ function Home({ status, pct, st, saveLine, open, moments, sections }) {
         </div>
       </section>
       <main className="kf-wrap kf-home">
+        {proBanner && (
+          <a className="kf-pro-banner" href="/pro/">
+            <span className="kf-st kf-st--pro">NUEVO · PRO</span>
+            <span className="t"><b>Kit Feriante PRO gratis por 12 meses</b> Tus ferias, tus productos, tus ventas con stock y lo que te quedó en cada feria.</span>
+            <span className="kf-btn kf-btn--coral kf-btn--sm">Activar gratis</span>
+          </a>
+        )}
         {moments.map(([m, label, sub], mi) => (
           <section key={m} className="kf-moment">
             <div className="kf-moment-h"><span>{mi + 1}</span><div><h2>{label}</h2><p>{sub}</p></div></div>

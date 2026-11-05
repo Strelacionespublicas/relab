@@ -66,8 +66,9 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
     return (
       <div className="kf-card kf-pro-gate">
         <h3 className="kf-card-title">Herramienta PRO</h3>
-        <p>Para usar las herramientas PRO, ingresá con tu cuenta de Google y activá tu código.</p>
-        <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={onLogin}>Ingresar con Google</button>
+        <p>Kit Feriante PRO es gratis por 12 meses durante el lanzamiento. Se activa con tu cuenta de Google en un minuto.</p>
+        <a className="kf-btn kf-btn--coral kf-btn--sm" href="/pro/">Activar PRO gratis</a>
+        <button type="button" className="kf-link" onClick={onLogin}>Ya lo activé: ingresar</button>
       </div>
     );
   }
