@@ -19,6 +19,7 @@ import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
 import { blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
 import { createKitSync } from './kit/sync.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
+import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
 
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
@@ -100,6 +101,8 @@ const MOMENTS = [
   ['antes', 'Antes de la feria', 'Preparate y hacé las cuentas'],
   ['durante', 'Durante la feria', 'Atendé, vendé y registrá'],
   ['despues', 'Después de la feria', 'Medí y decidí'],
+  // Kit PRO: se muestra a quien tiene PRO (o datos PRO), o a todos con VITE_PRO_ENABLED (ver Kit()).
+  ['pro', 'Kit PRO', 'Tus ferias, tu catálogo, tus ventas y tu stock'],
 ];
 const momentLabel = Object.fromEntries(MOMENTS.map(m => [m[0], m[1]]));
 const Svg = ({ children }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
@@ -113,6 +116,10 @@ const ICONS = {
   tracker: <Svg><path d="M3 3v18h18" /><path d="M7 16v-5" /><path d="M12 16V8" /><path d="M17 16V5" /></Svg>,
   roi: <Svg><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></Svg>,
   menu: <Svg><path d="M4 6h16M4 12h16M4 18h16" /></Svg>,
+  ferias: <Svg><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></Svg>,
+  productos: <Svg><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></Svg>,
+  ventaspro: <Svg><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" /></Svg>,
+  stock: <Svg><path d="M21 8 12 3 3 8v8l9 5 9-5V8z" /><path d="m3 8 9 5 9-5" /><path d="M12 13v8" /></Svg>,
 };
 
 // Las herramientas del kit, en el orden del recorrido. El ejemplo sigue a un mismo caso: Rosa.
@@ -138,6 +145,20 @@ const SECTIONS = [
   { id: 'roi', label: 'ROI post feria', moment: 'despues', desc: 'El balance final: ganancia real, retorno y si te conviene volver.',
     para: ['Saber si la feria fue rentable.', 'Decidir con números si volvés el año que viene.'],
     ejemplo: 'Al terminar el festival, Rosa trae sus ventas del tracker, carga lo que gastó en stand, viaje y lana, y decide con números si vuelve el año que viene.' },
+  ...[
+    { id: 'ferias', label: 'Mis ferias', moment: 'pro', pro: true, desc: 'Cada feria con sus fechas, sus gastos y su resultado.',
+      para: ['Tener todas tus ferias en un solo lugar.', 'Ver cuánto te dejó cada una, con gastos y comisiones.'],
+      ejemplo: 'Rosa crea "Festival del Poncho 2026" con el stand, el flete y los viáticos. Cada venta que registra queda en esa feria, y al final ve el resultado sin hacer cuentas.' },
+    { id: 'productos', label: 'Mis productos', moment: 'pro', pro: true, desc: 'Tu catálogo con costos, precios y variantes.',
+      para: ['Cargar tus productos una vez y vender con un toque.', 'Saber el margen de cada producto.'],
+      ejemplo: 'Rosa carga el poncho, la manta (en azul y en rojo) y el camino de mesa, cada uno con su costo y su precio.' },
+    { id: 'ventaspro', label: 'Ventas PRO', moment: 'pro', pro: true, desc: 'Ventas con productos, cantidades, descuentos y comisiones.',
+      para: ['Registrar ventas de varios productos en segundos.', 'Saber cuánto te queda después de las comisiones.'],
+      ejemplo: 'Una clienta lleva 2 caminos de mesa y una manta azul con 10% de descuento y paga con QR. Rosa toca los productos, pone el descuento y ve al instante cuánto le queda.' },
+    { id: 'stock', label: 'Stock', moment: 'pro', pro: true, desc: 'Cuánto te queda de cada producto, con aviso de stock bajo.',
+      para: ['Saber qué te queda sin contar a mano.', 'Que te avise antes de quedarte sin un producto.'],
+      ejemplo: 'Rosa llega con 8 ponchos. Cada venta los descuenta sola, y cuando le quedan 2 el kit le avisa para traer más del taller.' },
+  ],
 ];
 const secById = id => SECTIONS.find(s => s.id === id);
 const fromHash = () => (secById(location.hash.slice(1)) ? location.hash.slice(1) : null);
@@ -164,6 +185,12 @@ function Kit() {
   const [menu, setMenu] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const access = useProAccess({ user, ready: snap.status !== 'cargando' });
+  const pro = useProData(user);
+  const counts = proCounts(pro.data);
+  // Antes del lanzamiento (sin VITE_PRO_ENABLED), el Kit PRO lo ve solo quien ya tiene PRO o datos PRO.
+  const showPro = PRO_ENABLED || !!access.pro?.pro || !!(counts && (counts.ferias || counts.productos || counts.ventas));
+  const SECS = SECTIONS.filter(s => !s.pro || showPro);
+  const MOMS = MOMENTS.filter(m => m[0] !== 'pro' || showPro);
   const login = () => { sync.markLoginIntent(); api.login(); };
 
   useEffect(() => {
@@ -205,12 +232,16 @@ function Kit() {
     calculadora: calcOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
     tracker: st.ventas.length ? [`${st.ventas.length} ${st.ventas.length === 1 ? 'venta' : 'ventas'}`, 'now'] : ['Sin ventas', ''],
     roi: roiOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
+    ferias: counts?.ferias ? [`${counts.ferias} ${counts.ferias === 1 ? 'feria' : 'ferias'}`, 'now'] : ['PRO', 'pro'],
+    productos: counts?.productos ? [`${counts.productos} ${counts.productos === 1 ? 'producto' : 'productos'}`, 'now'] : ['PRO', 'pro'],
+    ventaspro: counts?.ventas ? [`${counts.ventas} ${counts.ventas === 1 ? 'venta' : 'ventas'}`, 'now'] : ['PRO', 'pro'],
+    stock: ['PRO', 'pro'],
   }[id] || ['Para leer', 'read']);
 
   const sec = view && secById(view);
-  const idx = sec ? SECTIONS.indexOf(sec) : -1;
-  const prev = SECTIONS[idx - 1];
-  const next = SECTIONS[idx + 1];
+  const idx = sec ? SECS.indexOf(sec) : -1;
+  const prev = idx >= 0 ? SECS[idx - 1] : null;
+  const next = idx >= 0 ? SECS[idx + 1] : null;
 
   const saveLine = (
     <p className={`kf-save${snap.status === 'guardado' ? ' ok' : ''}`} role="status">
@@ -221,10 +252,10 @@ function Kit() {
   const nav = (
     <nav className="kf-nav" aria-label="Herramientas del kit">
       <a href="#inicio" className={`kf-nav-home${!sec ? ' on' : ''}`}><span className="kf-ico">{ICONS.inicio}</span>Tu kit</a>
-      {MOMENTS.map(([m, label]) => (
+      {MOMS.map(([m, label]) => (
         <div key={m} className="kf-nav-grp">
           <p>{label}</p>
-          {SECTIONS.filter(s => s.moment === m).map(s => {
+          {SECS.filter(s => s.moment === m).map(s => {
             const [txt, cls] = status(s.id);
             return (
               <a key={s.id} href={'#' + s.id} className={view === s.id ? 'on' : ''} aria-current={view === s.id ? 'page' : undefined}>
@@ -257,7 +288,7 @@ function Kit() {
       <Avisos snap={snap} sync={sync} />
 
       {!sec ? (
-        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} />
+        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} moments={MOMS} sections={SECS} />
       ) : (
         <>
           <div className="kf-sub">
@@ -270,7 +301,7 @@ function Kit() {
             <main className="kf-sec">
               <header className="kf-sec-head">
                 <span className="kf-ico-big">{ICONS[sec.id]}</span>
-                <div><p className="kf-kicker">{momentLabel[sec.moment]} · {idx + 1} de {SECTIONS.length}</p><h1>{sec.label}</h1></div>
+                <div><p className="kf-kicker">{momentLabel[sec.moment]} · {idx >= 0 ? `${idx + 1} de ${SECS.length}` : 'PRO'}</p><h1>{sec.label}</h1></div>
               </header>
               <div className="kf-intro">
                 <div className="kf-para"><p className="kf-para-t">Para qué sirve</p><ul>{sec.para.map(x => <li key={x}>{x}</li>)}</ul></div>
@@ -289,6 +320,7 @@ function Kit() {
               {sec.id === 'visitantes' && <Visitantes />}
               {sec.id === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
               {sec.id === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={open} />}
+              {sec.pro && <ProSection id={sec.id} user={user} access={access} pro={pro} medios={MEDIOS} onLogin={() => setLoginOpen(true)} />}
               <nav className="kf-pn" aria-label="Anterior y siguiente">
                 {prev ? <a href={'#' + prev.id} className="prev"><small>Anterior</small><span>← {prev.label}</span></a> : <a href="#inicio" className="prev"><small>Volver</small><span>← Tu kit</span></a>}
                 {next ? <a href={'#' + next.id} className="next"><small>Siguiente</small><span>{next.label} →</span></a> : <a href="#inicio" className="next"><small>Terminaste el recorrido</small><span>Tu kit →</span></a>}
@@ -353,7 +385,7 @@ function Avisos({ snap, sync }) {
   return items.length ? <div className="kf-aviso">{items}</div> : null;
 }
 
-function Home({ status, pct, st, saveLine, open }) {
+function Home({ status, pct, st, saveLine, open, moments, sections }) {
   const hoy = dayKey(Date.now());
   const hoyTotal = st.ventas.filter(v => dayKey(v.ts) === hoy).reduce((a, v) => a + v.monto, 0);
   return (
@@ -376,11 +408,11 @@ function Home({ status, pct, st, saveLine, open }) {
         </div>
       </section>
       <main className="kf-wrap kf-home">
-        {MOMENTS.map(([m, label, sub], mi) => (
+        {moments.map(([m, label, sub], mi) => (
           <section key={m} className="kf-moment">
             <div className="kf-moment-h"><span>{mi + 1}</span><div><h2>{label}</h2><p>{sub}</p></div></div>
             <div className="kf-cards">
-              {SECTIONS.filter(s => s.moment === m).map(s => {
+              {sections.filter(s => s.moment === m).map(s => {
                 const [txt, cls] = status(s.id);
                 return (
                   <a key={s.id} href={'#' + s.id} className="kf-tool">
