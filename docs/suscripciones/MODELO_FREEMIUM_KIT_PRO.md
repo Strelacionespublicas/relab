@@ -69,7 +69,7 @@ La única forma de borrar datos PRO es que la persona use "Borrar mi cuenta", o 
 
 **Por qué "gratis por lanzamiento" y no "gratis para siempre":** deja abierta la venta futura, a instituciones (paquetes de capacitación + PRO para sus feriantes) o a personas, sin tener que "quitar" algo que se prometió gratis.
 
-⏳ **Pendiente:** la fecha de fin del lanzamiento (por ejemplo, 6 o 12 meses desde el canje, o una fecha fija).
+✅ **Decidido:** PRO gratis por **12 meses desde el canje** del código.
 
 ## 6. Planes pagos (futuros, a definir según la adopción y el interés de instituciones)
 | Plan | Precio | Condiciones |
