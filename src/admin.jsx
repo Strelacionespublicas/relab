@@ -12,6 +12,7 @@ import './kit-feriante.css';
 import logoPetrol from './ds/assets/logo-petrol.png';
 import { api } from './lib/api.js';
 import { fecha } from './kit/pro.jsx';
+import { watchVersion } from './lib/version.js';
 
 const KIT_URL = `${location.origin}/kit-feriante/`;
 const copy = async (text, setMsg) => {
@@ -66,6 +67,7 @@ function Admin() {
       <header className="kf-topbar">
         <div className="kf-topbar-in">
           <a href="/" className="kf-brand"><img src={logoPetrol} alt="ST Relaciones Públicas" /><span>Relab · <b>admin</b></span></a>
+          <div className="kf-bar-r"><a href="/kit-feriante/" className="kf-relab"><span className="lg">Volver al <b>Kit</b></span><span className="sm">‹ Kit</span></a></div>
         </div>
       </header>
       <main className="kf-wrap" style={{ paddingTop: 24, paddingBottom: 48, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -160,4 +162,5 @@ function Admin() {
   );
 }
 
+watchVersion();
 createRoot(document.getElementById('root')).render(<Admin />);

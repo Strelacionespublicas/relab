@@ -8,6 +8,7 @@ import './app.css';
 import { Logo } from './ds/components.jsx';
 import { Footer } from './Footer.jsx';
 import { RESOURCES } from './resources.jsx';
+import { watchVersion } from './lib/version.js';
 
 
 const soon = { boxShadow: 'none', background: 'transparent', border: '1.5px dashed var(--border-default)' };
@@ -62,4 +63,5 @@ function Hub() {
   );
 }
 
+watchVersion();
 createRoot(document.getElementById('root')).render(<Hub />);

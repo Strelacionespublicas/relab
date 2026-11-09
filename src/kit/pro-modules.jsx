@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createProStore } from './pro-store.js';
 import { ownerOf } from './sync.js';
 import { readField, fmt } from './calc.js';
-import { controlaStock, gastosFeria, resumenFeria, resumenVentas, stockBajo, stockDe, ventaTotales } from './pro-calc.js';
+import { controlaStock, gastosFeria, periodo, resumenFeria, resumenNegocio, resumenVentas, stockBajo, stockDe, topProductos, ventaTotales } from './pro-calc.js';
 import { fecha } from './pro.jsx';
 import { keyName, parseDelimited, parseProductRows, planImport, templateCsv } from './pro-import.js';
 
@@ -101,7 +101,89 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
       {id === 'productos' && <Productos {...props} />}
       {id === 'ventaspro' && <VentasPro {...props} />}
       {id === 'stock' && <Stock {...props} />}
+      {id === 'resumen' && <Resumen {...props} />}
       <Exportar data={data} medios={medios} />
+    </>
+  );
+}
+
+// ---- Resumen del negocio ----
+const PERIODOS = [['mes', 'Este mes'], ['3m', '3 meses'], ['anio', 'Este año'], ['todo', 'Todo']];
+const pct = x => `${Math.round(x * 100)}%`;
+
+function Resumen({ data, medios }) {
+  const [per, setPer] = useState('todo');
+  const medioLabel = Object.fromEntries(medios);
+  const rango = periodo(per);
+  const r = resumenNegocio(data, rango);
+  const ventasPer = data.ventas.filter(v => (rango.desde == null || v.ts >= rango.desde));
+  const { top, mejorMargen } = topProductos(ventasPer, 5);
+  const ctx = { movimientos: data.movimientos, ventas: data.ventas };
+  const bajos = data.productos.flatMap(p => (p.variantes?.length ? p.variantes.map(v => [p, v.id]) : [[p, null]]))
+    .filter(([p, vid]) => data.movimientos.some(m => m.productoId === p.id && (m.varianteId ?? null) === vid) && stockBajo(p, stockDe(p.id, vid, ctx))).length;
+  const maxFeria = Math.max(1, ...r.porFeria.map(f => f.total));
+  const maxProd = Math.max(1, ...top.map(p => p.ingresos));
+  const medios_ = Object.entries(r.porMedio).sort((a, b) => b[1].total - a[1].total);
+
+  if (!data.ventas.length && !data.ferias.length) {
+    return <p className="kf-empty">Cuando cargues tus ferias y registres ventas en <a href="#ventaspro">Ventas PRO</a>, acá vas a ver el resumen de tu negocio: cuánto vendiste, cuánto te quedó y qué es lo que más se vende.</p>;
+  }
+  return (
+    <>
+      <div className="kf-seg kf-res-per" role="group" aria-label="Período">
+        {PERIODOS.map(([k, l]) => <button key={k} type="button" className={per === k ? 'on' : ''} onClick={() => setPer(k)}>{l}</button>)}
+      </div>
+      <div className={`kf-res-hero ${r.resultado >= 0 ? 'ok' : 'neg'}`}>
+        <span>Te quedó</span>
+        <b>{fmt(r.resultado)}</b>
+        <small>Lo cobrado, menos comisiones, mercadería vendida y gastos de las ferias</small>
+      </div>
+      <div className="kf-metrics">
+        <div><span>Cobrado</span><b>{fmt(r.total)}</b><small>{r.ventas} {r.ventas === 1 ? 'venta' : 'ventas'} · ticket {fmt(r.ticket)}</small></div>
+        <div><span>Comisiones</span><b>{fmt(r.comisiones)}</b><small>según tus tasas</small></div>
+        <div><span>Mercadería</span><b>{fmt(r.costo)}</b><small>costo de lo vendido</small></div>
+        <div><span>Gastos</span><b>{fmt(r.gastos)}</b><small>de {r.porFeria.length} {r.porFeria.length === 1 ? 'feria' : 'ferias'}</small></div>
+      </div>
+      {bajos > 0 && <div className="kf-tip" role="alert"><span><strong>{bajos} {bajos === 1 ? 'producto' : 'productos'} con stock bajo.</strong> <a href="#stock">Ver stock</a></span></div>}
+
+      {r.porFeria.length > 0 && (
+        <div className="kf-card kf-res-block">
+          <h3 className="kf-card-title">Comparación entre ferias</h3>
+          <div className="kf-res-bars">
+            {r.porFeria.map((f, i) => (
+              <div key={f.id} className={`kf-res-row${i === 0 && r.porFeria.length > 1 ? ' best' : ''}`} title={`${f.nombre}: cobrado ${fmt(f.total)}, gastos ${fmt(f.gastos)}, te quedó ${fmt(f.resultado)}`}>
+                <div className="kf-res-lab"><span>{f.nombre}{i === 0 && r.porFeria.length > 1 && <em> · la mejor</em>}</span><b className={f.resultado >= 0 ? 'ok' : 'neg'}>{fmt(f.resultado)}</b></div>
+                <div className="kf-res-track"><i style={{ width: `${(f.total / maxFeria) * 100}%` }} /></div>
+                <small>Cobrado {fmt(f.total)} · {f.ventas} {f.ventas === 1 ? 'venta' : 'ventas'} · gastos {fmt(f.gastos)}</small>
+              </div>
+            ))}
+          </div>
+          {r.sinFeria && <p className="kf-pro-note">Además, {r.sinFeria.ventas} {r.sinFeria.ventas === 1 ? 'venta' : 'ventas'} sin feria asignada por {fmt(r.sinFeria.total)}.</p>}
+        </div>
+      )}
+
+      {top.length > 0 && (
+        <div className="kf-card kf-res-block">
+          <h3 className="kf-card-title">Lo que más vendés</h3>
+          <div className="kf-res-bars">
+            {top.map(p => (
+              <div key={p.id} className="kf-res-row" title={`${p.nombre}: ${p.unidades} unidades, ${fmt(p.ingresos)}${p.costo ? `, margen ${pct(p.margen)}` : ''}`}>
+                <div className="kf-res-lab"><span>{p.nombre}</span><b>{fmt(p.ingresos)}</b></div>
+                <div className="kf-res-track"><i style={{ width: `${(p.ingresos / maxProd) * 100}%` }} /></div>
+                <small>{p.unidades} {p.unidades === 1 ? 'unidad' : 'unidades'}{p.costo ? ` · margen ${pct(p.margen)}` : ''}</small>
+              </div>
+            ))}
+          </div>
+          {mejorMargen && <p className="kf-pro-note">El que más te deja por cada peso vendido: <b>{mejorMargen.nombre}</b> (margen {pct(mejorMargen.margen)}).</p>}
+        </div>
+      )}
+
+      {medios_.length > 0 && (
+        <div className="kf-card kf-res-block">
+          <h3 className="kf-card-title">Cómo te pagan</h3>
+          <div className="kf-medios">{medios_.map(([m, x]) => <span key={m}>{medioLabel[m] || m} <b>{fmt(x.total)}</b> <small>({pct(r.total ? x.total / r.total : 0)})</small></span>)}</div>
+        </div>
+      )}
     </>
   );
 }

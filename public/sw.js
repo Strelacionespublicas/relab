@@ -1,7 +1,7 @@
 // Service worker de Relab: deja abrir TextoRedes sin conexión.
 // Páginas: primero la red (siempre la versión nueva); sin señal, la última copia.
 // /assets/ tiene hash en el nombre: primero la copia guardada. /api nunca se guarda.
-const CACHE = 'relab-v1';
+const CACHE = 'relab-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {

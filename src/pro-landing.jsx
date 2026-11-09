@@ -14,6 +14,7 @@ import logoPetrol from './ds/assets/logo-petrol.png';
 import { Footer } from './Footer.jsx';
 import { api } from './lib/api.js';
 import { fecha } from './kit/pro.jsx';
+import { watchVersion } from './lib/version.js';
 
 const CAMPANA = 'relab-pro:campana';
 const RUBROS = ['Textiles', 'Indumentaria', 'Accesorios y bijou', 'Cerámica', 'Madera', 'Cuero', 'Cosmética natural', 'Velas y aromas', 'Alimentos', 'Plantas', 'Arte e ilustración', 'Juguetes'];
@@ -165,4 +166,5 @@ function Landing() {
   );
 }
 
+watchVersion();
 createRoot(document.getElementById('root')).render(<Landing />);

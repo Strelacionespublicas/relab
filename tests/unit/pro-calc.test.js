@@ -70,3 +70,56 @@ describe('resúmenes', () => {
     expect(f.resultado).toBeCloseTo(255000 - 190000 * 0.0629 - 120000 - 150000, 5);
   });
 });
+
+import { periodo, resumenNegocio, topProductos } from '../../src/kit/pro-calc.js';
+
+describe('resumen del negocio', () => {
+  const T = (y, m, d) => new Date(y, m - 1, d, 12).getTime();
+  const ferias = [
+    { id: 'f1', nombre: 'Poncho', desde: '2026-07-10', gastos: [{ monto: 100000 }] },
+    { id: 'f2', nombre: 'Navidad', desde: '2026-11-20', gastos: [{ monto: 50000 }] },
+    { id: 'f3', nombre: 'Vieja', desde: '2025-12-01', gastos: [{ monto: 10 }] },
+  ];
+  const item = (pid, cant, precio, costo) => ({ productoId: pid, nombre: pid, cant, precio, costo });
+  const ventas = [
+    { ts: T(2026, 7, 10), feriaId: 'f1', medio: 'mp', items: [item('poncho', 2, 95000, 45000)] },
+    { ts: T(2026, 11, 20), feriaId: 'f2', medio: 'efect', items: [item('manta', 1, 65000, 30000), item('taza', 4, 9000, 3500)], descuento: { tipo: 'monto', valor: 1000 } },
+    { ts: T(2026, 11, 21), feriaId: null, medio: 'efect', items: [item('taza', 1, 9000, 3500)] },
+  ];
+  const com = { mp: 10 };
+
+  it('todo: suma ventas, gastos de las ferias del período y calcula el resultado', () => {
+    const r = resumenNegocio({ ferias, ventas, comisiones: com });
+    expect(r.ventas).toBe(3);
+    expect(r.total).toBe(190000 + 100000 + 9000);
+    expect(r.comisiones).toBeCloseTo(19000, 5);
+    expect(r.gastos).toBe(150010);
+    expect(r.resultado).toBeCloseTo(r.neto - r.costo - 150010, 5);
+    expect(r.porFeria[0].nombre).toBe('Navidad'); // ordenado por resultado
+    expect(r.sinFeria.ventas).toBe(1);
+  });
+
+  it('un período deja afuera ventas y gastos de otras fechas', () => {
+    const r = resumenNegocio({ ferias, ventas, comisiones: com }, { desde: T(2026, 11, 1), hasta: null });
+    expect(r.ventas).toBe(2);
+    expect(r.gastos).toBe(50000);
+    expect(r.porFeria.map(f => f.nombre)).toEqual(['Navidad']);
+  });
+
+  it('topProductos reparte el descuento y calcula el margen', () => {
+    const { top, mejorMargen } = topProductos(ventas, 2);
+    expect(top.map(p => p.id)).toEqual(['poncho', 'manta']);
+    const manta = top[1];
+    expect(manta.ingresos).toBeCloseTo(65000 * (100000 / 101000), 5);
+    expect(manta.unidades).toBe(1);
+    expect(mejorMargen.id).toBe('taza');
+  });
+
+  it('periodo: inicio del mes, de 3 meses y del año', () => {
+    const now = new Date(2026, 10, 9);
+    expect(periodo('mes', now).desde).toBe(new Date(2026, 10, 1).getTime());
+    expect(periodo('3m', now).desde).toBe(new Date(2026, 8, 1).getTime());
+    expect(periodo('anio', now).desde).toBe(new Date(2026, 0, 1).getTime());
+    expect(periodo('todo', now).desde).toBeNull();
+  });
+});

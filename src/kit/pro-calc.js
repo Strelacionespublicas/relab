@@ -63,3 +63,64 @@ export function resumenFeria(feria, ventas, comisiones = {}) {
   const gastos = gastosFeria(feria);
   return { ...r, gastos, resultado: r.neto - r.costo - gastos };
 }
+
+// ---- Resumen del negocio (pantalla "Resumen") ----
+const enRango = (ts, desde, hasta) => (desde == null || ts >= desde) && (hasta == null || ts < hasta);
+const diaMs = k => (k ? new Date(`${k}T12:00:00`).getTime() : null);
+
+/**
+ * Resumen de todas las ferias en un período [desde, hasta) (ms; null = sin límite).
+ * Cuenta las ventas del período; los gastos de una feria cuentan si la feria empieza en el período
+ * o si tiene ventas en él. Devuelve los totales, el detalle por feria y las ventas sin feria.
+ */
+export function resumenNegocio({ ferias = [], ventas = [], comisiones = {} }, { desde = null, hasta = null } = {}) {
+  const vs = ventas.filter(v => enRango(v.ts, desde, hasta));
+  const conVentas = new Set(vs.map(v => v.feriaId).filter(Boolean));
+  const fs = ferias.filter(f => conVentas.has(f.id) || enRango(diaMs(f.desde) ?? -1, desde, hasta));
+  const porFeria = fs.map(f => ({ id: f.id, nombre: f.nombre, desde: f.desde, ...resumenFeria(f, vs.filter(v => v.feriaId === f.id), comisiones) }))
+    .sort((a, b) => b.resultado - a.resultado);
+  const sinFeria = vs.filter(v => !v.feriaId || !fs.some(f => f.id === v.feriaId));
+  const r = resumenVentas(vs, comisiones);
+  const gastos = fs.reduce((s, f) => s + gastosFeria(f), 0);
+  return {
+    ...r,
+    gastos,
+    resultado: r.neto - r.costo - gastos,
+    ticket: r.ventas ? r.total / r.ventas : 0,
+    porFeria,
+    sinFeria: sinFeria.length ? resumenVentas(sinFeria, comisiones) : null,
+  };
+}
+
+// Productos más vendidos por ingresos. El descuento de una venta se reparte entre sus ítems según su peso.
+export function topProductos(ventas, n = 5) {
+  const m = new Map();
+  for (const v of ventas) {
+    const t = ventaTotales(v);
+    const factor = t.subtotal ? t.total / t.subtotal : 0;
+    for (const it of v.items || []) {
+      const key = it.productoId || it.nombre;
+      const nombre = String(it.nombre || '').replace(/ \(.*\)$/, '');
+      const p = m.get(key) || { id: key, nombre, unidades: 0, ingresos: 0, costo: 0 };
+      p.unidades += n_(it.cant);
+      p.ingresos += n_(it.cant) * n_(it.precio) * factor;
+      p.costo += n_(it.cant) * n_(it.costo);
+      m.set(key, p);
+    }
+  }
+  const lista = [...m.values()].map(p => ({ ...p, margen: p.ingresos > 0 ? (p.ingresos - p.costo) / p.ingresos : 0 }))
+    .sort((a, b) => b.ingresos - a.ingresos);
+  const conCosto = lista.filter(p => p.costo > 0 && p.ingresos > 0);
+  return { top: lista.slice(0, n), mejorMargen: conCosto.sort((a, b) => b.margen - a.margen)[0] || null };
+}
+const n_ = v => (Number.isFinite(v) ? v : 0);
+
+// Inicio de los períodos del Resumen (hora local).
+export function periodo(id, now = new Date()) {
+  const y = now.getFullYear();
+  const mth = now.getMonth();
+  if (id === 'mes') return { desde: new Date(y, mth, 1).getTime(), hasta: null };
+  if (id === '3m') return { desde: new Date(y, mth - 2, 1).getTime(), hasta: null };
+  if (id === 'anio') return { desde: new Date(y, 0, 1).getTime(), hasta: null };
+  return { desde: null, hasta: null };
+}

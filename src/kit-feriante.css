@@ -480,3 +480,24 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-pro-prev small { color: var(--st-neutral-600); }
 .kf-pro-prev th { position: sticky; top: 0; background: #fff; }
 @media (max-width: 640px) { .kf-pro-prev th:nth-child(3), .kf-pro-prev td:nth-child(3) { display: none; } }
+
+/* Resumen del negocio */
+.kf-res-per { margin-bottom: 14px; flex-wrap: wrap; }
+.kf-res-hero { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; padding: 18px 20px; border-radius: 16px; background: var(--st-petroleo); color: #fff; }
+.kf-res-hero span { font-family: var(--font-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.kf-res-hero b { font-family: var(--font-display); font-size: 36px; line-height: 1.1; }
+.kf-res-hero.neg b::after { content: ' (pérdida)'; font-size: 15px; font-weight: 600; opacity: .85; }
+.kf-res-hero small { font-size: 13px; opacity: .8; }
+.kf-res-block { margin-top: 16px; }
+.kf-res-bars { display: flex; flex-direction: column; gap: 14px; }
+.kf-res-lab { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--st-petroleo); }
+.kf-res-lab span { font-weight: 600; }
+.kf-res-lab em { font-style: normal; font-weight: 400; color: var(--st-neutral-600); font-size: 12.5px; }
+.kf-res-lab b { font-family: var(--font-data); white-space: nowrap; }
+.kf-res-lab b.ok { color: var(--st-success); }
+.kf-res-lab b.neg { color: var(--st-danger); }
+.kf-res-track { height: 10px; margin: 5px 0 3px; border-radius: 4px; background: var(--st-gris-claro); overflow: hidden; }
+.kf-res-track i { display: block; height: 100%; min-width: 4px; border-radius: 0 4px 4px 0; background: var(--st-celeste-700, #2A7F9E); }
+.kf-res-row.best .kf-res-track i { background: var(--st-petroleo); }
+.kf-res-row small { font-size: 12.5px; color: var(--st-neutral-600); }
+.kf-admin-link { height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--st-petroleo); border-radius: 999px; color: var(--st-petroleo); font-family: var(--font-display); font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }

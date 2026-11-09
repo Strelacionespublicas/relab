@@ -18,6 +18,7 @@ import { api } from './lib/api.js';
 import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
 import { blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
 import { createKitSync } from './kit/sync.js';
+import { watchVersion } from './lib/version.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
 
@@ -120,6 +121,7 @@ const ICONS = {
   productos: <Svg><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></Svg>,
   ventaspro: <Svg><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" /></Svg>,
   stock: <Svg><path d="M21 8 12 3 3 8v8l9 5 9-5V8z" /><path d="m3 8 9 5 9-5" /><path d="M12 13v8" /></Svg>,
+  resumen: <Svg><path d="M3 3v18h18" /><rect x="7" y="12" width="3" height="5" rx="1" /><rect x="12" y="8" width="3" height="9" rx="1" /><rect x="17" y="5" width="3" height="12" rx="1" /></Svg>,
 };
 
 // Las herramientas del kit, en el orden del recorrido. El ejemplo sigue a un mismo caso: Rosa.
@@ -146,6 +148,9 @@ const SECTIONS = [
     para: ['Saber si la feria fue rentable.', 'Decidir con números si volvés el año que viene.'],
     ejemplo: 'Al terminar el festival, Rosa trae sus ventas del tracker, carga lo que gastó en stand, viaje y lana, y decide con números si vuelve el año que viene.' },
   ...[
+    { id: 'resumen', label: 'Resumen', moment: 'pro', pro: true, desc: 'Cuánto vendiste y cuánto te quedó, con todas tus ferias juntas.',
+      para: ['Ver de un vistazo cómo va tu negocio.', 'Comparar ferias y saber qué producto te deja más.'],
+      ejemplo: 'Después de tres ferias, Rosa mira el resumen: el Festival del Poncho fue la que más le dejó, y los caminos de mesa tienen mejor margen que los ponchos.' },
     { id: 'ferias', label: 'Mis ferias', moment: 'pro', pro: true, desc: 'Cada feria con sus fechas, sus gastos y su resultado.',
       para: ['Tener todas tus ferias en un solo lugar.', 'Ver cuánto te dejó cada una, con gastos y comisiones.'],
       ejemplo: 'Rosa crea "Festival del Poncho 2026" con el stand, el flete y los viáticos. Cada venta que registra queda en esa feria, y al final ve el resultado sin hacer cuentas.' },
@@ -236,6 +241,7 @@ function Kit() {
     productos: counts?.productos ? [`${counts.productos} ${counts.productos === 1 ? 'producto' : 'productos'}`, 'now'] : ['PRO', 'pro'],
     ventaspro: counts?.ventas ? [`${counts.ventas} ${counts.ventas === 1 ? 'venta' : 'ventas'}`, 'now'] : ['PRO', 'pro'],
     stock: ['PRO', 'pro'],
+    resumen: counts?.ventas ? ['Con tus datos', 'now'] : ['PRO', 'pro'],
   }[id] || ['Para leer', 'read']);
 
   const sec = view && secById(view);
@@ -278,7 +284,7 @@ function Kit() {
           <div className="kf-bar-r">
             <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
-              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && access.pro && !access.pro.pro && <a className="kf-pro-get" href="/pro/">PRO gratis</a>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && access.pro && !access.pro.pro && <a className="kf-pro-get" href="/pro/">PRO gratis</a>}{access.pro?.admin && <a className="kf-admin-link" href="/admin/">Panel</a>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
@@ -829,4 +835,5 @@ function Roi({ roi, ventas, set, openTab }) {
   );
 }
 
+watchVersion();
 createRoot(document.getElementById('root')).render(<Kit />);
