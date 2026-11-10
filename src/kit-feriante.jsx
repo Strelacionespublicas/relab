@@ -1,4 +1,4 @@
-// Kit del emprendedor feriante (recurso de Relab). Portado del "Kit Feriante — Festival del Poncho"
+// Kit del feriante (recurso de Relab; antes "Kit del emprendedor feriante"). Portado del "Kit Feriante — Festival del Poncho"
 // de Stella y generalizado para cualquier feria. "Tu kit" muestra las siete herramientas por momento
 // (antes, durante y después de la feria) y cada una se abre en su pantalla según el hash, con un
 // ejemplo que sigue a un mismo caso (Rosa, tejedora de Belén). Todo lo que se carga
@@ -400,8 +400,8 @@ function Home({ status, pct, st, saveLine, open, moments, sections, proBanner })
         <div className="kf-wrap kf-hero-in">
           <div>
             <p className="kf-kicker">Kit gratuito · 7 herramientas</p>
-            <h1>Kit del emprendedor feriante</h1>
-            <p className="kf-lead">Para el Festival del Poncho, ferias navideñas, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
+            <h1>Kit del feriante</h1>
+            <p className="kf-lead">Para ferias turísticas, fiestas regionales, festivales, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
             <a className="kf-btn kf-btn--coral" href="#checklist">Empezar por el checklist →</a>
             <a className="kf-hero-relab" href="/">Ver todos los recursos de Relab</a>
             {saveLine}

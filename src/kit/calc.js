@@ -1,4 +1,4 @@
-// Números en formato argentino y cuentas del Kit del emprendedor feriante. Funciones puras (sin
+// Números en formato argentino y cuentas del Kit del feriante. Funciones puras (sin
 // React) para poder probarlas: tests/unit/kit-calc.test.js. Los campos del kit guardan el texto tal
 // cual lo escribió la persona; acá se interpreta cada vez que se calcula.
 
