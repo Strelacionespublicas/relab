@@ -522,3 +522,11 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-sueldo-tag { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .kf-sueldo-tag.ok { background: var(--st-success-bg); color: var(--st-success); }
 .kf-sueldo-tag.low { background: #FFF3D6; color: #8A5A00; }
+
+/* Venta rápida: buscador y favoritos */
+.kf-pro-search { width: 100%; box-sizing: border-box; height: 44px; padding: 0 14px; border: 1.5px solid var(--st-neutral-300); border-radius: 10px; font-family: var(--font-body); font-size: 16px; }
+.kf-pro-search:focus { outline: none; border-color: var(--st-celeste-700); }
+.kf-pro-chip.fav { border-color: #E2A400; }
+.kf-pro-hint { color: var(--st-neutral-600); font-size: 12.5px; }
+.kf-fav { width: 34px; height: 34px; border: 1px solid var(--st-neutral-300); border-radius: 999px; background: #fff; color: var(--st-neutral-500); font-size: 18px; line-height: 1; cursor: pointer; }
+.kf-fav.on { border-color: #E2A400; color: #E2A400; background: #FFF9E8; }

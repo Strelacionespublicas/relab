@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createProStore } from './pro-store.js';
 import { ownerOf } from './sync.js';
 import { readField, fmt } from './calc.js';
-import { controlaStock, gastosFeria, jornadasFeria, mesesDelPeriodo, periodo, resumenFeria, resumenSueldo, resumenNegocio, resumenVentas, stockBajo, stockDe, topProductos, ventaTotales } from './pro-calc.js';
+import { buscarProductos, controlaStock, gastosFeria, ordenarParaVender, jornadasFeria, mesesDelPeriodo, periodo, resumenFeria, resumenSueldo, resumenNegocio, resumenVentas, stockBajo, stockDe, topProductos, ventaTotales } from './pro-calc.js';
 import { fecha } from './pro.jsx';
 import { keyName, parseDelimited, parseProductRows, planImport, templateCsv } from './pro-import.js';
 
@@ -431,7 +431,7 @@ function Productos({ store, data, canEdit }) {
                   <b>{p.nombre}</b>{p.categoria && <span className="kf-pro-tag soft">{p.categoria}</span>}
                   <small>{fmt(p.precio)}{p.costo ? ` · costo ${fmt(p.costo)} · margen ${Math.round(margen)}%` : ''}{p.variantes?.length ? ` · ${p.variantes.map(v => v.nombre).join(', ')}` : ''}</small>
                 </div>
-                {canEdit && <div className="kf-pro-btns"><button type="button" className="kf-link" onClick={() => editar(p)}>Editar</button><button type="button" className="kf-link" onClick={() => window.confirm(`¿Mandar "${p.nombre}" a la papelera? Las ventas registradas no cambian.`) && store.remove('producto', p.id)}>Borrar</button></div>}
+                {canEdit && <div className="kf-pro-btns"><button type="button" className={`kf-fav${p.favorito ? ' on' : ''}`} aria-pressed={!!p.favorito} aria-label={p.favorito ? `Sacar ${p.nombre} de favoritos` : `Marcar ${p.nombre} como favorito`} title="Favorito: aparece primero al vender" onClick={() => { const { id, deletedAt: _d, ...d } = p; store.save('producto', id, { ...d, favorito: !p.favorito }); }}>{p.favorito ? '★' : '☆'}</button><button type="button" className="kf-link" onClick={() => editar(p)}>Editar</button><button type="button" className="kf-link" onClick={() => window.confirm(`¿Mandar "${p.nombre}" a la papelera? Las ventas registradas no cambian.`) && store.remove('producto', p.id)}>Borrar</button></div>}
               </div>
             </div>
           );
@@ -560,6 +560,9 @@ function VentasPro({ store, data, canEdit, medios }) {
   const [vista, setVista] = useState('hoy');
   const [okMsg, setOkMsg] = useState('');
   const [tasas, setTasas] = useState(null);
+  const [q, setQ] = useState('');
+  const [verTodos, setVerTodos] = useState(false);
+  const buscador = useRef(null);
   const enviado = useRef(null);
   useEffect(() => { if (!feriaSel && data.config.feriaActiva) setFeriaSel(data.config.feriaActiva); }, [data.config.feriaActiva]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDraft(d => (d.ts ? d : { ...d, feriaId: feriaSel || null })); }, [feriaSel]);
@@ -628,24 +631,37 @@ function VentasPro({ store, data, canEdit, medios }) {
           <button type="button" className={vista === 'todo' ? 'on' : ''} onClick={() => setVista('todo')}>{feria ? 'Toda la feria' : 'Todo'}</button>
         </div>
       </div>
-      <div className="kf-metrics">
-        <div><span>Ventas</span><b>{r.ventas}</b><small>{r.unidades} {r.unidades === 1 ? 'unidad' : 'unidades'}</small></div>
-        <div><span>Cobrado</span><b>{fmt(r.total)}</b><small>{r.descuentos ? `con ${fmt(r.descuentos)} de descuentos` : 'bruto'}</small></div>
-        <div><span>Comisiones</span><b>{fmt(r.comisiones)}</b><small>según tus tasas</small></div>
-        <div><span>Neto</span><b>{fmt(r.neto)}</b><small>lo que te queda</small></div>
-      </div>
-      {Object.keys(r.porMedio).length > 0 && <div className="kf-medios">{Object.entries(r.porMedio).map(([m, x]) => <span key={m}>{medioLabel[m] || m} <b>{fmt(x.total)}</b></span>)}</div>}
-
       {canEdit && (
         <form className="kf-card kf-pro-form" onSubmit={registrar}>
           <h3 className="kf-card-title">{draft.ts ? 'Editar venta' : 'Nueva venta'}</h3>
           {!data.productos.length ? <p className="kf-empty">Primero cargá tus productos en <a href="#productos">Mis productos</a>.</p> : (
-            <div className="kf-pro-chips" role="group" aria-label="Productos">
-              {data.productos.map(p => {
-                const s = controlaStock(p.id, data.movimientos) ? stockDe(p.id, undefined, stockCtx) : null;
-                return <button key={p.id} type="button" className="kf-pro-chip" onClick={() => add(p)}>{p.nombre}<small>{fmt(p.precio)}{s != null ? ` · ${s} en stock` : ''}</small></button>;
-              })}
-            </div>
+            (() => {
+              // Venta rápida: favoritos y más vendidos primero; con muchos productos, buscador.
+              const ordenados = ordenarParaVender(data.productos, data.ventas);
+              const encontrados = buscarProductos(ordenados, q);
+              const LIMITE = 12;
+              const mostrar = q || verTodos ? encontrados : encontrados.slice(0, LIMITE);
+              const conBuscador = data.productos.length > 6;
+              const elegir = p => { add(p); if (q) { setQ(''); buscador.current?.focus(); } };
+              return (
+                <>
+                  {conBuscador && (
+                    <input ref={buscador} type="search" className="kf-pro-search" aria-label="Buscar producto" placeholder={`Buscar entre ${data.productos.length} productos…`} value={q}
+                      onChange={e => setQ(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (encontrados.length === 1) elegir(encontrados[0]); } if (e.key === 'Escape') setQ(''); }} />
+                  )}
+                  <div className="kf-pro-chips" role="group" aria-label="Productos">
+                    {mostrar.map(p => {
+                      const st = controlaStock(p.id, data.movimientos) ? stockDe(p.id, undefined, stockCtx) : null;
+                      return <button key={p.id} type="button" className={`kf-pro-chip${p.favorito ? ' fav' : ''}`} onClick={() => elegir(p)}>{p.favorito ? '★ ' : ''}{p.nombre}<small>{fmt(p.precio)}{st != null ? ` · ${st} en stock` : ''}</small></button>;
+                    })}
+                    {q && !encontrados.length && <p className="kf-empty">No hay productos con "{q}".</p>}
+                  </div>
+                  {!q && encontrados.length > LIMITE && <button type="button" className="kf-link" onClick={() => setVerTodos(v => !v)}>{verTodos ? 'Ver menos' : `Ver todos (${encontrados.length})`}</button>}
+                  {q && encontrados.length === 1 && <small className="kf-pro-hint">Enter para sumarlo</small>}
+                </>
+              );
+            })()
           )}
           {draft.items.map((it, i) => {
             const p = data.productos.find(x => x.id === it.productoId);
@@ -684,6 +700,14 @@ function VentasPro({ store, data, canEdit, medios }) {
           {okMsg && <p className="kf-pro-ok" role="status">{okMsg}</p>}
         </form>
       )}
+      <div className="kf-metrics">
+        <div><span>Ventas</span><b>{r.ventas}</b><small>{r.unidades} {r.unidades === 1 ? 'unidad' : 'unidades'}</small></div>
+        <div><span>Cobrado</span><b>{fmt(r.total)}</b><small>{r.descuentos ? `con ${fmt(r.descuentos)} de descuentos` : 'bruto'}</small></div>
+        <div><span>Comisiones</span><b>{fmt(r.comisiones)}</b><small>según tus tasas</small></div>
+        <div><span>Neto</span><b>{fmt(r.neto)}</b><small>lo que te queda</small></div>
+      </div>
+      {Object.keys(r.porMedio).length > 0 && <div className="kf-medios">{Object.entries(r.porMedio).map(([m, x]) => <span key={m}>{medioLabel[m] || m} <b>{fmt(x.total)}</b></span>)}</div>}
+
 
       <div className="kf-ventas">
         {!lista.length && <p className="kf-empty">{vista === 'hoy' ? 'Todavía no hay ventas hoy.' : 'Todavía no hay ventas.'}</p>}

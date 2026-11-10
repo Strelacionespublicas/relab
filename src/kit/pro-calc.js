@@ -167,3 +167,25 @@ export function resumenSueldo({ resultado = 0, jornadas = 0 }, cfg, { meses = 1 
     trasSueldo: objetivo != null ? resultado - objetivo : null,
   };
 }
+
+// ---- Venta rápida: orden y búsqueda de productos ----
+const sinTildes = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// Para vender: primero los favoritos, después los más vendidos (por unidades) y luego por nombre.
+export function ordenarParaVender(productos = [], ventas = []) {
+  const unidades = new Map();
+  for (const v of ventas) for (const it of v.items || []) unidades.set(it.productoId, (unidades.get(it.productoId) || 0) + n_(it.cant));
+  return [...productos].sort((a, b) => (!!b.favorito - !!a.favorito)
+    || ((unidades.get(b.id) || 0) - (unidades.get(a.id) || 0))
+    || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+}
+
+// Busca por nombre, categoría o variante; todas las palabras tienen que aparecer (sin importar tildes).
+export function buscarProductos(productos = [], q = '') {
+  const palabras = sinTildes(q).split(/\s+/).filter(Boolean);
+  if (!palabras.length) return productos;
+  return productos.filter(p => {
+    const texto = sinTildes([p.nombre, p.categoria, ...(p.variantes || []).map(v => v.nombre)].join(' '));
+    return palabras.every(w => texto.includes(w));
+  });
+}

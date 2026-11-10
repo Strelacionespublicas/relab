@@ -165,3 +165,26 @@ describe('tu sueldo (PRO)', () => {
     expect(r).toMatchObject({ porJornada: null, objetivo: null, cubre: null, trasSueldo: null });
   });
 });
+
+import { buscarProductos, ordenarParaVender } from '../../src/kit/pro-calc.js';
+
+describe('venta rápida', () => {
+  const productos = [
+    { id: 'a', nombre: 'Aros dorados', categoria: 'Bijou', variantes: [{ id: 'v1', nombre: 'Grande' }] },
+    { id: 'b', nombre: 'Taza de cerámica', categoria: 'Cerámica' },
+    { id: 'c', nombre: 'Collar', categoria: 'Bijou', favorito: true },
+    { id: 'd', nombre: 'Anillo', categoria: 'Bijou' },
+  ];
+  it('ordena: favoritos, más vendidos y nombre', () => {
+    const ventas = [{ items: [{ productoId: 'b', cant: 3 }] }, { items: [{ productoId: 'a', cant: 1 }] }];
+    expect(ordenarParaVender(productos, ventas).map(p => p.id)).toEqual(['c', 'b', 'a', 'd']);
+    expect(ordenarParaVender(productos, []).map(p => p.id)).toEqual(['c', 'd', 'a', 'b']);
+  });
+  it('busca sin tildes, por categoría y variante, con varias palabras', () => {
+    expect(buscarProductos(productos, 'ceramica').map(p => p.id)).toEqual(['b']);
+    expect(buscarProductos(productos, 'bijou').map(p => p.id)).toEqual(['a', 'c', 'd']);
+    expect(buscarProductos(productos, 'aros grande').map(p => p.id)).toEqual(['a']);
+    expect(buscarProductos(productos, '  ')).toHaveLength(4);
+    expect(buscarProductos(productos, 'zapato')).toEqual([]);
+  });
+});
