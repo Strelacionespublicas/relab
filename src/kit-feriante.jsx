@@ -767,6 +767,25 @@ function Cobros() {
   );
 }
 
+// "Tu sueldo" en el ROI: cuánto ganaste por jornada (y por hora) y si cubriste lo que querías ganar.
+function Sueldo({ r, openTab }) {
+  const pct = r.cubre != null ? Math.round(r.cubre * 100) : null;
+  return (
+    <div className="kf-sueldo">
+      <p className="kf-sueldo-t">Tu sueldo</p>
+      <p>Ganaste <b>{fmt(r.ganDia)} por jornada</b>{r.ganHora != null ? <> (≈ {fmt(r.ganHora)} por hora)</> : null}{r.dias > 1 ? ` en ${r.dias} jornadas` : ''}.</p>
+      {pct != null ? (
+        <>
+          <div className="kf-sueldo-bar" aria-hidden="true"><i className={pct >= 100 ? 'ok' : 'low'} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></div>
+          <p>{pct >= 100 ? <>Cubriste tu sueldo: <b>{pct}%</b> de lo que querías ganar.</> : <>Cubriste el <b>{Math.max(pct, 0)}%</b> de tu sueldo.</>}{' '}
+            Después de pagarte {fmt(r.sueldo)} por jornada, al negocio {r.trasSueldo >= 0 ? <>le quedan <b className="pos">{fmt(r.trasSueldo)}</b>.</> : <>le faltan <b className="neg">{fmt(-r.trasSueldo)}</b>.</>}</p>
+          {pct < 100 && <p className="kf-muted">Si no te alcanza para tu sueldo, revisá precios y costos en la <button type="button" className="kf-link-inline" onClick={() => openTab('calculadora')}>Calculadora</button>.</p>}
+        </>
+      ) : <p className="kf-muted">Cargá cuánto querés ganar por jornada para saber si la feria cubrió tu sueldo.</p>}
+    </div>
+  );
+}
+
 function Roi({ roi, ventas, set, openTab }) {
   const upd = (k, v) => set('roi', r => ({ ...r, [k]: v }));
   const traer = () => {
@@ -794,7 +813,7 @@ function Roi({ roi, ventas, set, openTab }) {
         </div>
       )}
       {ventas.length === 0 && <p className="kf-muted kf-mb">¿Registraste tus ventas en <button type="button" className="kf-link-inline" onClick={() => openTab('tracker')}>Ventas del día</button>? Desde acá las traés con un clic.</p>}
-      <div className="kf-calc kf-calc--3">
+      <div className="kf-calc kf-calc--2x2">
         <Card title="Ingresos reales">
           <Field label="Vendido en efectivo" value={roi.ef} onChange={v => upd('ef', v)} error={errors.ef} suffix="$" />
           <Field label="Vendido en digital" value={roi.dig} onChange={v => upd('dig', v)} error={errors.dig} suffix="$" />
@@ -812,6 +831,10 @@ function Roi({ roi, ventas, set, openTab }) {
           <Field label="Días de feria" value={roi.dias} onChange={v => upd('dias', v)} error={errors.dias} placeholder="1" />
           <Field label="Objetivo de ventas que tenías" value={roi.obj} onChange={v => upd('obj', v)} error={errors.obj} suffix="$" />
         </Card>
+        <Card title="Tu sueldo">
+          <Field label="¿Cuánto querés ganar por jornada?" value={roi.sueldo} onChange={v => upd('sueldo', v)} error={errors.sueldo} suffix="$" hint="Lo que te pagarías a vos por un día de feria. Opcional." />
+          <Field label="Horas por jornada" value={roi.horas} onChange={v => upd('horas', v)} error={errors.horas} placeholder="Ej.: 10" hint="Contando armado y desarme. Opcional." />
+        </Card>
       </div>
       {!r.ok && <p className="kf-empty">Corregí los campos marcados para ver el análisis.</p>}
       {show && (
@@ -827,6 +850,7 @@ function Roi({ roi, ventas, set, openTab }) {
           </div>
           <div className={`kf-dec kf-dec--${dec[0]}`}>{dec[1]}</div>
           {dec[2] && <p className="kf-analisis">{dec[2]}</p>}
+          <Sueldo r={r} openTab={openTab} />
         </div>
       )}
       <Tip><strong>Más allá del dinero:</strong> los contactos, los seguidores y el reconocimiento de tu marca también son retorno. Medí todo.</Tip>

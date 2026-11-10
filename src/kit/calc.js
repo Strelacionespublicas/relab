@@ -148,6 +148,9 @@ export function calcRoi(roi) {
   const seg = field('seg');
   const dias = field('dias', { positive: true, fallback: 1 });
   const obj = field('obj');
+  // Tu sueldo (opcionales): cuánto querés ganar por jornada y cuántas horas dura cada jornada.
+  const sueldo = field('sueldo');
+  const horas = field('horas');
   const bruto = ef + dig;
   const ing = bruto - com;
   const gan = ing - costo;
@@ -160,6 +163,11 @@ export function calcRoi(roi) {
     ok: Object.keys(errors).length === 0, errors, show,
     ef, dig, com, bruto, ing, costo, gan, cont, seg, dias, obj, pctRoi, pctObj, decision,
     ventaDia: bruto / dias,
+    sueldo, horas,
+    ganDia: gan / dias,
+    ganHora: horas > 0 ? gan / (dias * horas) : null,
+    cubre: sueldo > 0 ? (gan / dias) / sueldo : null,
+    trasSueldo: sueldo > 0 ? gan - sueldo * dias : null,
     costoContacto: cont > 0 && costo > 0 ? costo / cont : null,
   };
 }

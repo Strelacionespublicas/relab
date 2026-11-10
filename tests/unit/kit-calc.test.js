@@ -227,3 +227,38 @@ describe('formato de salida', () => {
     expect(csvMonto(12000)).toBe('12000');
   });
 });
+
+describe('ROI: tu sueldo', () => {
+  const base = { ef: '300.000', dig: '', com: '', stand: '100.000', dias: '2' }; // ganancia 200.000 en 2 jornadas
+  it('ganancia por jornada; por hora solo con horas', () => {
+    const r = calcRoi(base);
+    expect(r.ganDia).toBe(100000);
+    expect(r.ganHora).toBeNull();
+    expect(r.cubre).toBeNull();
+    expect(r.trasSueldo).toBeNull();
+    expect(calcRoi({ ...base, horas: '10' }).ganHora).toBe(10000);
+  });
+  it('sueldo cubierto: porcentaje y lo que le queda al negocio', () => {
+    const r = calcRoi({ ...base, sueldo: '80.000' });
+    expect(r.cubre).toBeCloseTo(1.25, 5);
+    expect(r.trasSueldo).toBe(40000);
+  });
+  it('sueldo no cubierto: lo que falta', () => {
+    const r = calcRoi({ ...base, sueldo: '150.000' });
+    expect(r.cubre).toBeCloseTo(100000 / 150000, 5);
+    expect(r.trasSueldo).toBe(-100000);
+  });
+  it('campos inválidos se marcan y no rompen el resto', () => {
+    const r = calcRoi({ ...base, sueldo: 'mucho', horas: '-3' });
+    expect(r.ok).toBe(false);
+    expect(r.errors.sueldo).toBeTruthy();
+    expect(r.errors.horas).toBeTruthy();
+    expect(r.gan).toBe(200000);
+  });
+  it('lo que ya calculaba no cambia', () => {
+    const r = calcRoi(base);
+    expect(r.gan).toBe(200000);
+    expect(r.ventaDia).toBe(150000);
+    expect(r.decision).toBe('go');
+  });
+});
