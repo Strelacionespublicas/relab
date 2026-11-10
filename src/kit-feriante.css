@@ -514,3 +514,11 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-sueldo-bar i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
 .kf-sueldo-bar i.ok { background: var(--st-success); }
 .kf-sueldo-bar i.low { background: #E2A400; }
+.kf-sueldo-pro p { margin: 0 0 8px; line-height: 1.5; }
+.kf-sueldo-pro .pos { color: var(--st-success); }
+.kf-sueldo-pro .neg { color: var(--st-danger); }
+.kf-sueldo-pro .kf-sueldo-bar { margin: 4px 0 10px; background: var(--st-gris-claro); }
+.kf-sueldo-pro .kf-link { margin: 0; padding: 0; }
+.kf-sueldo-tag { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.kf-sueldo-tag.ok { background: var(--st-success-bg); color: var(--st-success); }
+.kf-sueldo-tag.low { background: #FFF3D6; color: #8A5A00; }

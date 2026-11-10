@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createProStore } from './pro-store.js';
 import { ownerOf } from './sync.js';
 import { readField, fmt } from './calc.js';
-import { controlaStock, gastosFeria, periodo, resumenFeria, resumenNegocio, resumenVentas, stockBajo, stockDe, topProductos, ventaTotales } from './pro-calc.js';
+import { controlaStock, gastosFeria, jornadasFeria, mesesDelPeriodo, periodo, resumenFeria, resumenSueldo, resumenNegocio, resumenVentas, stockBajo, stockDe, topProductos, ventaTotales } from './pro-calc.js';
 import { fecha } from './pro.jsx';
 import { keyName, parseDelimited, parseProductRows, planImport, templateCsv } from './pro-import.js';
 
@@ -111,7 +111,7 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
 const PERIODOS = [['mes', 'Este mes'], ['3m', '3 meses'], ['anio', 'Este año'], ['todo', 'Todo']];
 const pct = x => `${Math.round(x * 100)}%`;
 
-function Resumen({ data, medios }) {
+function Resumen({ data, medios, store, canEdit }) {
   const [per, setPer] = useState('todo');
   const medioLabel = Object.fromEntries(medios);
   const rango = periodo(per);
@@ -144,6 +144,7 @@ function Resumen({ data, medios }) {
         <div><span>Mercadería</span><b>{fmt(r.costo)}</b><small>costo de lo vendido</small></div>
         <div><span>Gastos</span><b>{fmt(r.gastos)}</b><small>de {r.porFeria.length} {r.porFeria.length === 1 ? 'feria' : 'ferias'}</small></div>
       </div>
+      <TuSueldo r={r} data={data} per={per} store={store} canEdit={canEdit} />
       {bajos > 0 && <div className="kf-tip" role="alert"><span><strong>{bajos} {bajos === 1 ? 'producto' : 'productos'} con stock bajo.</strong> <a href="#stock">Ver stock</a></span></div>}
 
       {r.porFeria.length > 0 && (
@@ -188,6 +189,61 @@ function Resumen({ data, medios }) {
   );
 }
 
+// ---- Tu sueldo (dentro del Resumen) ----
+function TuSueldo({ r, data, per, store, canEdit }) {
+  const cfg = data.config.sueldo || null;
+  const [form, setForm] = useState(null);
+  const [err, setErr] = useState('');
+  const meses = mesesDelPeriodo(per, data.ventas);
+  const s = resumenSueldo({ resultado: r.resultado, jornadas: r.jornadas }, cfg, { meses });
+  const pct = s.cubre != null ? Math.round(s.cubre * 100) : null;
+  const abrir = () => { setErr(''); setForm({ tipo: cfg?.tipo || 'mes', monto: txt(cfg?.monto ?? ''), horas: txt(cfg?.horas ?? '') }); };
+  const guardar = e => {
+    e.preventDefault();
+    const m = readField(form.monto, { positive: true, required: true });
+    if (m.error) return setErr(`Revisá el monto: ${m.error.toLowerCase()}`);
+    const h = readField(form.horas);
+    if (h.error || h.value > 24) return setErr('Las horas por jornada tienen que estar entre 1 y 24.');
+    store.save('config', 'config', { ...data.config, sueldo: { tipo: form.tipo, monto: m.value, horas: h.value || null } });
+    setForm(null);
+  };
+  const objetivoTxt = cfg ? (cfg.tipo === 'mes' ? `${fmt(cfg.monto)} por mes${meses > 1 ? ` × ${meses} meses` : ''}` : `${fmt(cfg.monto)} por jornada × ${r.jornadas}`) : '';
+  return (
+    <div className="kf-card kf-res-block kf-sueldo-pro">
+      <h3 className="kf-card-title">Tu sueldo</h3>
+      {form ? (
+        <form className="kf-pro-form" onSubmit={guardar}>
+          <div className="kf-seg" role="group" aria-label="Cómo querés pensar tu sueldo">
+            <button type="button" className={form.tipo === 'mes' ? 'on' : ''} onClick={() => setForm({ ...form, tipo: 'mes' })}>Por mes</button>
+            <button type="button" className={form.tipo === 'jornada' ? 'on' : ''} onClick={() => setForm({ ...form, tipo: 'jornada' })}>Por jornada</button>
+          </div>
+          <div className="kf-pro-grid">
+            <label className="kf-field"><span>{form.tipo === 'mes' ? '¿Cuánto querés ganar por mes?' : '¿Cuánto querés ganar por jornada?'}</span><span className="kf-input-wrap"><em className="pre">$</em><input inputMode="decimal" value={form.monto} onChange={e => setForm({ ...form, monto: e.target.value })} placeholder="0" autoFocus /></span></label>
+            <label className="kf-field"><span>Horas por jornada <small>(opcional)</small></span><input inputMode="numeric" value={form.horas} onChange={e => setForm({ ...form, horas: e.target.value })} placeholder="Ej.: 10" /><small>Contando armado y desarme</small></label>
+          </div>
+          {err && <p className="kf-err" role="alert">{err}</p>}
+          <div className="kf-modal-act">
+            <button type="button" className="kf-btn kf-btn--soft kf-btn--sm" onClick={() => setForm(null)}>Cancelar</button>
+            <button type="submit" className="kf-btn kf-btn--coral kf-btn--sm">Guardar</button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <p>En este período trabajaste <b>{r.jornadas} {r.jornadas === 1 ? 'jornada' : 'jornadas'}</b> de feria y te quedaron <b>{fmt(s.porJornada ?? 0)} por jornada</b>{s.porHora != null ? <> (≈ {fmt(s.porHora)} por hora)</> : null}.</p>
+          {cfg && pct != null ? (
+            <>
+              <div className="kf-sueldo-bar" aria-hidden="true"><i className={pct >= 100 ? 'ok' : 'low'} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></div>
+              <p>Tu objetivo: <b>{fmt(s.objetivo)}</b> <small>({objetivoTxt})</small>. {pct >= 100 ? <>Lo cubriste: <b>{pct}%</b>.</> : <>Cubriste el <b>{Math.max(pct, 0)}%</b>.</>}</p>
+              <p>Después de pagarte tu sueldo, al negocio {s.trasSueldo >= 0 ? <>le quedan <b className="pos">{fmt(s.trasSueldo)}</b>.</> : <>le faltan <b className="neg">{fmt(-s.trasSueldo)}</b>: para sostenerte, revisá precios, costos o a qué ferias vas.</>}</p>
+            </>
+          ) : <p className="kf-muted">Cargá cuánto querés ganar (por mes o por jornada) y te decimos si tus ferias te pagan el sueldo.</p>}
+          {canEdit && <button type="button" className="kf-link" onClick={abrir}>{cfg ? 'Cambiar mi sueldo' : 'Cargar mi sueldo'}</button>}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ---- Mis ferias ----
 const blankFeria = () => ({ nombre: '', lugar: '', desde: hoyKey(), hasta: hoyKey(), gastos: [{ id: uid(), concepto: 'Stand', monto: '' }], notas: '' });
 
@@ -196,7 +252,8 @@ function Ferias({ store, data, canEdit }) {
   const [err, setErr] = useState('');
   const activa = data.config.feriaActiva;
   const setActiva = id => store.save('config', 'config', { ...data.config, feriaActiva: id });
-  const editar = f => { setErr(''); setForm({ ...f, nuevo: false, gastos: (f.gastos || []).map(g => ({ ...g, monto: txt(g.monto) })) }); };
+  const editar = f => { setErr(''); setForm({ ...f, nuevo: false, jornadas: f.jornadas ? String(f.jornadas) : '', gastos: (f.gastos || []).map(g => ({ ...g, monto: txt(g.monto) })) }); };
+  const sueldoCfg = data.config.sueldo;
   const nueva = () => { setErr(''); setForm({ id: store.newId(), nuevo: true, ...blankFeria() }); };
   const guardar = e => {
     e.preventDefault();
@@ -209,8 +266,14 @@ function Ferias({ store, data, canEdit }) {
       if (error) return setErr(`Revisá el monto de "${g.concepto || 'gasto'}": ${error.toLowerCase()}`);
       gastos.push({ id: g.id, concepto: g.concepto.trim() || 'Gasto', monto: value });
     }
+    let jornadas = null;
+    if (String(form.jornadas ?? '').trim()) {
+      const j = readField(form.jornadas, { positive: true });
+      if (j.error || !Number.isInteger(j.value) || j.value > 366) return setErr('Las jornadas tienen que ser un número entero de días, por ejemplo 3.');
+      jornadas = j.value;
+    }
     const { id, nuevo, ...rest } = form;
-    store.save('feria', id, { ...rest, nombre: rest.nombre.trim(), lugar: rest.lugar.trim(), gastos });
+    store.save('feria', id, { ...rest, nombre: rest.nombre.trim(), lugar: rest.lugar.trim(), gastos, jornadas });
     if (nuevo && !activa) setActiva(id);
     setForm(null);
   };
@@ -231,6 +294,7 @@ function Ferias({ store, data, canEdit }) {
           <label className="kf-field"><span>Lugar</span><input value={form.lugar} onChange={e => setForm({ ...form, lugar: e.target.value })} placeholder="Ciudad o predio" maxLength={80} /></label>
           <label className="kf-field"><span>Desde</span><input type="date" value={form.desde} onChange={e => setForm({ ...form, desde: e.target.value })} /></label>
           <label className="kf-field"><span>Hasta</span><input type="date" value={form.hasta} onChange={e => setForm({ ...form, hasta: e.target.value })} /></label>
+          <label className="kf-field"><span>Jornadas que trabajaste</span><input inputMode="numeric" value={form.jornadas ?? ''} onChange={e => setForm({ ...form, jornadas: e.target.value })} placeholder={String(jornadasFeria({ desde: form.desde, hasta: form.hasta }))} /><small>Vacío = las calculamos por las fechas ({jornadasFeria({ desde: form.desde, hasta: form.hasta })})</small></label>
         </div>
         <p className="kf-pro-sub">Gastos de la feria</p>
         {form.gastos.map((g, i) => (
@@ -276,6 +340,17 @@ function Ferias({ store, data, canEdit }) {
                 <span>Ventas <b>{r.ventas}</b></span><span>Cobrado <b>{fmt(r.total)}</b></span><span>Comisiones <b>{fmt(r.comisiones)}</b></span>
                 <span>Gastos <b>{fmt(r.gastos)}</b></span><span>Mercadería <b>{fmt(r.costo)}</b></span>
                 <span className={r.resultado >= 0 ? 'ok' : 'neg'}>Resultado <b>{fmt(r.resultado)}</b></span>
+                {(() => {
+                  const sj = resumenSueldo({ resultado: r.resultado, jornadas: jornadasFeria(f) }, sueldoCfg?.tipo === 'jornada' ? sueldoCfg : null);
+                  const objJ = sueldoCfg?.monto > 0 ? (sueldoCfg.tipo === 'jornada' ? sueldoCfg.monto : null) : null;
+                  const pctJ = objJ && sj.porJornada != null ? Math.round((sj.porJornada / objJ) * 100) : null;
+                  return (
+                    <>
+                      <span>Por jornada <b>{fmt(sj.porJornada ?? 0)}</b> <small>({jornadasFeria(f)} {jornadasFeria(f) === 1 ? 'jornada' : 'jornadas'})</small></span>
+                      {pctJ != null && <span className={`kf-sueldo-tag ${pctJ >= 100 ? 'ok' : 'low'}`}>Sueldo cubierto {Math.max(pctJ, 0)}%</span>}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           );
