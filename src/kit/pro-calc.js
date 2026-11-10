@@ -77,7 +77,7 @@ export function resumenNegocio({ ferias = [], ventas = [], comisiones = {} }, { 
   const vs = ventas.filter(v => enRango(v.ts, desde, hasta));
   const conVentas = new Set(vs.map(v => v.feriaId).filter(Boolean));
   const fs = ferias.filter(f => conVentas.has(f.id) || enRango(diaMs(f.desde) ?? -1, desde, hasta));
-  const porFeria = fs.map(f => ({ id: f.id, nombre: f.nombre, desde: f.desde, ...resumenFeria(f, vs.filter(v => v.feriaId === f.id), comisiones) }))
+  const porFeria = fs.map(f => ({ id: f.id, nombre: f.nombre, desde: f.desde, jornadas: jornadasFeria(f), ...resumenFeria(f, vs.filter(v => v.feriaId === f.id), comisiones) }))
     .sort((a, b) => b.resultado - a.resultado);
   const sinFeria = vs.filter(v => !v.feriaId || !fs.some(f => f.id === v.feriaId));
   const r = resumenVentas(vs, comisiones);
@@ -88,6 +88,7 @@ export function resumenNegocio({ ferias = [], ventas = [], comisiones = {} }, { 
     resultado: r.neto - r.costo - gastos,
     ticket: r.ventas ? r.total / r.ventas : 0,
     porFeria,
+    jornadas: fs.reduce((t, f) => t + jornadasFeria(f), 0),
     sinFeria: sinFeria.length ? resumenVentas(sinFeria, comisiones) : null,
   };
 }
@@ -123,4 +124,46 @@ export function periodo(id, now = new Date()) {
   if (id === '3m') return { desde: new Date(y, mth - 2, 1).getTime(), hasta: null };
   if (id === 'anio') return { desde: new Date(y, 0, 1).getTime(), hasta: null };
   return { desde: null, hasta: null };
+}
+
+// ---- Tu sueldo (PRO) ----
+// Jornadas de una feria: las cargadas a mano o, si no, los días entre desde y hasta (contando los dos).
+export function jornadasFeria(f) {
+  if (Number.isFinite(f?.jornadas) && f.jornadas > 0) return f.jornadas;
+  const d = f?.desde ? new Date(`${f.desde}T12:00:00`) : null;
+  const h = f?.hasta ? new Date(`${f.hasta}T12:00:00`) : d;
+  if (!d || Number.isNaN(d.getTime())) return 1;
+  const n = Math.round((h - d) / 86_400_000) + 1;
+  return n >= 1 && n <= 366 ? n : 1;
+}
+
+// Meses que abarca un período del Resumen (para el sueldo mensual).
+export function mesesDelPeriodo(id, ventas = [], now = new Date()) {
+  if (id === 'mes') return 1;
+  if (id === '3m') return 3;
+  if (id === 'anio') return now.getMonth() + 1;
+  const primera = ventas.reduce((m, v) => (Number.isFinite(v.ts) && v.ts < m ? v.ts : m), Infinity);
+  if (!Number.isFinite(primera)) return 1;
+  const d = new Date(primera);
+  return Math.max(1, (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth() + 1);
+}
+
+// Lo que querías ganar en el período: por jornada × jornadas, o por mes × meses.
+export function sueldoObjetivo(cfg, { jornadas = 0, meses = 1 } = {}) {
+  const monto = n_(cfg?.monto);
+  if (!(monto > 0)) return null;
+  return cfg.tipo === 'mes' ? monto * meses : monto * jornadas;
+}
+
+// Resumen del sueldo: cuánto te quedó por jornada (y por hora), el objetivo y si lo cubriste.
+export function resumenSueldo({ resultado = 0, jornadas = 0 }, cfg, { meses = 1 } = {}) {
+  const horas = n_(cfg?.horas);
+  const porJornada = jornadas > 0 ? resultado / jornadas : null;
+  const porHora = jornadas > 0 && horas > 0 ? resultado / (jornadas * horas) : null;
+  const objetivo = sueldoObjetivo(cfg, { jornadas, meses });
+  return {
+    jornadas, porJornada, porHora, objetivo,
+    cubre: objetivo ? resultado / objetivo : null,
+    trasSueldo: objetivo != null ? resultado - objetivo : null,
+  };
 }

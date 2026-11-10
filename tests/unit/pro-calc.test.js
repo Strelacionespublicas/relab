@@ -123,3 +123,45 @@ describe('resumen del negocio', () => {
     expect(periodo('todo', now).desde).toBeNull();
   });
 });
+
+import { jornadasFeria, mesesDelPeriodo, resumenSueldo, sueldoObjetivo } from '../../src/kit/pro-calc.js';
+
+describe('tu sueldo (PRO)', () => {
+  it('jornadas: cargadas a mano o por fechas (contando los dos días)', () => {
+    expect(jornadasFeria({ desde: '2026-07-10', hasta: '2026-07-13' })).toBe(4);
+    expect(jornadasFeria({ desde: '2026-07-10' })).toBe(1);
+    expect(jornadasFeria({ desde: '2026-07-10', hasta: '2026-07-13', jornadas: 2 })).toBe(2);
+    expect(jornadasFeria({})).toBe(1);
+    expect(jornadasFeria({ desde: '2026-07-13', hasta: '2026-07-10' })).toBe(1);
+  });
+  it('meses del período', () => {
+    const now = new Date(2026, 10, 10);
+    expect(mesesDelPeriodo('mes', [], now)).toBe(1);
+    expect(mesesDelPeriodo('3m', [], now)).toBe(3);
+    expect(mesesDelPeriodo('anio', [], now)).toBe(11);
+    expect(mesesDelPeriodo('todo', [{ ts: new Date(2026, 6, 5).getTime() }], now)).toBe(5);
+    expect(mesesDelPeriodo('todo', [], now)).toBe(1);
+  });
+  it('objetivo por jornada y por mes', () => {
+    expect(sueldoObjetivo({ tipo: 'jornada', monto: 40000 }, { jornadas: 3 })).toBe(120000);
+    expect(sueldoObjetivo({ tipo: 'mes', monto: 600000 }, { jornadas: 3, meses: 2 })).toBe(1200000);
+    expect(sueldoObjetivo({ tipo: 'mes', monto: 0 })).toBeNull();
+    expect(sueldoObjetivo(null)).toBeNull();
+  });
+  it('resumen: por jornada, por hora, cubierto y lo que queda después de pagarte', () => {
+    const r = resumenSueldo({ resultado: 150000, jornadas: 3 }, { tipo: 'jornada', monto: 40000, horas: 10 });
+    expect(r.porJornada).toBe(50000);
+    expect(r.porHora).toBe(5000);
+    expect(r.objetivo).toBe(120000);
+    expect(r.cubre).toBeCloseTo(1.25, 5);
+    expect(r.trasSueldo).toBe(30000);
+    const m = resumenSueldo({ resultado: 300000, jornadas: 4 }, { tipo: 'mes', monto: 600000 }, { meses: 1 });
+    expect(m.cubre).toBe(0.5);
+    expect(m.trasSueldo).toBe(-300000);
+    expect(m.porHora).toBeNull();
+  });
+  it('sin sueldo cargado o sin jornadas no rompe', () => {
+    const r = resumenSueldo({ resultado: 1000, jornadas: 0 }, null);
+    expect(r).toMatchObject({ porJornada: null, objetivo: null, cubre: null, trasSueldo: null });
+  });
+});
