@@ -530,3 +530,20 @@ body { margin: 0; background: var(--st-gris-claro); }
 .kf-pro-hint { color: var(--st-neutral-600); font-size: 12.5px; }
 .kf-fav { width: 34px; height: 34px; border: 1px solid var(--st-neutral-300); border-radius: 999px; background: #fff; color: var(--st-neutral-500); font-size: 18px; line-height: 1; cursor: pointer; }
 .kf-fav.on { border-color: #E2A400; color: #E2A400; background: #FFF9E8; }
+
+/* Facilidad de uso: primeros pasos, variantes, aviso de comisión, introducción plegada */
+.kf-pasos { margin-bottom: 16px; border-color: var(--st-coral); }
+.kf-pasos ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.kf-pasos li { display: flex; gap: 12px; align-items: flex-start; }
+.kf-pasos li .n { flex: none; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--st-gris-claro); color: var(--st-neutral-600); font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+.kf-pasos li.now .n { background: var(--st-coral); color: #fff; }
+.kf-pasos li.ok .n { background: var(--st-success-bg); color: var(--st-success); }
+.kf-pasos li b { display: block; color: var(--st-petroleo); }
+.kf-pasos li.ok b { text-decoration: line-through; opacity: .6; }
+.kf-pasos li small { color: var(--st-neutral-600); font-size: 13px; }
+.kf-pro-vars { padding: 12px; border-radius: 12px; background: #FFF9E8; border: 1.5px solid #E2A400; }
+.kf-pro-vars p { margin: 0 0 8px; font-weight: 700; color: var(--st-petroleo); }
+.kf-pro-warn { margin: 0; font-size: 13px; color: #8A5A00; }
+.kf-intro-min { margin: 0 0 18px; }
+.kf-intro-min > summary { cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--st-petroleo); padding: 6px 0; }
+.kf-intro-min[open] > summary { margin-bottom: 10px; }

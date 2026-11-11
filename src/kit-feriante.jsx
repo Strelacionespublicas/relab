@@ -194,7 +194,8 @@ function Kit() {
   const counts = proCounts(pro.data);
   // Antes del lanzamiento (sin VITE_PRO_ENABLED), el Kit PRO lo ve solo quien ya tiene PRO o datos PRO.
   const showPro = PRO_ENABLED || !!access.pro?.pro || !!(counts && (counts.ferias || counts.productos || counts.ventas));
-  const SECS = SECTIONS.filter(s => !s.pro || showPro);
+  const SECS = SECTIONS.filter(s => !s.pro || showPro)
+    .map(s => (s.id === 'tracker' && access.pro?.pro ? { ...s, label: 'Ventas del día (simple)' } : s));
   const MOMS = MOMENTS.filter(m => m[0] !== 'pro' || showPro);
   const login = () => { sync.markLoginIntent(); api.login(); };
 
@@ -284,7 +285,7 @@ function Kit() {
           <div className="kf-bar-r">
             <a href="/" className="kf-relab" aria-label="Volver a todos los recursos de Relab"><span className="lg">un recurso <b>relab</b></span><span className="sm">‹ Recursos</span></a>
             {user ? (
-              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && access.pro && !access.pro.pro && <a className="kf-pro-get" href="/pro/">PRO gratis</a>}{access.pro?.admin && <a className="kf-admin-link" href="/admin/">Panel</a>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
+              <span className="kf-user"><span className={`kf-saved ${statusCls}`} role="status">{snap.status === 'guardado' ? '✓ Guardado' : statusText}{retry}{relogin}</span><ProBadge pro={access.pro} />{PRO_ENABLED && access.pro && !access.pro.pro && <a className="kf-pro-get" href="/pro/">PRO gratis</a>}{access.pro?.admin && <a className="kf-admin-link" href="/admin/">Panel</a>}{firstName && <span>{firstName}</span>}<button type="button" onClick={logout}>Salir</button></span>
             ) : (
               <button type="button" className="kf-btn kf-btn--coral kf-btn--sm" onClick={() => setLoginOpen(true)}>Guardar en mi cuenta</button>
             )}
@@ -309,6 +310,10 @@ function Kit() {
                 <span className="kf-ico-big">{ICONS[sec.id]}</span>
                 <div><p className="kf-kicker">{momentLabel[sec.moment]} · {idx >= 0 ? `${idx + 1} de ${SECS.length}` : 'PRO'}</p><h1>{sec.label}</h1></div>
               </header>
+              {(() => {
+                // Una vez que la herramienta tiene datos, la introducción queda plegada para no tapar la herramienta.
+                const usada = ['now', 'ok'].includes(status(sec.id)[1]);
+                const intro = (
               <div className="kf-intro">
                 <div className="kf-para"><p className="kf-para-t">Para qué sirve</p><ul>{sec.para.map(x => <li key={x}>{x}</li>)}</ul></div>
                 <div className="kf-ejemplo">
@@ -319,11 +324,17 @@ function Kit() {
                   )}
                 </div>
               </div>
+                );
+                return usada ? <details className="kf-intro-min"><summary>¿Para qué sirve? · Ver el ejemplo de Rosa</summary>{intro}</details> : intro;
+              })()}
               {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} pct={pct} />}
               {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} />}
               {sec.id === 'cobros' && <Cobros />}
               {sec.id === 'pitch' && <Pitch />}
               {sec.id === 'visitantes' && <Visitantes />}
+              {sec.id === 'tracker' && access.pro?.pro && (
+                <div className="kf-tip kf-tip--celeste kf-pro-ro"><span><strong>Tenés PRO.</strong> Para vender con tus productos, cantidades y stock, usá <a href="#ventaspro">Ventas PRO</a>. Esta es la versión simple.</span></div>
+              )}
               {sec.id === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
               {sec.id === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={open} />}
               {sec.pro && <ProSection id={sec.id} user={user} access={access} pro={pro} medios={MEDIOS} onLogin={() => setLoginOpen(true)} />}

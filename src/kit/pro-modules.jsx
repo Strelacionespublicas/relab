@@ -97,6 +97,7 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
         </div>
       )}
       {snap && snap.status !== 'listo' && snap.status !== 'solo-lectura' && <p className={`kf-pro-sync ${snap.status}`} role="status">{SYNC_TEXT[snap.status]}{snap.pending ? ` (${snap.pending} pendiente${snap.pending === 1 ? '' : 's'})` : ''}</p>}
+      {canEdit && (id === 'resumen' || id === 'ventaspro') && <PrimerosPasos data={data} />}
       {id === 'ferias' && <Ferias {...props} />}
       {id === 'productos' && <Productos {...props} />}
       {id === 'ventaspro' && <VentasPro {...props} />}
@@ -104,6 +105,30 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
       {id === 'resumen' && <Resumen {...props} />}
       <Exportar data={data} medios={medios} />
     </>
+  );
+}
+
+// ---- Primera vez en PRO: carga guiada en 3 pasos ----
+function PrimerosPasos({ data }) {
+  const pasos = [
+    ['productos', 'Cargá tus productos', 'A mano o todos juntos desde Excel.', data.productos.length > 0],
+    ['ferias', 'Creá tu próxima feria', 'Con sus fechas y gastos.', data.ferias.length > 0],
+    ['ventaspro', 'Registrá tu primera venta', 'Tocás el producto, elegís cómo te pagan y listo.', data.ventas.length > 0],
+  ];
+  if (pasos.every(p => p[3])) return null;
+  const sig = pasos.find(p => !p[3]);
+  return (
+    <div className="kf-card kf-pasos">
+      <h3 className="kf-card-title">Empezá en 3 pasos</h3>
+      <ol>
+        {pasos.map(([id, t, d, hecho], i) => (
+          <li key={id} className={hecho ? 'ok' : sig[0] === id ? 'now' : ''}>
+            <span className="n">{hecho ? '✓' : i + 1}</span>
+            <span><b>{hecho ? t : <a href={'#' + id}>{t}</a>}</b><small>{d}</small></span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -561,6 +586,9 @@ function VentasPro({ store, data, canEdit, medios }) {
   const [okMsg, setOkMsg] = useState('');
   const [tasas, setTasas] = useState(null);
   const [q, setQ] = useState('');
+  const [eligiendo, setEligiendo] = useState(null); // producto con variantes esperando que se elija una
+  const tasasRef = useRef(null);
+  const abrirTasas = () => { if (tasasRef.current) { tasasRef.current.open = true; tasasRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
   const [verTodos, setVerTodos] = useState(false);
   const buscador = useRef(null);
   const enviado = useRef(null);
@@ -568,10 +596,10 @@ function VentasPro({ store, data, canEdit, medios }) {
   useEffect(() => { setDraft(d => (d.ts ? d : { ...d, feriaId: feriaSel || null })); }, [feriaSel]);
 
   const stockCtx = { movimientos: data.movimientos, ventas: data.ventas.filter(v => v.id !== draft.id) };
-  const add = p => {
+  const add = (p, vid) => {
     setErr('');
     setDraft(d => {
-      const varianteId = p.variantes?.length ? p.variantes[0].id : null;
+      const varianteId = vid ?? null;
       const i = d.items.findIndex(it => it.productoId === p.id && it.varianteId === varianteId);
       if (i >= 0) return { ...d, items: d.items.map((it, j) => (j === i ? { ...it, cant: it.cant + 1 } : it)) };
       return { ...d, items: [...d.items, { key: uid(), productoId: p.id, varianteId, nombre: p.nombre, cant: 1, precio: txt(p.precio), costo: p.costo || 0 }] };
@@ -642,7 +670,11 @@ function VentasPro({ store, data, canEdit, medios }) {
               const LIMITE = 12;
               const mostrar = q || verTodos ? encontrados : encontrados.slice(0, LIMITE);
               const conBuscador = data.productos.length > 6;
-              const elegir = p => { add(p); if (q) { setQ(''); buscador.current?.focus(); } };
+              const elegir = p => {
+                if (p.variantes?.length) { setEligiendo(p); return; } // con variantes: primero se elige cuál
+                add(p, null);
+                if (q) { setQ(''); buscador.current?.focus(); }
+              };
               return (
                 <>
                   {conBuscador && (
@@ -659,6 +691,18 @@ function VentasPro({ store, data, canEdit, medios }) {
                   </div>
                   {!q && encontrados.length > LIMITE && <button type="button" className="kf-link" onClick={() => setVerTodos(v => !v)}>{verTodos ? 'Ver menos' : `Ver todos (${encontrados.length})`}</button>}
                   {q && encontrados.length === 1 && <small className="kf-pro-hint">Enter para sumarlo</small>}
+                  {eligiendo && (
+                    <div className="kf-pro-vars" role="group" aria-label={`Variante de ${eligiendo.nombre}`}>
+                      <p>¿Qué {eligiendo.nombre} vendiste?</p>
+                      <div className="kf-pro-chips">
+                        {eligiendo.variantes.map(v => {
+                          const st = data.movimientos.some(m => m.productoId === eligiendo.id && m.varianteId === v.id) ? stockDe(eligiendo.id, v.id, stockCtx) : null;
+                          return <button key={v.id} type="button" className="kf-pro-chip" onClick={() => { add(eligiendo, v.id); setEligiendo(null); if (q) { setQ(''); buscador.current?.focus(); } }}>{v.nombre}<small>{st != null ? `${st} en stock` : ' '}</small></button>;
+                        })}
+                        <button type="button" className="kf-link" onClick={() => setEligiendo(null)}>Cancelar</button>
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()
@@ -690,6 +734,9 @@ function VentasPro({ store, data, canEdit, medios }) {
                 {tot.comision > 0 && <span>Comisión {txt(tot.tasa)}% <b>−{fmt(tot.comision)}</b></span>}
                 <span>Te queda <b>{fmt(tot.neto)}</b></span>
               </div>
+              {draft.medio !== 'efect' && !(data.comisiones[draft.medio] > 0) && (
+                <p className="kf-pro-warn">No cargaste la comisión de {medioLabel[draft.medio] || draft.medio}: lo que te queda puede ser menos. <button type="button" className="kf-link-inline" onClick={abrirTasas}>Cargarla</button></p>
+              )}
             </>
           )}
           {err && <p className="kf-err" role="alert">{err}</p>}
@@ -726,7 +773,7 @@ function VentasPro({ store, data, canEdit, medios }) {
       </div>
       <Papelera store={store} kind="venta" canEdit={canEdit} label={v => `${(v.items || []).map(it => `${it.cant}× ${it.nombre}`).join(', ')} · ${fmt(ventaTotales(v, data.comisiones).total)}`} />
 
-      <details className="kf-card kf-pro-tasas" onToggle={e => e.target.open && setTasas(Object.fromEntries(medios.map(([k]) => [k, txt(data.comisiones[k] ?? '')])))}>
+      <details ref={tasasRef} className="kf-card kf-pro-tasas" onToggle={e => e.target.open && setTasas(Object.fromEntries(medios.map(([k]) => [k, txt(data.comisiones[k] ?? '')])))}>
         <summary>Comisiones por medio de pago</summary>
         <p>Poné el % que te cobra cada medio (míralo en la herramienta Cobros o en tu cuenta). Se usa para calcular lo que te queda.</p>
         {tasas && (
