@@ -1,5 +1,5 @@
 // Kit del feriante (recurso de Relab; antes "Kit del emprendedor feriante"). Portado del "Kit Feriante — Festival del Poncho"
-// de Stella y generalizado para cualquier feria. "Tu kit" muestra las siete herramientas por momento
+// de Stella y generalizado para cualquier feria. "Tu kit" muestra las ocho herramientas por momento
 // (antes, durante y después de la feria) y cada una se abre en su pantalla según el hash, con un
 // ejemplo que sigue a un mismo caso (Rosa, tejedora de Belén). Todo lo que se carga
 // se guarda en el navegador y, con cuenta de Relab, en /api/state/kit-feriante (cifrado).
@@ -21,6 +21,7 @@ import { createKitSync } from './kit/sync.js';
 import { watchVersion } from './lib/version.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
+import { MiSueldo } from './kit/sueldo.jsx';
 
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
@@ -116,6 +117,7 @@ const ICONS = {
   visitantes: <Svg><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Svg>,
   tracker: <Svg><path d="M3 3v18h18" /><path d="M7 16v-5" /><path d="M12 16V8" /><path d="M17 16V5" /></Svg>,
   roi: <Svg><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></Svg>,
+  sueldo: <Svg><path d="M4 7h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z" /><path d="m4 7 8 6 8-6" /><path d="M9 4h6" /></Svg>,
   menu: <Svg><path d="M4 6h16M4 12h16M4 18h16" /></Svg>,
   ferias: <Svg><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></Svg>,
   productos: <Svg><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></Svg>,
@@ -147,6 +149,9 @@ const SECTIONS = [
   { id: 'roi', label: 'ROI post feria', moment: 'despues', desc: 'El balance final: ganancia real, retorno y si te conviene volver.',
     para: ['Saber si la feria fue rentable.', 'Decidir con números si volvés el año que viene.'],
     ejemplo: 'Al terminar el festival, Rosa trae sus ventas del tracker, carga lo que gastó en stand, viaje y lana, y decide con números si vuelve el año que viene.' },
+  { id: 'sueldo', label: 'Mi sueldo y rentabilidad', moment: 'despues', desc: 'Cuánto vale tu hora, cuánto te pagaste y en qué sobre va cada peso.',
+    para: ['Separar lo que vendiste de lo que ganaste, de tu sueldo y de lo que tenés que reponer.', 'Saber cuánto tenés que facturar para cubrir todo, incluido tu tiempo.'],
+    ejemplo: 'Rosa quiere ganar $640.000 al mes trabajando 160 horas: su hora vale $4.000. En la feria del domingo vendió $150.000; después de reponer, pagar el stand y pagarse su tiempo, le quedaron $28.000 de ganancia. Reinvierte el 40% y se lleva $70.800 en total.' },
   ...[
     { id: 'resumen', label: 'Resumen', moment: 'pro', pro: true, desc: 'Cuánto vendiste y cuánto te quedó, con todas tus ferias juntas.',
       para: ['Ver de un vistazo cómo va tu negocio.', 'Comparar ferias y saber qué producto te deja más.'],
@@ -233,11 +238,14 @@ function Kit() {
   const pct = Math.round((checksDone / CHECK_IDS.length) * 100);
   const calcOn = Object.values(st.calc.fijos).some(Boolean) || st.calc.productos.some(p => p.precio && p.unid);
   const roiOn = Object.entries(st.roi).some(([k, v]) => k !== 'dias' && v);
+  const nHist = st.sueldo.hist.length;
+  const sueldoOn = nHist > 0 || Object.entries(st.sueldo.f).some(([k, v]) => k !== 'reinv' && v);
   const status = id => ({
     checklist: [`${checksDone}/${CHECK_IDS.length}`, pct === 100 ? 'ok' : checksDone ? 'now' : ''],
     calculadora: calcOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
     tracker: st.ventas.length ? [`${st.ventas.length} ${st.ventas.length === 1 ? 'venta' : 'ventas'}`, 'now'] : ['Sin ventas', ''],
     roi: roiOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
+    sueldo: nHist ? [`${nHist} ${nHist === 1 ? 'jornada' : 'jornadas'}`, 'now'] : sueldoOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
     ferias: counts?.ferias ? [`${counts.ferias} ${counts.ferias === 1 ? 'feria' : 'ferias'}`, 'now'] : ['PRO', 'pro'],
     productos: counts?.productos ? [`${counts.productos} ${counts.productos === 1 ? 'producto' : 'productos'}`, 'now'] : ['PRO', 'pro'],
     ventaspro: counts?.ventas ? [`${counts.ventas} ${counts.ventas === 1 ? 'venta' : 'ventas'}`, 'now'] : ['PRO', 'pro'],
@@ -300,7 +308,7 @@ function Kit() {
         <>
           <div className="kf-sub">
             <a href="#inicio">‹ Tu kit</a>
-            <span className="kf-sub-t"><span className="kf-ico">{ICONS[sec.id]}</span>{sec.label}</span>
+            <span className="kf-sub-t"><span className="kf-ico">{ICONS[sec.id]}</span><span className="kf-sub-l">{sec.label}</span></span>
             <button type="button" onClick={() => setMenu(true)} aria-expanded={menu} aria-controls="kfDrawer"><span className="kf-ico">{ICONS.menu}</span>Herramientas</button>
           </div>
           <div className="kf-layout">
@@ -337,6 +345,7 @@ function Kit() {
               )}
               {sec.id === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
               {sec.id === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={open} />}
+              {sec.id === 'sueldo' && <MiSueldo st={st} set={set} isPro={!!access.pro?.pro} openTab={open} />}
               {sec.pro && <ProSection id={sec.id} user={user} access={access} pro={pro} medios={MEDIOS} onLogin={() => setLoginOpen(true)} />}
               <nav className="kf-pn" aria-label="Anterior y siguiente">
                 {prev ? <a href={'#' + prev.id} className="prev"><small>Anterior</small><span>← {prev.label}</span></a> : <a href="#inicio" className="prev"><small>Volver</small><span>← Tu kit</span></a>}
@@ -410,7 +419,7 @@ function Home({ status, pct, st, saveLine, open, moments, sections, proBanner })
       <section className="kf-hero">
         <div className="kf-wrap kf-hero-in">
           <div>
-            <p className="kf-kicker">Kit gratuito · 7 herramientas</p>
+            <p className="kf-kicker">Kit gratuito · 8 herramientas</p>
             <h1>Kit del feriante</h1>
             <p className="kf-lead">Para ferias turísticas, fiestas regionales, festivales, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
             <a className="kf-btn kf-btn--coral" href="#checklist">Empezar por el checklist →</a>
@@ -785,6 +794,7 @@ function Sueldo({ r, openTab }) {
     <div className="kf-sueldo">
       <p className="kf-sueldo-t">Tu sueldo</p>
       <p>Ganaste <b>{fmt(r.ganDia)} por jornada</b>{r.ganHora != null ? <> (≈ {fmt(r.ganHora)} por hora)</> : null}{r.dias > 1 ? ` en ${r.dias} jornadas` : ''}.</p>
+      <p className="kf-muted">Para separar tu sueldo, la ganancia, lo que tenés que reponer y lo que reinvertís: <button type="button" className="kf-link-inline" onClick={() => openTab('sueldo')}>Ver el análisis completo en Mi sueldo y rentabilidad</button>.</p>
       {pct != null ? (
         <>
           <div className="kf-sueldo-bar" aria-hidden="true"><i className={pct >= 100 ? 'ok' : 'low'} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></div>

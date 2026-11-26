@@ -422,7 +422,7 @@ describe('Compatibilidad con los datos existentes', () => {
     expect(d.data().checks).toEqual({ 'pre-2': true });
     expect(d.data().ventas.map(v => v.id)).toEqual(['R1']);
     expect(srv.puts).toBe(1); // solo se normaliza una vez (agrega un producto vacío), sin cambiar datos
-    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'roi', 'ventas']); // misma forma
+    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'roi', 'sueldo', 'ventas']); // misma forma, más "sueldo" (vacío)
   });
 });
 
@@ -599,5 +599,38 @@ describe('Concurrencia con versión en el servidor (409)', () => {
     await Promise.all(ps);
     expect(srv.remote('a@x.com').ventas.map(v => v.id)).toEqual(['t0', 't1', 't2']);
     expect(ds.every(d => d.status() === 'guardado')).toBe(true);
+  });
+});
+
+// ---- Mi sueldo y rentabilidad: campos y jornadas guardadas ----
+describe('Mi sueldo en la conciliación', () => {
+  const j = (id, nombre, fecha = '2026-11-01') => ({ id, nombre, fecha, ts: 1, f: { bVentas: '1000' }, r: { ventas: 1000 } });
+  it('una versión anterior sin "sueldo" se normaliza vacía', () => {
+    expect(S({ ventas: [] }).sueldo).toEqual({ f: {}, hist: [] });
+    const m = merge3({ data: { checks: {}, ventas: [], calc: {}, roi: {} } }, S({ sueldo: { f: { hSueldo: '5' } } }), S(null));
+    expect(m.sueldo.f.hSueldo).toBe('5');
+  });
+  it('campos por hoja y jornadas por id, con borrados de cada lado', () => {
+    const base = S({ sueldo: { f: { hSueldo: '1', hDias: '20' }, hist: [j('a', 'A'), j('b', 'B')] } });
+    const local = S({ sueldo: { f: { hSueldo: '2', hDias: '20' }, hist: [j('a', 'A editada'), j('c', 'C')] } }); // borró b acá
+    const remote = S({ sueldo: { f: { hSueldo: '1', hDias: '22' }, hist: [j('b', 'B'), j('d', 'D')] } }); // borró a allá
+    const m = merge3({ data: base }, local, remote).sueldo;
+    expect(m.f).toEqual({ hSueldo: '2', hDias: '22' });
+    expect(m.hist.map(h => h.id).sort()).toEqual(['c', 'd']);
+  });
+  it('edición de la misma jornada en un solo lado se conserva', () => {
+    const base = S({ sueldo: { hist: [j('a', 'A')] } });
+    const remote = S({ sueldo: { hist: [j('a', 'A en el celu')] } });
+    expect(merge3({ data: base }, base, remote).sueldo.hist[0].nombre).toBe('A en el celu');
+  });
+  it('primera conciliación suma jornadas y completa campos', () => {
+    const m = mergeFirst(S({ sueldo: { f: { hSueldo: '9', hDias: '20' }, hist: [j('a', 'A')] } }), S({ sueldo: { f: { hSueldo: '5' }, hist: [j('b', 'B')] } }));
+    expect(m.sueldo.f).toEqual({ hSueldo: '5', hDias: '20' });
+    expect(m.sueldo.hist.length).toBe(2);
+  });
+  it('containedIn mira las jornadas', () => {
+    const remote = S({ sueldo: { hist: [j('a', 'A')] } });
+    expect(containedIn(S({ sueldo: { hist: [j('a', 'A')] } }), remote)).toBe(true);
+    expect(containedIn(S({ sueldo: { hist: [j('z', 'Z')] } }), remote)).toBe(false);
   });
 });

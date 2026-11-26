@@ -30,6 +30,8 @@ const leaf3 = (b, l, r) => (!same(l, b) ? l : r);
  *  - Checklist: por ítem; si cambió acá gana lo de acá, si no lo de la cuenta.
  *  - Calculadora y ROI: por campo (cada costo fijo, comisión, % digital, la lista de productos y cada
  *    campo del ROI); si cambió acá gana lo de acá, si no lo de la cuenta.
+ *  - Mi sueldo: cada campo igual que el ROI; las jornadas guardadas por id (como las ventas, pero
+ *    una jornada editada en los dos lados se queda con la versión de acá).
  */
 export function merge3(base, local, remote) {
   const B = new Map((base.data?.ventas || []).map(v => [v.id, v]));
@@ -44,7 +46,7 @@ export function merge3(base, local, remote) {
   }
   ventas.sort((a, b) => a.ts - b.ts);
 
-  const bd = base.data || emptyState();
+  const bd = normalize(base.data); // una versión guardada antes de "Mi sueldo" no trae ese campo
   const checks = {};
   for (const k of leafKeys(bd.checks, local.checks, remote.checks)) {
     if (leaf3(!!bd.checks[k], !!local.checks[k], !!remote.checks[k])) checks[k] = true;
@@ -66,8 +68,27 @@ export function merge3(base, local, remote) {
     const v = leaf3(bd.roi[k] ?? '', local.roi[k] ?? '', remote.roi[k] ?? '');
     if (v !== '') roi[k] = v;
   }
-  return normalize({ checks, ventas, calc, roi });
+  return normalize({ checks, ventas, calc, roi, sueldo: mergeSueldo3(bd.sueldo, local.sueldo, remote.sueldo) });
 }
+
+function mergeSueldo3(b, l, r) {
+  const f = {};
+  for (const k of leafKeys(b.f, l.f, r.f)) {
+    const v = leaf3(b.f[k], l.f[k], r.f[k]);
+    if (v !== undefined) f[k] = v;
+  }
+  const B = new Map(b.hist.map(h => [h.id, h]));
+  const L = new Map(l.hist.map(h => [h.id, h]));
+  const R = new Map(r.hist.map(h => [h.id, h]));
+  const hist = [];
+  for (const id of new Set([...L.keys(), ...R.keys()])) {
+    if (L.has(id) && R.has(id)) hist.push(B.has(id) ? leaf3(B.get(id), L.get(id), R.get(id)) : L.get(id));
+    else if (L.has(id)) { if (!B.has(id)) hist.push(L.get(id)); } // estaba en base y ya no está en la cuenta: se borró allá
+    else if (!B.has(id)) hist.push(R.get(id)); // nueva de otro dispositivo; si estaba en base, se borró acá
+  }
+  return { f, hist: sortHist(hist) };
+}
+const sortHist = hist => [...hist].sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')) || (b.ts || 0) - (a.ts || 0));
 
 /**
  * Primera conciliación de este dispositivo con una cuenta (sin versión anterior): se suman las
@@ -90,7 +111,11 @@ export function mergeFirst(local, remote) {
     comision: hasData(remote) ? remote.calc.comision : local.calc.comision,
     pctDigital: hasData(remote) ? remote.calc.pctDigital : local.calc.pctDigital,
   };
-  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi });
+  const sf = { ...local.sueldo.f };
+  for (const [k, v] of Object.entries(remote.sueldo.f)) if (filled(v)) sf[k] = v;
+  const hs = new Map(remote.sueldo.hist.map(h => [h.id, h]));
+  for (const h of local.sueldo.hist) if (!hs.has(h.id)) hs.set(h.id, h);
+  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi, sueldo: { f: sf, hist: sortHist([...hs.values()]) } });
 }
 
 /** true si todo lo de `local` ya está en `remote` (se puede adoptar la cuenta sin preguntar). */
@@ -104,7 +129,10 @@ export function containedIn(local, remote) {
   if (!leafOk(local.calc.comision, remote.calc.comision, blank.calc.comision)) return false;
   if (!leafOk(local.calc.pctDigital, remote.calc.pctDigital, blank.calc.pctDigital)) return false;
   if (productosFilled(local.calc.productos) && !same(local.calc.productos, remote.calc.productos)) return false;
-  return leafKeys(local.roi).every(k => leafOk(local.roi[k], remote.roi[k], blank.roi[k]));
+  if (!leafKeys(local.roi).every(k => leafOk(local.roi[k], remote.roi[k], blank.roi[k]))) return false;
+  const hist = new Map(remote.sueldo.hist.map(h => [h.id, h]));
+  if (!local.sueldo.hist.every(h => same(h, hist.get(h.id)))) return false;
+  return leafKeys(local.sueldo.f).every(k => leafOk(local.sueldo.f[k], remote.sueldo.f[k], undefined));
 }
 
 /** Huella de la cuenta para marcar de quién es el estado local (no se guarda el email). */
