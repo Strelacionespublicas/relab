@@ -20,7 +20,8 @@
 
 ## Kit: módulos del navegador (`src/kit/`)
 - `calc.js`: lectura de importes argentinos (`parseNumber`, `readField`, `fmt`) y cuentas de la Calculadora y el ROI (`calcRoi`, con "tu sueldo": `ganDia`, `ganHora`, `cubre`, `trasSueldo`).
-- `state.js`, `sync.js`: estado gratis `{ checks, ventas, calc, roi }` en el navegador y en `resource_state` (`kit-feriante`), con dueño por cuenta, sin conexión y control de versión (409).
+- `sueldo-calc.js`, `sueldo.jsx`, `sueldo-ejemplo.js`: Mi sueldo y rentabilidad (cuentas puras probadas en `tests/unit/sueldo-calc.test.js`; colores de los sobres validados para daltonismo).
+- `state.js`, `sync.js`: estado gratis `{ checks, ventas, calc, roi, sueldo, propios }` (`sueldo` = `{ f, hist }`; `propios` = tareas propias del checklist, su marca en `checks['p-' + id]`). Una clave nueva del estado hay que sumarla en `normalize`, `hasData`, `merge3`, `mergeFirst` y `containedIn`, o se pierde al sincronizar. El estado completo tiene un límite de 100 KB en el navegador y en `resource_state` (`kit-feriante`), con dueño por cuenta, sin conexión y control de versión (409).
 - `pro.jsx`: insignia PRO, modal de canje de código, `?codigo=`; `PRO_ENABLED` (visible por defecto; `VITE_PRO_ENABLED=0` lo oculta).
 - `pro-store.js`: datos PRO en el dispositivo más una cola de cambios sin conexión; sincroniza con `/api/pro/data` y `/api/pro/ops`.
 - `pro-calc.js`: ventas, stock (libro de movimientos), resumen del negocio, productos más vendidos, sueldo (`jornadasFeria`, `resumenSueldo`, `sueldoObjetivo`, `mesesDelPeriodo`), orden y búsqueda para la venta rápida.

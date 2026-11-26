@@ -3,10 +3,11 @@
 ## Nombre y público
 El kit se llama "**Kit del feriante**", con la bajada "Para ferias turísticas, fiestas regionales, festivales, mercados y expos". Fue decisión de Stella: un título amplio para no excluir a nadie, y lo turístico en la bajada, porque es su nicho y su puerta de entrada con municipios. El caso de ejemplo en todas las herramientas es **Rosa, tejedora de Belén**, que vende en el Festival del Poncho.
 
-## Gratis (7 herramientas, nunca se recortan)
-- **Antes de la feria:** Checklist, Calculadora (se puede cargar con los números de Rosa) y Cobros.
+## Gratis (8 herramientas, nunca se recortan)
+- **Antes de la feria:** Checklist (plegable por bloque, con tareas propias de cada persona), Calculadora (se puede cargar con los números de Rosa) y Cobros.
 - **Durante:** Pitch y ventas, Visitantes y Ventas del día (simple, con descarga CSV).
-- **Después:** ROI post feria. Trae las ventas del tracker e incluye "Tu sueldo": ganancia por jornada y por hora, porcentaje del sueldo cubierto y lo que le queda o le falta al negocio.
+- **Después:** ROI post feria. Trae las ventas del tracker e incluye "Tu sueldo": ganancia por jornada y por hora, porcentaje del sueldo cubierto y lo que le queda o le falta al negocio, con link a "Mi sueldo y rentabilidad".
+- **Después:** Mi sueldo y rentabilidad. Cuatro pasos: cuánto vale mi hora, sueldo por jornada de feria (horas de preparación a desarmado × valor hora × jornadas), balance de la feria (costos de lo vendido, gastos de participar, remuneración; facturación mínima con costos variables) y los cuatro sobres (Mi negocio, Mi sueldo, Mi ganancia, Mi reinversión con slider; sin ganancia no se reparte). Semáforo verde/amarillo/rojo, "Ver ejemplo" (resultado: $28.000 de ganancia, $70.800 de ingreso personal), historial gratis de hasta 40 jornadas con PDF por impresión, y comparación + acumulado mensual para PRO. Se completa sola con el ROI y Ventas del día. Regla clave: la mano de obra de producción es costo en el resultado e ingreso personal en el sobre "Mi sueldo"; no se cuenta dos veces.
 
 Funciona sin cuenta. Con Google se guarda en la cuenta y en varios dispositivos.
 
