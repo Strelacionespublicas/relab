@@ -662,3 +662,25 @@ body { margin: 0; background: var(--st-gris-claro); }
   .ms-print-k { font-size: 9pt; text-transform: uppercase; letter-spacing: .1em; color: #6F7A7C; margin: 0; }
   .ms-print-pie { margin-top: 8mm; font-size: 9pt; color: #6F7A7C; }
 }
+
+/* ---- Checklist plegable y tareas propias ---- */
+.kf-cl-tools { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: -8px 0 12px; font-size: 13.5px; color: var(--st-neutral-600); }
+.kf-cl-sec { margin-bottom: 10px; }
+.kf-cl-h2 { margin: 0; font-size: inherit; }
+button.kf-cl-head { width: 100%; margin: 0; border: none; cursor: pointer; text-align: left; font-family: var(--font-display); min-height: 48px; }
+.kf-cl-title { flex: 1; min-width: 0; }
+.kf-cl-count { flex: none; font-size: 13px; opacity: .85; white-space: nowrap; }
+.kf-cl-chev { flex: none; width: 20px; height: 20px; transition: transform .2s ease; }
+.kf-cl-sec.open .kf-cl-chev { transform: rotate(180deg); }
+.kf-cl-body { padding: 10px 0 6px; }
+.kf-item-row { position: relative; }
+.kf-item-row.propio .kf-item { padding-right: 48px; }
+.kf-item-tuya { color: var(--st-celeste-700); font-weight: 600; }
+.kf-item-del { position: absolute; top: 6px; right: 6px; width: 36px; height: 36px; border: none; background: none; border-radius: 8px; font-size: 22px; line-height: 1; color: var(--st-neutral-500); cursor: pointer; }
+.kf-item-del:hover { background: var(--st-danger-bg); color: var(--st-danger); }
+.kf-cl-addbtn { width: 100%; min-height: 44px; border: 1.5px dashed var(--st-neutral-300); border-radius: 10px; background: transparent; color: var(--st-petroleo); font-family: var(--font-display); font-weight: 600; font-size: 14px; cursor: pointer; }
+.kf-cl-addbtn:hover { border-color: var(--st-celeste-700); background: var(--st-gris-claro); }
+.kf-cl-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.kf-cl-add input { flex: 1 1 220px; min-width: 0; height: 42px; padding: 0 12px; border: 1.5px solid var(--st-celeste-700); border-radius: 8px; font-family: var(--font-body); font-size: 16px; outline: none; }
+.kf-cl-add .kf-btn[disabled] { opacity: .5; cursor: not-allowed; }
+.kf-cl-cancel { font-size: 13.5px; padding: 8px 4px; }

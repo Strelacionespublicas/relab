@@ -30,6 +30,7 @@ const leaf3 = (b, l, r) => (!same(l, b) ? l : r);
  *  - Checklist: por ítem; si cambió acá gana lo de acá, si no lo de la cuenta.
  *  - Calculadora y ROI: por campo (cada costo fijo, comisión, % digital, la lista de productos y cada
  *    campo del ROI); si cambió acá gana lo de acá, si no lo de la cuenta.
+ *  - Tareas propias del checklist: por id, igual que las jornadas guardadas.
  *  - Mi sueldo: cada campo igual que el ROI; las jornadas guardadas por id (como las ventas, pero
  *    una jornada editada en los dos lados se queda con la versión de acá).
  */
@@ -68,7 +69,7 @@ export function merge3(base, local, remote) {
     const v = leaf3(bd.roi[k] ?? '', local.roi[k] ?? '', remote.roi[k] ?? '');
     if (v !== '') roi[k] = v;
   }
-  return normalize({ checks, ventas, calc, roi, sueldo: mergeSueldo3(bd.sueldo, local.sueldo, remote.sueldo) });
+  return normalize({ checks, ventas, calc, roi, sueldo: mergeSueldo3(bd.sueldo, local.sueldo, remote.sueldo), propios: mergeList3(bd.propios, local.propios, remote.propios) });
 }
 
 function mergeSueldo3(b, l, r) {
@@ -77,16 +78,21 @@ function mergeSueldo3(b, l, r) {
     const v = leaf3(b.f[k], l.f[k], r.f[k]);
     if (v !== undefined) f[k] = v;
   }
-  const B = new Map(b.hist.map(h => [h.id, h]));
-  const L = new Map(l.hist.map(h => [h.id, h]));
-  const R = new Map(r.hist.map(h => [h.id, h]));
-  const hist = [];
+  return { f, hist: sortHist(mergeList3(b.hist, l.hist, r.hist)) };
+}
+// Lista con id en tres vías (jornadas guardadas, tareas propias): se conservan las nuevas de cada lado,
+// se respeta un borrado de cualquiera de los dos y, si se editó, gana la versión de acá.
+function mergeList3(b, l, r) {
+  const B = new Map(b.map(h => [h.id, h]));
+  const L = new Map(l.map(h => [h.id, h]));
+  const R = new Map(r.map(h => [h.id, h]));
+  const out = [];
   for (const id of new Set([...L.keys(), ...R.keys()])) {
-    if (L.has(id) && R.has(id)) hist.push(B.has(id) ? leaf3(B.get(id), L.get(id), R.get(id)) : L.get(id));
-    else if (L.has(id)) { if (!B.has(id)) hist.push(L.get(id)); } // estaba en base y ya no está en la cuenta: se borró allá
-    else if (!B.has(id)) hist.push(R.get(id)); // nueva de otro dispositivo; si estaba en base, se borró acá
+    if (L.has(id) && R.has(id)) out.push(B.has(id) ? leaf3(B.get(id), L.get(id), R.get(id)) : L.get(id));
+    else if (L.has(id)) { if (!B.has(id)) out.push(L.get(id)); } // estaba en base y ya no está en la cuenta: se borró allá
+    else if (!B.has(id)) out.push(R.get(id)); // nueva de otro dispositivo; si estaba en base, se borró acá
   }
-  return { f, hist: sortHist(hist) };
+  return out;
 }
 const sortHist = hist => [...hist].sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')) || (b.ts || 0) - (a.ts || 0));
 
@@ -115,8 +121,10 @@ export function mergeFirst(local, remote) {
   for (const [k, v] of Object.entries(remote.sueldo.f)) if (filled(v)) sf[k] = v;
   const hs = new Map(remote.sueldo.hist.map(h => [h.id, h]));
   for (const h of local.sueldo.hist) if (!hs.has(h.id)) hs.set(h.id, h);
-  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi, sueldo: { f: sf, hist: sortHist([...hs.values()]) } });
+  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi, sueldo: { f: sf, hist: sortHist([...hs.values()]) }, propios: unionById(remote.propios, local.propios) });
 }
+
+const unionById = (a, b) => { const m = new Map(a.map(x => [x.id, x])); for (const x of b) if (!m.has(x.id)) m.set(x.id, x); return [...m.values()]; };
 
 /** true si todo lo de `local` ya está en `remote` (se puede adoptar la cuenta sin preguntar). */
 export function containedIn(local, remote) {
@@ -132,6 +140,8 @@ export function containedIn(local, remote) {
   if (!leafKeys(local.roi).every(k => leafOk(local.roi[k], remote.roi[k], blank.roi[k]))) return false;
   const hist = new Map(remote.sueldo.hist.map(h => [h.id, h]));
   if (!local.sueldo.hist.every(h => same(h, hist.get(h.id)))) return false;
+  const propios = new Map(remote.propios.map(p => [p.id, p]));
+  if (!local.propios.every(p => same(p, propios.get(p.id)))) return false;
   return leafKeys(local.sueldo.f).every(k => leafOk(local.sueldo.f[k], remote.sueldo.f[k], undefined));
 }
 

@@ -422,7 +422,7 @@ describe('Compatibilidad con los datos existentes', () => {
     expect(d.data().checks).toEqual({ 'pre-2': true });
     expect(d.data().ventas.map(v => v.id)).toEqual(['R1']);
     expect(srv.puts).toBe(1); // solo se normaliza una vez (agrega un producto vacío), sin cambiar datos
-    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'roi', 'sueldo', 'ventas']); // misma forma, más "sueldo" (vacío)
+    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'propios', 'roi', 'sueldo', 'ventas']); // misma forma, más "sueldo" y "propios" (vacíos)
   });
 });
 
@@ -632,5 +632,23 @@ describe('Mi sueldo en la conciliación', () => {
     const remote = S({ sueldo: { hist: [j('a', 'A')] } });
     expect(containedIn(S({ sueldo: { hist: [j('a', 'A')] } }), remote)).toBe(true);
     expect(containedIn(S({ sueldo: { hist: [j('z', 'Z')] } }), remote)).toBe(false);
+  });
+});
+
+describe('Tareas propias del checklist en la conciliación', () => {
+  const t = (id, txt, grp = 'pre') => ({ id, grp, txt });
+  it('se normalizan y descartan las inválidas', () => {
+    expect(S({ propios: [t('a', 'Llevar alargue'), { id: 'b', grp: 'pre', txt: '  ' }, null] }).propios.map(p => p.id)).toEqual(['a']);
+    expect(S({}).propios).toEqual([]);
+  });
+  it('por id, con altas y bajas de cada lado', () => {
+    const base = S({ propios: [t('a', 'A'), t('b', 'B')] });
+    const local = S({ propios: [t('a', 'A'), t('c', 'C')] });
+    const remote = S({ propios: [t('b', 'B'), t('d', 'D')] });
+    expect(merge3({ data: base }, local, remote).propios.map(p => p.id).sort()).toEqual(['c', 'd']);
+  });
+  it('primera conciliación suma las de los dos lados', () => {
+    expect(mergeFirst(S({ propios: [t('a', 'A')] }), S({ propios: [t('b', 'B')] })).propios.length).toBe(2);
+    expect(containedIn(S({ propios: [t('a', 'A')] }), S({ propios: [] }))).toBe(false);
   });
 });

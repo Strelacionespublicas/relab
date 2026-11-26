@@ -16,7 +16,7 @@ import { Footer } from './Footer.jsx';
 import LoginModal from './LoginModal.jsx';
 import { api } from './lib/api.js';
 import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
-import { blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
+import { MAX_PROPIOS, blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
 import { createKitSync } from './kit/sync.js';
 import { watchVersion } from './lib/version.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
@@ -234,14 +234,15 @@ function Kit() {
   const retry = (snap.status === 'error' || snap.status === 'conflicto') && <button type="button" onClick={() => sync.syncNow()}>Reintentar</button>;
   const relogin = snap.status === 'sesion' && <button type="button" onClick={() => setLoginOpen(true)}>Ingresar</button>;
 
-  const checksDone = CHECK_IDS.filter(id => st.checks[id]).length;
-  const pct = Math.round((checksDone / CHECK_IDS.length) * 100);
+  const checkIds = [...CHECK_IDS, ...st.propios.map(p => 'p-' + p.id)];
+  const checksDone = checkIds.filter(id => st.checks[id]).length;
+  const pct = Math.round((checksDone / checkIds.length) * 100);
   const calcOn = Object.values(st.calc.fijos).some(Boolean) || st.calc.productos.some(p => p.precio && p.unid);
   const roiOn = Object.entries(st.roi).some(([k, v]) => k !== 'dias' && v);
   const nHist = st.sueldo.hist.length;
   const sueldoOn = nHist > 0 || Object.entries(st.sueldo.f).some(([k, v]) => k !== 'reinv' && v);
   const status = id => ({
-    checklist: [`${checksDone}/${CHECK_IDS.length}`, pct === 100 ? 'ok' : checksDone ? 'now' : ''],
+    checklist: [`${checksDone}/${checkIds.length}`, pct === 100 ? 'ok' : checksDone ? 'now' : ''],
     calculadora: calcOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
     tracker: st.ventas.length ? [`${st.ventas.length} ${st.ventas.length === 1 ? 'venta' : 'ventas'}`, 'now'] : ['Sin ventas', ''],
     roi: roiOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
@@ -335,7 +336,7 @@ function Kit() {
                 );
                 return usada ? <details className="kf-intro-min"><summary>¿Para qué sirve? · Ver el ejemplo de Rosa</summary>{intro}</details> : intro;
               })()}
-              {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} pct={pct} />}
+              {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} total={checkIds.length} pct={pct} />}
               {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} />}
               {sec.id === 'cobros' && <Cobros />}
               {sec.id === 'pitch' && <Pitch />}
@@ -483,27 +484,82 @@ const Cta = () => (
   </div>
 );
 
-function Checklist({ st, set, done, pct }) {
+// Checklist plegable por bloque, con tareas propias (orientativo: cada persona suma lo suyo).
+function Checklist({ st, set, done, total, pct }) {
   const toggle = id => set('checks', c => ({ ...c, [id]: !c[id] }));
+  const itemsDe = sec => [...sec.items.map(([id, text, sub]) => ({ id, text, sub })), ...st.propios.filter(p => p.grp === sec.id).map(p => ({ id: 'p-' + p.id, text: p.txt, propio: p }))];
+  // Al entrar se abre el primer bloque con cosas pendientes; después cada uno se abre y cierra a mano.
+  const [abiertos, setAbiertos] = useState(() => {
+    const first = CHECKLIST.find(sec => itemsDe(sec).some(i => !st.checks[i.id]));
+    return new Set(first ? [first.id] : []);
+  });
+  const [nuevo, setNuevo] = useState({}); // bloque → texto que se está escribiendo
+  const [agregando, setAgregando] = useState(null);
+  const todos = abiertos.size === CHECKLIST.length;
+  const toggleSec = id => setAbiertos(a => { const n = new Set(a); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const agregar = grp => {
+    const txt = (nuevo[grp] || '').trim().slice(0, 120);
+    if (!txt) return;
+    if (st.propios.length >= MAX_PROPIOS) { window.alert(`Llegaste a ${MAX_PROPIOS} tareas propias. Borrá alguna para sumar otra.`); return; }
+    set('propios', ps => [...ps, { id: newId(), grp, txt }]);
+    setNuevo(n => ({ ...n, [grp]: '' }));
+  };
+  const borrar = p => {
+    if (!window.confirm(`¿Borrar "${p.txt}"?`)) return;
+    set('propios', ps => ps.filter(x => x.id !== p.id));
+    set('checks', c => { const n = { ...c }; delete n['p-' + p.id]; return n; });
+  };
   return (
     <>
       <div className="kf-progress">
-        <div className="kf-progress-top"><span>Tu preparación</span><b>{done} de {CHECK_IDS.length} ítems</b></div>
+        <div className="kf-progress-top"><span>Tu preparación</span><b>{done} de {total} ítems</b></div>
         <div className="kf-topbar"><i style={{ width: pct + '%' }} className={pct === 100 ? 'full' : ''} /></div>
       </div>
-      {CHECKLIST.map(sec => (
-        <section key={sec.id} className="kf-cl-sec">
-          <h2 className={`kf-cl-head kf-c-${sec.color}`}>{sec.title}<span>{sec.items.filter(i => st.checks[i[0]]).length}/{sec.items.length}</span></h2>
-          {sec.items.map(([id, text, sub]) => (
-            <button key={id} type="button" className={`kf-item${st.checks[id] ? ' on' : ''}`} aria-pressed={!!st.checks[id]} onClick={() => toggle(id)}>
-              <span className="kf-box"><Tick /></span>
-              <span><span className="kf-item-t">{text}</span><span className="kf-item-s">{sub}</span></span>
-            </button>
-          ))}
-        </section>
-      ))}
-      <Tip><strong>Recordá:</strong> la feria empieza una semana antes en tus redes y termina una semana después, con el contenido que generaste adentro.</Tip>
-      {done > 0 && <button type="button" className="kf-link" onClick={() => window.confirm('¿Desmarcar todo el checklist?') && set('checks', () => ({}))}>Desmarcar todo</button>}
+      <div className="kf-cl-tools">
+        <span>Tocá cada bloque para ver sus tareas.</span>
+        <button type="button" className="kf-link-inline" onClick={() => setAbiertos(todos ? new Set() : new Set(CHECKLIST.map(x => x.id)))}>{todos ? 'Cerrar todo' : 'Abrir todo'}</button>
+      </div>
+      {CHECKLIST.map(sec => {
+        const items = itemsDe(sec);
+        const hechos = items.filter(i => st.checks[i.id]).length;
+        const open = abiertos.has(sec.id);
+        const completo = items.length > 0 && hechos === items.length;
+        return (
+          <section key={sec.id} className={`kf-cl-sec${open ? ' open' : ''}`}>
+            <h2 className="kf-cl-h2">
+              <button type="button" className={`kf-cl-head kf-c-${sec.color}`} aria-expanded={open} aria-controls={'cl-' + sec.id} onClick={() => toggleSec(sec.id)}>
+                <span className="kf-cl-title">{sec.title}</span>
+                <span className="kf-cl-count">{completo ? '✓ ' : ''}{hechos}/{items.length}</span>
+                <svg className="kf-cl-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+            </h2>
+            {open && (
+              <div id={'cl-' + sec.id} className="kf-cl-body">
+                {items.map(i => (
+                  <div key={i.id} className={`kf-item-row${i.propio ? ' propio' : ''}`}>
+                    <button type="button" className={`kf-item${st.checks[i.id] ? ' on' : ''}`} aria-pressed={!!st.checks[i.id]} onClick={() => toggle(i.id)}>
+                      <span className="kf-box"><Tick /></span>
+                      <span><span className="kf-item-t">{i.text}</span>{i.propio ? <span className="kf-item-s kf-item-tuya">Tarea tuya</span> : <span className="kf-item-s">{i.sub}</span>}</span>
+                    </button>
+                    {i.propio && <button type="button" className="kf-item-del" onClick={() => borrar(i.propio)} aria-label={`Borrar ${i.text}`}>×</button>}
+                  </div>
+                ))}
+                {agregando === sec.id ? (
+                  <form className="kf-cl-add" onSubmit={e => { e.preventDefault(); agregar(sec.id); }}>
+                    <input type="text" autoFocus maxLength={120} value={nuevo[sec.id] || ''} placeholder="Ej.: Llevar alargue y zapatilla" onChange={e => setNuevo(n => ({ ...n, [sec.id]: e.target.value }))} aria-label={`Nueva tarea en ${sec.title}`} />
+                    <button type="submit" className="kf-btn kf-btn--coral kf-btn--sm" disabled={!(nuevo[sec.id] || '').trim()}>Agregar</button>
+                    <button type="button" className="kf-link-inline kf-cl-cancel" onClick={() => setAgregando(null)}>Listo</button>
+                  </form>
+                ) : (
+                  <button type="button" className="kf-cl-addbtn" onClick={() => setAgregando(sec.id)}>+ Agregar una tarea propia</button>
+                )}
+              </div>
+            )}
+          </section>
+        );
+      })}
+      <Tip><strong>Recordá:</strong> la feria empieza una semana antes en tus redes y termina una semana después, con el contenido que generaste adentro. Este checklist es una guía: sumale lo tuyo.</Tip>
+      {done > 0 && <button type="button" className="kf-link" onClick={() => window.confirm('¿Desmarcar todo el checklist? Tus tareas propias quedan, sin marcar.') && set('checks', () => ({}))}>Desmarcar todo</button>}
     </>
   );
 }
