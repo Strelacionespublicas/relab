@@ -262,3 +262,47 @@ describe('ROI: tu sueldo', () => {
     expect(r.decision).toBe('go');
   });
 });
+
+describe('auditoría: tu sueldo en la Calculadora', () => {
+  const KEYS = ['alquiler', 'traslado', 'deco', 'viaticos', 'personal', 'otros', 'sueldo'];
+  const base = { productos: [{ id: 1, costo: '4000', precio: '8000', unid: '20' }], comision: '0', pctDigital: '0' };
+  it('stand + transporte + tu sueldo = 30.000 → equilibrio de 8 unidades', () => {
+    const r = calcFeria({ ...base, fijos: { alquiler: '6000', traslado: '4000', sueldo: '20000' } }, KEYS);
+    expect(r.fijos).toBe(30000);
+    expect(r.sueldo).toBe(20000);
+    expect(r.gastos).toBe(10000);
+    expect(r.eq).toBe(8);
+    expect(r.gan).toBe(50000);
+  });
+  it('escenarios de 0 a 20 unidades', () => {
+    const res = [0, 5, 10, 15, 20].map(u => calcFeria({ ...base, productos: [{ id: 1, costo: '4000', precio: '8000', unid: String(u) }], fijos: { sueldo: '20000', alquiler: '10000' } }, KEYS).gan);
+    expect(res).toEqual([-30000, -10000, 10000, 30000, 50000]);
+  });
+  it('sin sueldo cargado, nada cambia', () => {
+    const r = calcFeria({ ...base, fijos: { alquiler: '6000', traslado: '4000' } }, KEYS);
+    expect(r.sueldo).toBe(0);
+    expect(r.eq).toBe(3);
+  });
+  it('un sueldo inválido se marca como error', () => {
+    expect(calcFeria({ ...base, fijos: { sueldo: '-5' } }, KEYS).errors['fijos.sueldo']).toBeTruthy();
+  });
+});
+
+describe('auditoría: el veredicto del ROI tiene en cuenta tu sueldo', () => {
+  const base = { ef: '100.000', stand: '20.000', ins: '40.000' }; // ganancia 40.000, ROI 67%
+  it('sin sueldo cargado: rentable', () => {
+    expect(calcRoi(base).decision).toBe('go');
+  });
+  it('ganancia que no cubre el sueldo: no es "rentable"', () => {
+    const r = calcRoi({ ...base, sueldo: '50.000' });
+    expect(r.sinSueldo).toBe(true);
+    expect(r.decision).toBe('maybe');
+  });
+  it('el sueldo se cuenta por jornada', () => {
+    expect(calcRoi({ ...base, sueldo: '15.000', dias: '2' }).decision).toBe('go'); // 40.000 ≥ 30.000
+    expect(calcRoi({ ...base, sueldo: '25.000', dias: '2' }).decision).toBe('maybe'); // 40.000 < 50.000
+  });
+  it('con pérdida sigue siendo "no"', () => {
+    expect(calcRoi({ ef: '10.000', stand: '20.000', sueldo: '5000' }).decision).toBe('no');
+  });
+});

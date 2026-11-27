@@ -15,7 +15,9 @@ export function ventaTotales(venta, comisiones = {}) {
   let descuento = 0;
   if (d && n(d.valor) > 0) descuento = d.tipo === 'pct' ? subtotal * Math.min(n(d.valor), 100) / 100 : Math.min(n(d.valor), subtotal);
   const total = subtotal - descuento;
-  const tasa = n(comisiones[venta?.medio]);
+  // La tasa guardada en la venta manda (queda fija al registrarla); las ventas viejas, sin tasa
+  // guardada, usan la tasa actual del medio de pago.
+  const tasa = Number.isFinite(venta?.tasa) ? venta.tasa : n(comisiones[venta?.medio]);
   const comision = total * tasa / 100;
   const costo = items.reduce((s, it) => s + n(it.cant) * n(it.costo), 0);
   const unidades = items.reduce((s, it) => s + n(it.cant), 0);

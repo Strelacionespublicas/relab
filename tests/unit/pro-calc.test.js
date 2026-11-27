@@ -188,3 +188,19 @@ describe('venta rápida', () => {
     expect(buscarProductos(productos, 'zapato')).toEqual([]);
   });
 });
+
+describe('auditoría: la comisión queda fija en cada venta', () => {
+  const venta = { items: [{ cant: 2, precio: 5000, costo: 2000 }], medio: 'mp', tasa: 6 };
+  it('usa la tasa guardada aunque cambie la del medio', () => {
+    expect(ventaTotales(venta, { mp: 3 }).comision).toBe(600);
+    const f = { gastos: [{ monto: 1000 }] };
+    expect(resumenFeria(f, [venta], { mp: 6 }).resultado).toBe(resumenFeria(f, [venta], { mp: 3 }).resultado);
+  });
+  it('las ventas viejas, sin tasa guardada, usan la actual', () => {
+    const { tasa: _t, ...vieja } = venta;
+    expect(ventaTotales(vieja, { mp: 3 }).comision).toBe(300);
+  });
+  it('una tasa guardada en 0 (efectivo) no toma la del medio', () => {
+    expect(ventaTotales({ ...venta, tasa: 0 }, { mp: 6 }).comision).toBe(0);
+  });
+});

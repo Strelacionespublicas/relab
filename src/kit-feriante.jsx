@@ -22,6 +22,7 @@ import { watchVersion } from './lib/version.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
 import { MiSueldo } from './kit/sueldo.jsx';
+import { calcSueldo, sugerencias } from './kit/sueldo-calc.js';
 
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
@@ -337,7 +338,7 @@ function Kit() {
                 return usada ? <details className="kf-intro-min"><summary>¿Para qué sirve? · Ver el ejemplo de Rosa</summary>{intro}</details> : intro;
               })()}
               {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} total={checkIds.length} pct={pct} />}
-              {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} />}
+              {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} sueldoSug={calcSueldo(st.sueldo.f, sugerencias({ roi: st.roi, ventas: st.ventas })).jornada.sueldoJornada} openTab={open} />}
               {sec.id === 'cobros' && <Cobros />}
               {sec.id === 'pitch' && <Pitch />}
               {sec.id === 'visitantes' && <Visitantes />}
@@ -743,13 +744,14 @@ function Tracker({ ventas, set }) {
   );
 }
 
-function Calculadora({ calc, set }) {
+function Calculadora({ calc, set, sueldoSug = 0, openTab }) {
   const upd = fn => set('calc', fn);
   const setFijo = (k, v) => upd(c => ({ ...c, fijos: { ...c.fijos, [k]: v } }));
   const setProd = (id, f, v) => upd(c => ({ ...c, productos: c.productos.map(p => (p.id === id ? { ...p, [f]: v } : p)) }));
 
   // Fórmulas y validaciones en src/kit/calc.js (calcFeria).
-  const { ok, errors, fijos, ing, cv, com, gan, margen, unid, pProm, eq } = calcFeria(calc, FIJOS.map(([k]) => k));
+  // Tu sueldo por la jornada se guarda en fijos.sueldo y cuenta como costo fijo (equilibrio incluido).
+  const { ok, errors, fijos, sueldo, gastos, ing, cv, com, gan, margen, unid, pProm, eq } = calcFeria(calc, [...FIJOS.map(([k]) => k), 'sueldo']);
   const show = ing > 0 || fijos > 0;
   const prodErrors = p => ['costo', 'precio', 'unid'].map(f => errors[`prod.${p.id}.${f}`]).find(Boolean);
 
@@ -764,6 +766,11 @@ function Calculadora({ calc, set }) {
       <div className="kf-calc">
         <Card title="Costos fijos del stand">
           {FIJOS.map(([k, l]) => <Field key={k} label={l} value={calc.fijos[k]} onChange={v => setFijo(k, v)} suffix="$" error={errors[`fijos.${k}`]} />)}
+          <Field label="Tu sueldo por la jornada" value={calc.fijos.sueldo} onChange={v => setFijo('sueldo', v)} suffix="$" error={errors['fijos.sueldo']}
+            hint={sueldoSug > 0 && !calc.fijos.sueldo ? null : 'Lo que te pagás por preparar, viajar, armar, atender y desarmar. Opcional.'} />
+          {sueldoSug > 0 && !calc.fijos.sueldo
+            ? <p className="kf-muted">En Mi sueldo calculaste <b>{fmt(sueldoSug)}</b> por jornada. <button type="button" className="kf-link-inline" onClick={() => setFijo('sueldo', String(Math.round(sueldoSug)))}>Usar ese valor</button></p>
+            : !calc.fijos.sueldo && <p className="kf-muted">¿No sabés cuánto? <button type="button" className="kf-link-inline" onClick={() => openTab?.('sueldo')}>Calculalo en Mi sueldo</button>.</p>}
         </Card>
         <Card title="Cobros">
           <Field label="Comisión promedio de los cobros digitales" value={calc.comision} onChange={v => upd(c => ({ ...c, comision: v }))} suffix="%" error={errors.comision} hint="Mezcla de débito y crédito, con IVA. Mirá la sección Cobros." />
@@ -775,7 +782,7 @@ function Calculadora({ calc, set }) {
         {calc.productos.map(p => (
           <div key={p.id} className="kf-prod">
             <input type="text" aria-label="Producto" placeholder="Nombre" value={p.nombre} onChange={e => setProd(p.id, 'nombre', e.target.value)} />
-            <input type="text" inputMode="decimal" aria-label="Costo por unidad" aria-invalid={errors[`prod.${p.id}.costo`] ? true : undefined} placeholder="Costo $" value={p.costo} onChange={e => setProd(p.id, 'costo', e.target.value)} />
+            <input type="text" inputMode="decimal" aria-label="Costo por unidad" aria-invalid={errors[`prod.${p.id}.costo`] ? true : undefined} placeholder="Costo $" title="Costo de producción por unidad (con tu mano de obra, si la calculaste)" value={p.costo} onChange={e => setProd(p.id, 'costo', e.target.value)} />
             <input type="text" inputMode="decimal" aria-label="Precio de venta" aria-invalid={errors[`prod.${p.id}.precio`] ? true : undefined} placeholder="Precio $" value={p.precio} onChange={e => setProd(p.id, 'precio', e.target.value)} />
             <input type="text" inputMode="decimal" aria-label="Unidades que esperás vender" aria-invalid={errors[`prod.${p.id}.unid`] ? true : undefined} placeholder="Unid." value={p.unid} onChange={e => setProd(p.id, 'unid', e.target.value)} />
             <button type="button" aria-label="Quitar producto" onClick={() => upd(c => ({ ...c, productos: c.productos.length > 1 ? c.productos.filter(x => x.id !== p.id) : [blankProduct()] }))}>×</button>
@@ -791,15 +798,16 @@ function Calculadora({ calc, set }) {
           <div className="kf-res-grid">
             <div><span>Ingresos</span><b>{fmt(ing)}</b></div>
             <div><span>Costo de lo vendido</span><b className="neg">{fmt(cv)}</b></div>
-            <div><span>Costos fijos</span><b className="neg">{fmt(fijos)}</b></div>
+            <div><span>Costos fijos</span><b className="neg">{fmt(gastos)}</b></div>
+            {sueldo > 0 && <div><span>Tu sueldo</span><b className="neg">{fmt(sueldo)}</b></div>}
             <div><span>Comisiones</span><b className="neg">{fmt(com)}</b></div>
-            <div className="hi"><span>Ganancia neta</span><b className={gan < 0 ? 'neg' : 'pos'}>{fmt(gan)}</b></div>
+            <div className="hi"><span>{sueldo > 0 ? 'Ganancia después de tu sueldo' : 'Ganancia (antes de tu sueldo)'}</span><b className={gan < 0 ? 'neg' : 'pos'}>{fmt(gan)}</b></div>
             <div><span>Margen neto</span><b>{margen}%</b></div>
           </div>
           <p className="kf-eqline">
             {fijos === 0 ? 'Cargá los costos fijos para calcular el punto de equilibrio.'
               : eq == null ? (unid > 0 ? 'Con estos precios no llegás al equilibrio: cada unidad deja menos de lo que cuesta.' : 'Cargá las unidades que esperás vender para calcular el punto de equilibrio.')
-              : <>Punto de equilibrio: <b>{eq} unidades</b> (unos {fmt(eq * pProm)}) para cubrir los costos fijos.{unid > 0 && unid < eq ? ' Tu estimación de ventas no llega.' : ''}</>}
+              : <>Punto de equilibrio: <b>{eq} unidades</b> (unos {fmt(eq * pProm)}) para cubrir los costos fijos{sueldo > 0 ? ' y tu sueldo' : ''}.{unid > 0 && unid < eq ? ' Tu estimación de ventas no llega.' : ''}</>}
           </p>
           <Tip tone="oscuro">{tip}</Tip>
         </div>
@@ -878,6 +886,7 @@ function Roi({ roi, ventas, set, openTab }) {
   let dec = null;
   if (r.decision === 'sinCostos') dec = ['maybe', 'Cargá los costos del evento para calcular el ROI.', ''];
   else if (r.decision === 'go') dec = ['go', '✓ Feria rentable: vale la pena repetirla', `ROI del ${pctRoi}%: por cada $1 invertido volvieron $${(1 + pctRoi / 100).toFixed(2).replace('.', ',')}.${pctObj != null ? ` Llegaste al ${pctObj}% de tu objetivo de ventas.` : ''}${cont ? ` Además, los ${cont} contactos y ${seg} seguidores nuevos son un retorno que no se ve en la caja.` : ''}`];
+  else if (r.decision === 'maybe' && r.sinSueldo) dec = ['maybe', '~ Ganaste, pero no te pagaste tu sueldo', `La feria dejó ${fmt(gan)}, pero querías ganar ${fmt(r.sueldo * r.dias)}${r.dias > 1 ? ` por las ${r.dias} jornadas` : ''}. Antes de repetirla, revisá precios, costos del stand o cuántas unidades llevás.`];
   else if (r.decision === 'maybe') dec = ['maybe', '~ Feria positiva pero con margen bajo: optimizá costos', `ROI del ${pctRoi}%. Cubriste los costos y ganaste, pero el margen es ajustado. Para la próxima: bajá gastos fijos o trabajá el ticket promedio.${r.costoContacto != null ? ` Cada contacto nuevo te costó ${fmt(r.costoContacto)}.` : ''}`];
   else if (r.decision === 'no') dec = ['no', '✗ Feria con pérdida: revisá la estrategia antes de repetir', `Perdiste ${fmt(Math.abs(gan))}. Antes de volver, revisá precios, costos del stand y la comunicación previa.${cont ? ` Los ${cont} contactos que conseguiste pueden ser una inversión a largo plazo si les hacés seguimiento.` : ''}`];
 
@@ -899,7 +908,7 @@ function Roi({ roi, ventas, set, openTab }) {
         <Card title="Costos reales">
           <Field label="Stand e inscripción" value={roi.stand} onChange={v => upd('stand', v)} error={errors.stand} suffix="$" />
           <Field label="Traslado y viáticos" value={roi.tras} onChange={v => upd('tras', v)} error={errors.tras} suffix="$" />
-          <Field label="Mercadería e insumos" hint="El costo de lo que vendiste, no de todo el stock." value={roi.ins} onChange={v => upd('ins', v)} error={errors.ins} suffix="$" />
+          <Field label="Mercadería e insumos" hint="El costo de producción de lo que vendiste (no de todo el stock), con tu mano de obra si la calculaste." value={roi.ins} onChange={v => upd('ins', v)} error={errors.ins} suffix="$" />
           <Field label="Otros costos" value={roi.otros} onChange={v => upd('otros', v)} error={errors.otros} suffix="$" />
         </Card>
         <Card title="Más allá de la caja">
@@ -921,7 +930,7 @@ function Roi({ roi, ventas, set, openTab }) {
             <div><span>Ingreso neto</span><b>{fmt(ing)}</b></div>
             <div><span>Costos totales</span><b className="neg">{fmt(costo)}</b></div>
             <div className="hi"><span>Ganancia real</span><b className={gan < 0 ? 'neg' : 'pos'}>{fmt(gan)}</b></div>
-            <div><span>ROI de la feria</span><b>{pctRoi == null ? '—' : pctRoi + '%'}</b></div>
+            <div title="Ganancia dividida por todo lo que pusiste para esta feria: stand, traslado, mercadería vendida y otros"><span>ROI de la feria</span><b>{pctRoi == null ? '—' : pctRoi + '%'}</b></div>
             <div><span>Venta por día</span><b>{fmt(r.ventaDia)}</b></div>
             <div><span>Costo por contacto</span><b>{r.costoContacto != null ? fmt(r.costoContacto) : '—'}</b></div>
           </div>

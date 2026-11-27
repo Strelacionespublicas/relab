@@ -222,6 +222,7 @@ export function MiSueldo({ st, set, isPro, openTab }) {
           <Campo k="jOtras" label="Otras" f={f} sug={sug} upd={upd} errors={errors} suffix="h" />
         </div>
         {errors.jHoras && <p className="kf-err" role="alert">{errors.jHoras}</p>}
+        {sug.horasRoi && <p className="kf-muted">En el ROI pusiste <b>{horasTxt(sug.horasRoi.value)}</b> por jornada, contando armado y desarme. Repartilas en estos casilleros{j.horas > 0 && Math.abs(j.horas - sug.horasRoi.value) > 0.01 ? <> (acá suman {horasTxt(j.horas)})</> : null}.</p>}
         <div className="ms-g2">
           <Campo k="jValor" label="Valor de tu hora" f={f} sug={sug} upd={upd} errors={errors}
             placeholder={hora.valorHora != null ? String(Math.round(hora.valorHora)) : '0'}
@@ -247,7 +248,7 @@ export function MiSueldo({ st, set, isPro, openTab }) {
             <Campo k="cPack" label="Packaging" f={f} sug={sug} upd={upd} errors={errors} />
             <Campo k="cMo" label="Mano de obra de producción" f={f} sug={sug} upd={upd} errors={errors}
               placeholder={b.moSug != null && (f.cMo === undefined || f.cMo === '') ? String(Math.round(b.moSug)) : '0'}
-              hint="Lo que te pagás por fabricar lo que vendiste. Si revendés, dejalo en 0." />
+              hint="Lo que te pagás por fabricar lo que vendiste. Si revendés, o si ya la sumaste en el costo de tus productos, dejalo en 0." />
             <details className="ms-mo" open={f.moHoras !== undefined && f.moHoras !== ''}>
               <summary>¿Lo hiciste vos? Calculalo con tus horas</summary>
               <Campo k="moHoras" label="Horas que te llevó hacer lo que vendiste" f={f} sug={sug} upd={upd} errors={errors} suffix="h"

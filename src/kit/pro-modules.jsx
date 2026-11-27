@@ -260,6 +260,7 @@ function TuSueldo({ r, data, per, store, canEdit }) {
               <div className="kf-sueldo-bar" aria-hidden="true"><i className={pct >= 100 ? 'ok' : 'low'} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></div>
               <p>Tu objetivo: <b>{fmt(s.objetivo)}</b> <small>({objetivoTxt})</small>. {pct >= 100 ? <>Lo cubriste: <b>{pct}%</b>.</> : <>Cubriste el <b>{Math.max(pct, 0)}%</b>.</>}</p>
               <p>Después de pagarte tu sueldo, al negocio {s.trasSueldo >= 0 ? <>le quedan <b className="pos">{fmt(s.trasSueldo)}</b>.</> : <>le faltan <b className="neg">{fmt(-s.trasSueldo)}</b>: para sostenerte, revisá precios, costos o a qué ferias vas.</>}</p>
+              <p className="kf-muted">Ojo: si el costo de tus productos ya incluye tu mano de obra, esa parte de tu sueldo ya está pagada dentro de la mercadería.</p>
             </>
           ) : <p className="kf-muted">Cargá cuánto querés ganar (por mes o por jornada) y te decimos si tus ferias te pagan el sueldo.</p>}
           {canEdit && <button type="button" className="kf-link" onClick={abrir}>{cfg ? 'Cambiar mi sueldo' : 'Cargar mi sueldo'}</button>}
@@ -416,7 +417,7 @@ function Productos({ store, data, canEdit }) {
         <div className="kf-pro-grid">
           <label className="kf-field"><span>Nombre</span><input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Poncho de telar" maxLength={80} autoFocus /></label>
           <label className="kf-field"><span>Categoría</span><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} placeholder="Textiles" maxLength={40} list="kf-cats" /><datalist id="kf-cats">{cats.map(c => <option key={c} value={c} />)}</datalist></label>
-          <label className="kf-field"><span>Costo</span><span className="kf-input-wrap"><em className="pre">$</em><input inputMode="decimal" value={form.costo} onChange={e => setForm({ ...form, costo: e.target.value })} placeholder="0" /></span><small>Lo que te cuesta hacerlo o comprarlo</small></label>
+          <label className="kf-field"><span>Costo</span><span className="kf-input-wrap"><em className="pre">$</em><input inputMode="decimal" value={form.costo} onChange={e => setForm({ ...form, costo: e.target.value })} placeholder="0" /></span><small>Lo que te cuesta hacerlo (materiales, envase y tu mano de obra si la calculaste) o comprarlo</small></label>
           <label className="kf-field"><span>Precio de venta</span><span className="kf-input-wrap"><em className="pre">$</em><input inputMode="decimal" value={form.precio} onChange={e => setForm({ ...form, precio: e.target.value })} placeholder="0" /></span></label>
           <label className="kf-field"><span>Avisarme con stock de</span><input inputMode="numeric" value={form.stockMin} onChange={e => setForm({ ...form, stockMin: e.target.value })} placeholder="Ej.: 3" /><small>Vacío = sin aviso</small></label>
         </div>
@@ -615,7 +616,12 @@ function VentasPro({ store, data, canEdit, medios }) {
     items.push({ productoId: it.productoId, varianteId: it.varianteId, nombre: it.nombre + (it.varianteId ? ` (${varName(data, it)})` : ''), cant: it.cant, precio: pr.value, costo: it.costo });
   }
   const desc = readField(draft.descValor, { percent: draft.descTipo === 'pct' });
-  const venta = { items, medio: draft.medio, descuento: desc.value ? { tipo: draft.descTipo, valor: desc.value } : null };
+  // La comisión queda fijada en cada venta: si después cambia la tasa del medio, las ventas pasadas no
+  // cambian. Al editar una venta sin cambiar el medio se conserva la tasa que tenía.
+  const tasaVenta = draft.ts && draft.medio === draft.medioOrig && Number.isFinite(draft.tasa)
+    ? draft.tasa
+    : (Number.isFinite(data.comisiones[draft.medio]) ? data.comisiones[draft.medio] : 0);
+  const venta = { items, medio: draft.medio, tasa: tasaVenta, descuento: desc.value ? { tipo: draft.descTipo, valor: desc.value } : null };
   const tot = ventaTotales(venta, data.comisiones);
 
   const registrar = e => {
@@ -626,7 +632,7 @@ function VentasPro({ store, data, canEdit, medios }) {
     // Doble toque: el mismo borrador tiene siempre el mismo id, así que se guarda una sola vez.
     if (enviado.current === draft.id && !draft.ts) return;
     enviado.current = draft.id;
-    store.save('venta', draft.id, { ts: draft.ts || Date.now(), feriaId: draft.feriaId || null, items, medio: draft.medio, descuento: venta.descuento, nota: draft.nota.trim() });
+    store.save('venta', draft.id, { ts: draft.ts || Date.now(), feriaId: draft.feriaId || null, items, medio: draft.medio, tasa: tasaVenta, descuento: venta.descuento, nota: draft.nota.trim() });
     setOkMsg(draft.ts ? 'Venta actualizada' : `Venta registrada: ${fmt(tot.total)}`);
     setTimeout(() => setOkMsg(''), 2500);
     setDraft(blankVenta(feriaSel || null, draft.medio));
@@ -635,7 +641,7 @@ function VentasPro({ store, data, canEdit, medios }) {
   const editar = v => {
     setErr('');
     enviado.current = null;
-    setDraft({ id: v.id, ts: v.ts, feriaId: v.feriaId, medio: v.medio, nota: v.nota || '', descTipo: v.descuento?.tipo || 'monto', descValor: txt(v.descuento?.valor ?? ''),
+    setDraft({ id: v.id, ts: v.ts, feriaId: v.feriaId, medio: v.medio, medioOrig: v.medio, tasa: v.tasa, nota: v.nota || '', descTipo: v.descuento?.tipo || 'monto', descValor: txt(v.descuento?.valor ?? ''),
       items: v.items.map(it => ({ ...it, key: uid(), nombre: it.nombre.replace(/ \(.*\)$/, ''), precio: txt(it.precio) })) });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

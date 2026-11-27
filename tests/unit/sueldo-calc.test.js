@@ -131,3 +131,15 @@ describe('historial', () => {
     expect(m[0].sueldo).toBe(54000 + 42000);
   });
 });
+
+describe('auditoría: las horas del ROI no se cuentan dos veces', () => {
+  it('no se sugieren en Atención y venta; quedan como referencia', () => {
+    const sug = sugerencias({ roi: { horas: '10' } });
+    expect(sug.jVenta).toBeUndefined();
+    expect(sug.horasRoi).toEqual({ value: 10, from: 'ROI post feria' });
+  });
+  it('con 10 h en el ROI y 1 h de armado, la jornada suma 1 h (no 11)', () => {
+    const sug = sugerencias({ roi: { horas: '10' } });
+    expect(calcSueldo({ jArmado: '1', jValor: '4000' }, sug).jornada.horas).toBe(1);
+  });
+});

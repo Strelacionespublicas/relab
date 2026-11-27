@@ -25,7 +25,8 @@ export const REINV_DEFAULT = 30;
  * Valores sugeridos a partir de lo que ya cargó en el kit, para no cargar dos veces.
  *  - Ventas: lo del ROI (efectivo + digital) si está; si no, el total de Ventas del día.
  *  - Mercadería, traslado, stand, comisiones y otros: los costos reales del ROI.
- *  - Horas de atención y cantidad de jornadas: las del ROI ("Tu sueldo" y "Días de feria").
+ *  - Cantidad de jornadas: la del ROI ("Días de feria"). Las horas por jornada del ROI van en
+ *    `horasRoi` solo como referencia (no es un campo).
  * Solo se sugieren valores mayores a 0. Devuelve { campo: { value, from } }.
  */
 export function sugerencias({ roi = {}, ventas = [] } = {}) {
@@ -41,7 +42,10 @@ export function sugerencias({ roi = {}, ventas = [] } = {}) {
   put('gAlq', r('stand'), 'ROI post feria');
   put('gCom', r('com'), 'ROI post feria');
   put('gOtros', r('otros'), 'ROI post feria');
-  put('jVenta', r('horas'), 'ROI post feria');
+  // Las horas del ROI son la jornada completa (con armado y desarme), no solo la atención: no se
+  // sugieren en ningún campo para no contarlas dos veces. Se muestran como referencia para repartirlas.
+  const horasRoi = r('horas');
+  if (horasRoi > 0) out.horasRoi = { value: horasRoi, from: 'ROI post feria' };
   const dias = readField(roi.dias, { positive: true, fallback: 1 }).value;
   if (dias > 1) put('jCant', dias, 'ROI post feria');
   return out;

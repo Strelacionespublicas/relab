@@ -103,6 +103,9 @@ export function calcFeria(calc, fijoKeys) {
     return r.value;
   };
   const fijos = fijoKeys.reduce((a, k) => a + field(`fijos.${k}`, calc.fijos?.[k]), 0);
+  // Tu sueldo por la jornada (opcional, clave fijos.sueldo) es un costo fijo más: el equilibrio lo
+  // incluye, igual que la facturación mínima de Mi sueldo. Se devuelve aparte para mostrarlo.
+  const sueldo = fijoKeys.includes('sueldo') ? readField(calc.fijos?.sueldo).value : 0;
   const cp = field('comision', calc.comision, { percent: true }) / 100;
   const pd = field('pctDigital', calc.pctDigital, { percent: true }) / 100;
   let ing = 0;
@@ -122,7 +125,7 @@ export function calcFeria(calc, fijoKeys) {
   const pProm = unid > 0 ? ing / unid : 0;
   const mu = unid > 0 ? pProm - cv / unid - pProm * pd * cp : 0;
   const eq = mu > 0 ? Math.ceil(fijos / mu) : null;
-  return { ok: Object.keys(errors).length === 0, errors, fijos, ing, cv, com, gan, margen, unid, pProm, eq };
+  return { ok: Object.keys(errors).length === 0, errors, fijos, sueldo, gastos: fijos - sueldo, ing, cv, com, gan, margen, unid, pProm, eq };
 }
 
 /**
@@ -131,7 +134,9 @@ export function calcFeria(calc, fijoKeys) {
  *   costos = stand + traslado + mercadería vendida + otros · ganancia = neto − costos
  *   ROI = ganancia / costos (sin costos no hay ROI) · venta por día = brutas / días
  *   % del objetivo = brutas / objetivo (el objetivo se fija sobre lo vendido, antes de comisiones)
- * Decisión: 'sinCostos' | 'go' (ganancia y ROI ≥ 20%) | 'maybe' (ganancia con ROI < 20%) | 'no' (pérdida).
+ * Decisión: 'sinCostos' | 'go' (ganancia, ROI ≥ 20% y, si cargó sueldo, lo cubre) | 'maybe' (ganancia con
+ * ROI < 20% o sin cubrir el sueldo: `sinSueldo`) | 'no' (pérdida).
+ * El ROI usa como inversión todo lo que puso para esa feria: stand, traslado, mercadería vendida y otros.
  */
 export function calcRoi(roi) {
   const errors = {};
@@ -158,10 +163,12 @@ export function calcRoi(roi) {
   const pctObj = obj > 0 ? Math.round((bruto / obj) * 100) : null;
   const show = bruto > 0 || com > 0 || costo > 0;
   let decision = null;
-  if (show) decision = costo === 0 ? 'sinCostos' : gan > 0 && pctRoi >= 20 ? 'go' : gan > 0 ? 'maybe' : 'no';
+  // Si cargó su sueldo y la ganancia no lo cubre, la feria no es "rentable" aunque el ROI sea alto.
+  const sinSueldo = sueldo > 0 && gan > 0 && gan < sueldo * dias;
+  if (show) decision = costo === 0 ? 'sinCostos' : gan > 0 && pctRoi >= 20 && !sinSueldo ? 'go' : gan > 0 ? 'maybe' : 'no';
   return {
     ok: Object.keys(errors).length === 0, errors, show,
-    ef, dig, com, bruto, ing, costo, gan, cont, seg, dias, obj, pctRoi, pctObj, decision,
+    ef, dig, com, bruto, ing, costo, gan, cont, seg, dias, obj, pctRoi, pctObj, decision, sinSueldo,
     ventaDia: bruto / dias,
     sueldo, horas,
     ganDia: gan / dias,
