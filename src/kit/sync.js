@@ -31,6 +31,7 @@ const leaf3 = (b, l, r) => (!same(l, b) ? l : r);
  *  - Calculadora y ROI: por campo (cada costo fijo, comisión, % digital, la lista de productos y cada
  *    campo del ROI); si cambió acá gana lo de acá, si no lo de la cuenta.
  *  - Tareas propias del checklist: por id, igual que las jornadas guardadas.
+ *  - Costo y precio: cada receta por id (como las tareas propias); la receta abierta, como un campo.
  *  - Mi sueldo: cada campo igual que el ROI; las jornadas guardadas por id (como las ventas, pero
  *    una jornada editada en los dos lados se queda con la versión de acá).
  */
@@ -69,7 +70,8 @@ export function merge3(base, local, remote) {
     const v = leaf3(bd.roi[k] ?? '', local.roi[k] ?? '', remote.roi[k] ?? '');
     if (v !== '') roi[k] = v;
   }
-  return normalize({ checks, ventas, calc, roi, sueldo: mergeSueldo3(bd.sueldo, local.sueldo, remote.sueldo), propios: mergeList3(bd.propios, local.propios, remote.propios) });
+  return normalize({ checks, ventas, calc, roi, sueldo: mergeSueldo3(bd.sueldo, local.sueldo, remote.sueldo), propios: mergeList3(bd.propios, local.propios, remote.propios),
+    costos: { recetas: mergeList3(bd.costos.recetas, local.costos.recetas, remote.costos.recetas), activa: leaf3(bd.costos.activa, local.costos.activa, remote.costos.activa) } });
 }
 
 function mergeSueldo3(b, l, r) {
@@ -121,7 +123,8 @@ export function mergeFirst(local, remote) {
   for (const [k, v] of Object.entries(remote.sueldo.f)) if (filled(v)) sf[k] = v;
   const hs = new Map(remote.sueldo.hist.map(h => [h.id, h]));
   for (const h of local.sueldo.hist) if (!hs.has(h.id)) hs.set(h.id, h);
-  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi, sueldo: { f: sf, hist: sortHist([...hs.values()]) }, propios: unionById(remote.propios, local.propios) });
+  return normalize({ checks, ventas: [...byId.values()].sort((a, b) => a.ts - b.ts), calc, roi, sueldo: { f: sf, hist: sortHist([...hs.values()]) }, propios: unionById(remote.propios, local.propios),
+    costos: { recetas: unionById(remote.costos.recetas, local.costos.recetas), activa: local.costos.activa || remote.costos.activa } });
 }
 
 const unionById = (a, b) => { const m = new Map(a.map(x => [x.id, x])); for (const x of b) if (!m.has(x.id)) m.set(x.id, x); return [...m.values()]; };
@@ -142,6 +145,8 @@ export function containedIn(local, remote) {
   if (!local.sueldo.hist.every(h => same(h, hist.get(h.id)))) return false;
   const propios = new Map(remote.propios.map(p => [p.id, p]));
   if (!local.propios.every(p => same(p, propios.get(p.id)))) return false;
+  const recetas = new Map(remote.costos.recetas.map(r => [r.id, r]));
+  if (!local.costos.recetas.every(r => same(r, recetas.get(r.id)))) return false;
   return leafKeys(local.sueldo.f).every(k => leafOk(local.sueldo.f[k], remote.sueldo.f[k], undefined));
 }
 

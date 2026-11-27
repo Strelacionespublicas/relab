@@ -2,7 +2,7 @@
 // Se simula el servidor de Relab (sesiones, /api/me, /api/state, /api/auth/logout) en memoria.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { containedIn, createKitSync, merge3, mergeFirst } from '../../src/kit/sync.js';
-import { emptyState, normalize } from '../../src/kit/state.js';
+import { emptyState, hasData, normalize } from '../../src/kit/state.js';
 
 const venta = (id, monto = 1000, ts = 1) => ({ id, prod: 'P' + id, monto, medio: 'efect', ts });
 const S = data => normalize(data);
@@ -422,7 +422,7 @@ describe('Compatibilidad con los datos existentes', () => {
     expect(d.data().checks).toEqual({ 'pre-2': true });
     expect(d.data().ventas.map(v => v.id)).toEqual(['R1']);
     expect(srv.puts).toBe(1); // solo se normaliza una vez (agrega un producto vacío), sin cambiar datos
-    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'propios', 'roi', 'sueldo', 'ventas']); // misma forma, más "sueldo" y "propios" (vacíos)
+    expect(Object.keys(srv.rows.get('a@x.com').data).sort()).toEqual(['calc', 'checks', 'costos', 'propios', 'roi', 'sueldo', 'ventas']); // misma forma, más "sueldo", "propios" y "costos" (vacíos)
   });
 });
 
@@ -650,5 +650,38 @@ describe('Tareas propias del checklist en la conciliación', () => {
   it('primera conciliación suma las de los dos lados', () => {
     expect(mergeFirst(S({ propios: [t('a', 'A')] }), S({ propios: [t('b', 'B')] })).propios.length).toBe(2);
     expect(containedIn(S({ propios: [t('a', 'A')] }), S({ propios: [] }))).toBe(false);
+  });
+});
+
+describe('Costo y precio en la conciliación', () => {
+  const rc = (id, nombre, extra = {}) => ({ id, nombre, insumos: [{ id: `${id}-1`, nombre: 'Cera', pagado: '1000' }], ...extra });
+  it('se normalizan: descarta las inválidas y limita los insumos', () => {
+    const muchos = Array.from({ length: 30 }, (_, i) => ({ id: `i${i}` }));
+    const s = S({ costos: { recetas: [rc('a', 'Vela'), null, { nombre: 'sin id' }, { id: 'b', insumos: muchos }], activa: 'a' } });
+    expect(s.costos.recetas.map(r => r.id)).toEqual(['a', 'b']);
+    expect(s.costos.recetas[1].insumos.length).toBe(20);
+    expect(s.costos.activa).toBe('a');
+    expect(S({}).costos).toEqual({ recetas: [], activa: null });
+  });
+  it('por id, con altas, bajas y la edición de acá', () => {
+    const base = S({ costos: { recetas: [rc('a', 'A'), rc('b', 'B')], activa: 'a' } });
+    const local = S({ costos: { recetas: [rc('a', 'A editada'), rc('c', 'C')], activa: 'c' } });
+    const remote = S({ costos: { recetas: [rc('a', 'A'), rc('b', 'B'), rc('d', 'D')], activa: 'a' } });
+    const m = merge3({ data: base }, local, remote).costos;
+    expect(m.recetas.map(r => r.id).sort()).toEqual(['a', 'c', 'd']);
+    expect(m.recetas.find(r => r.id === 'a').nombre).toBe('A editada');
+    expect(m.activa).toBe('c');
+  });
+  it('una versión guardada antes de Costo y precio no rompe la conciliación', () => {
+    const local = S({ costos: { recetas: [rc('a', 'A')], activa: 'a' } });
+    expect(merge3({ data: { checks: {} } }, local, S({})).costos.recetas.length).toBe(1);
+  });
+  it('primera conciliación suma y containedIn las mira', () => {
+    expect(mergeFirst(S({ costos: { recetas: [rc('a', 'A')] } }), S({ costos: { recetas: [rc('b', 'B')] } })).costos.recetas.length).toBe(2);
+    expect(containedIn(S({ costos: { recetas: [rc('a', 'A')] } }), S({}))).toBe(false);
+    expect(containedIn(S({ costos: { recetas: [rc('a', 'A')] } }), S({ costos: { recetas: [rc('a', 'A')] } }))).toBe(true);
+  });
+  it('hasData cuenta las recetas', () => {
+    expect(hasData(S({ costos: { recetas: [rc('a', 'A')] } }))).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-// Forma del estado del Kit feriante: { checks, ventas, calc, roi, sueldo, propios }. Es la misma que se guarda en la
+// Forma del estado del Kit feriante: { checks, ventas, calc, roi, sueldo, propios, costos }. Es la misma que se guarda en la
 // cuenta (resource_state 'kit-feriante') y en el navegador; no cambiarla sin migración.
 
 export const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -11,6 +11,11 @@ export const MAX_HIST = 40; // tope de jornadas guardadas: cada una ocupa ~0,7 K
 // Tareas propias del checklist: { id, grp (bloque del checklist), txt }. Su marca va en checks['p-' + id].
 export const MAX_PROPIOS = 60;
 const okPropio = p => p && typeof p.id === 'string' && typeof p.grp === 'string' && typeof p.txt === 'string' && p.txt.trim();
+// "Costo y precio": recetas = [{ id, nombre, insumos: [...], ...campos de texto }] y la que se está editando.
+export const MAX_RECETAS = 30;
+const MAX_INSUMOS = 20;
+const okReceta = r => r && typeof r.id === 'string' && typeof r === 'object' && !Array.isArray(r);
+const fixReceta = r => ({ ...r, insumos: Array.isArray(r.insumos) ? r.insumos.filter(i => i && typeof i.id === 'string').slice(0, MAX_INSUMOS) : [] });
 const okHist = h => h && typeof h.id === 'string' && h.f && typeof h.f === 'object' && h.r && typeof h.r === 'object';
 
 export const normalize = s => ({
@@ -23,10 +28,14 @@ export const normalize = s => ({
     hist: Array.isArray(s?.sueldo?.hist) ? s.sueldo.hist.filter(okHist).slice(0, MAX_HIST) : [],
   },
   propios: Array.isArray(s?.propios) ? s.propios.filter(okPropio).slice(0, MAX_PROPIOS) : [],
+  costos: {
+    recetas: Array.isArray(s?.costos?.recetas) ? s.costos.recetas.filter(okReceta).slice(0, MAX_RECETAS).map(fixReceta) : [],
+    activa: typeof s?.costos?.activa === 'string' ? s.costos.activa : null,
+  },
 });
 export const emptyState = () => normalize(null);
 
 export const hasData = s => Object.values(s.checks).some(Boolean) || s.ventas.length > 0
   || Object.values(s.calc.fijos).some(Boolean) || s.calc.productos.some(p => p.nombre || p.costo || p.precio || p.unid)
   || Object.entries(s.roi).some(([k, v]) => k !== 'dias' && v)
-  || Object.values(s.sueldo.f).some(v => v !== '' && v != null) || s.sueldo.hist.length > 0 || s.propios.length > 0;
+  || Object.values(s.sueldo.f).some(v => v !== '' && v != null) || s.sueldo.hist.length > 0 || s.propios.length > 0 || s.costos.recetas.length > 0;

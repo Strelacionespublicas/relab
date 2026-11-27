@@ -139,7 +139,7 @@ function Landing() {
         )}
 
         <section className="kf-moment">
-          <div className="kf-moment-h"><span>✦</span><div><h2>Qué incluye</h2><p>Además de las 8 herramientas gratis del kit</p></div></div>
+          <div className="kf-moment-h"><span>✦</span><div><h2>Qué incluye</h2><p>Además de las 9 herramientas gratis del kit</p></div></div>
           <div className="kf-cards">
             {MODULOS.map(([t, d]) => <div key={t} className="kf-tool kf-pl-mod"><span className="kf-tool-t">{t}</span><span className="kf-tool-d">{d}</span><span className="kf-st kf-st--pro">PRO</span></div>)}
           </div>

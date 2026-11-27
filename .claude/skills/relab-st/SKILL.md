@@ -17,7 +17,7 @@ Relab es el conjunto de recursos gratuitos de Stella en **relab.strelacionespubl
 1. **Nunca a `main` sin su OK explícito** ("sí, publicá"). Cada push a `main` se publica solo en el sitio real. Trabajá siempre en una rama.
 2. **La base de datos la toca ella.** Las migraciones nuevas van en `migrations/000N_*.sql`, solo aditivas. Para producción le das un bloque SQL listo para pegar en Cloudflare → D1 `relab` → Consola, con `CREATE TABLE IF NOT EXISTS` y el `INSERT INTO d1_migrations ... WHERE NOT EXISTS`, así pegarlo dos veces no rompe nada. Pedile que anote la hora antes, por si hay que volver con Time Travel.
 3. **Privacidad: Stella no quiere poder leer lo que cargan las personas.** Todo contenido de usuarios va cifrado (`encryptText`/`decryptText` de `server/crypto.js`, con el Secreto `TEXT_KEY`). El panel `/admin` muestra solo cantidades; la única excepción son los datos de contacto de quienes aceptaron recibir novedades en `/pro`. Nada de pantallas, exportaciones o logs con ventas, productos o textos de terceros.
-4. **Lo gratis no se recorta.** Las 8 herramientas gratis del Kit siguen completas; PRO solo suma.
+4. **Lo gratis no se recorta.** Las 9 herramientas gratis del Kit siguen completas; PRO solo suma.
 5. **Secretos solo en Cloudflare** (`TEXT_KEY`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`), nunca en el repo ni en el chat. Con `[vars]` en `wrangler.toml`, Cloudflare ignora las variables de texto del panel: por eso `ADMIN_EMAILS` va como Secreto.
 6. **No cambiar URLs ya compartidas** (`/kit-feriante/`, `/pro/`, `/admin/`): hay links en mails y redes.
 

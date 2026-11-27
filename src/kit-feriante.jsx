@@ -1,5 +1,5 @@
 // Kit del feriante (recurso de Relab; antes "Kit del emprendedor feriante"). Portado del "Kit Feriante — Festival del Poncho"
-// de Stella y generalizado para cualquier feria. "Tu kit" muestra las ocho herramientas por momento
+// de Stella y generalizado para cualquier feria. "Tu kit" muestra las nueve herramientas por momento
 // (antes, durante y después de la feria) y cada una se abre en su pantalla según el hash, con un
 // ejemplo que sigue a un mismo caso (Rosa, tejedora de Belén). Todo lo que se carga
 // se guarda en el navegador y, con cuenta de Relab, en /api/state/kit-feriante (cifrado).
@@ -23,6 +23,8 @@ import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
 import { MiSueldo } from './kit/sueldo.jsx';
 import { calcSueldo, sugerencias } from './kit/sueldo-calc.js';
+import { CostoPrecio } from './kit/costo.jsx';
+import { calcCosto } from './kit/costo-calc.js';
 
 
 // Los ids de los ítems se guardan: no cambiarlos al editar el texto.
@@ -112,6 +114,7 @@ const Svg = ({ children }) => <svg viewBox="0 0 24 24" fill="none" stroke="curre
 const ICONS = {
   inicio: <Svg><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" /></Svg>,
   checklist: <Svg><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></Svg>,
+  costo: <Svg><path d="M12 2v20" /><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Svg>,
   calculadora: <Svg><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8" /><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" /></Svg>,
   cobros: <Svg><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /><path d="M6 15h4" /></Svg>,
   pitch: <Svg><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></Svg>,
@@ -132,6 +135,9 @@ const SECTIONS = [
   { id: 'checklist', label: 'Checklist', moment: 'antes', desc: 'Todo lo que tenés que tener listo, de la estrategia al balance.',
     para: ['Llegar a la feria sin olvidarte de nada.', 'Ordenar las tareas de antes, durante y después.'],
     ejemplo: 'Cinco días antes del festival, Rosa anuncia en Instagram el número de su stand y adelanta un poncho nuevo que va a presentar allá: su novedad exclusiva de la feria.' },
+  { id: 'costo', label: 'Costo y precio', moment: 'antes', desc: 'Cuánto te cuesta hacer cada producto y a cuánto venderlo para ganar lo que querés.',
+    para: ['Saber cuánto te cuesta cada unidad, con tu trabajo incluido.', 'Poner un precio con margen o recargo, sin confundirlos.'],
+    ejemplo: 'Para un camino de mesa, Rosa usa 200 g de un ovillo de 1 kg que le costó $10.000 y una hora de telar a $4.000: le cuesta $6.000. Con 50% de margen y 3% de comisión, el kit le sugiere $12.766. Ella lo vende a $15.000 y ve que le quedan $8.550 por unidad.' },
   { id: 'calculadora', label: 'Calculadora', moment: 'antes', desc: 'Cuánto vas a ganar y cuántas unidades necesitás vender para cubrir el stand.',
     para: ['Saber si la feria te conviene antes de pagar el stand.', 'Conocer tu punto de equilibrio: cuánto vender para no perder.'],
     ejemplo: 'Rosa paga $120.000 de stand, $30.000 de flete, $25.000 de cartelería y $40.000 de viáticos. Lleva ponchos, mantas y caminos de mesa. Con 10 unidades cubre los costos fijos; todo lo que vende después es ganancia.' },
@@ -171,6 +177,14 @@ const SECTIONS = [
       ejemplo: 'Rosa llega con 8 ponchos. Cada venta los descuenta sola, y cuando le quedan 2 el kit le avisa para traer más del taller.' },
   ],
 ];
+// Productos de Costo y precio con costo y precio calculados (para traerlos a Mis productos de PRO).
+const costosListos = st => {
+  const s = calcSueldo(st.sueldo.f, sugerencias({ roi: st.roi, ventas: st.ventas }));
+  const hora = s.jornada.valorHora > 0 ? s.jornada.valorHora : s.hora.valorHora;
+  return st.costos.recetas.map(rec => ({ rec, r: calcCosto(rec, { valorHoraSug: hora }) }))
+    .filter(({ r }) => r.ok && r.unidad.costoUnit != null && r.precio.final > 0)
+    .map(({ rec, r }) => ({ id: rec.id, nombre: rec.nombre || 'Sin nombre', costo: r.unidad.costoUnit, precio: r.precio.final }));
+};
 const secById = id => SECTIONS.find(s => s.id === id);
 const fromHash = () => (secById(location.hash.slice(1)) ? location.hash.slice(1) : null);
 
@@ -244,6 +258,7 @@ function Kit() {
   const sueldoOn = nHist > 0 || Object.entries(st.sueldo.f).some(([k, v]) => k !== 'reinv' && v);
   const status = id => ({
     checklist: [`${checksDone}/${checkIds.length}`, pct === 100 ? 'ok' : checksDone ? 'now' : ''],
+    costo: st.costos.recetas.length ? [`${st.costos.recetas.length} ${st.costos.recetas.length === 1 ? 'producto' : 'productos'}`, 'now'] : ['Sin empezar', ''],
     calculadora: calcOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
     tracker: st.ventas.length ? [`${st.ventas.length} ${st.ventas.length === 1 ? 'venta' : 'ventas'}`, 'now'] : ['Sin ventas', ''],
     roi: roiOn ? ['Con tus datos', 'now'] : ['Sin empezar', ''],
@@ -338,6 +353,7 @@ function Kit() {
                 return usada ? <details className="kf-intro-min"><summary>¿Para qué sirve? · Ver el ejemplo de Rosa</summary>{intro}</details> : intro;
               })()}
               {sec.id === 'checklist' && <Checklist st={st} set={set} done={checksDone} total={checkIds.length} pct={pct} />}
+              {sec.id === 'costo' && <CostoPrecio st={st} set={set} openTab={open} />}
               {sec.id === 'calculadora' && <Calculadora calc={st.calc} set={set} sueldoSug={calcSueldo(st.sueldo.f, sugerencias({ roi: st.roi, ventas: st.ventas })).jornada.sueldoJornada} openTab={open} />}
               {sec.id === 'cobros' && <Cobros />}
               {sec.id === 'pitch' && <Pitch />}
@@ -348,7 +364,7 @@ function Kit() {
               {sec.id === 'tracker' && <Tracker ventas={st.ventas} set={set} />}
               {sec.id === 'roi' && <Roi roi={st.roi} ventas={st.ventas} set={set} openTab={open} />}
               {sec.id === 'sueldo' && <MiSueldo st={st} set={set} isPro={!!access.pro?.pro} openTab={open} />}
-              {sec.pro && <ProSection id={sec.id} user={user} access={access} pro={pro} medios={MEDIOS} onLogin={() => setLoginOpen(true)} />}
+              {sec.pro && <ProSection id={sec.id} user={user} access={access} pro={pro} medios={MEDIOS} costos={sec.id === 'productos' ? costosListos(st) : []} onLogin={() => setLoginOpen(true)} />}
               <nav className="kf-pn" aria-label="Anterior y siguiente">
                 {prev ? <a href={'#' + prev.id} className="prev"><small>Anterior</small><span>← {prev.label}</span></a> : <a href="#inicio" className="prev"><small>Volver</small><span>← Tu kit</span></a>}
                 {next ? <a href={'#' + next.id} className="next"><small>Siguiente</small><span>{next.label} →</span></a> : <a href="#inicio" className="next"><small>Terminaste el recorrido</small><span>Tu kit →</span></a>}
@@ -421,7 +437,7 @@ function Home({ status, pct, st, saveLine, open, moments, sections, proBanner })
       <section className="kf-hero">
         <div className="kf-wrap kf-hero-in">
           <div>
-            <p className="kf-kicker">Kit gratuito · 8 herramientas</p>
+            <p className="kf-kicker">Kit gratuito · 9 herramientas</p>
             <h1>Kit del feriante</h1>
             <p className="kf-lead">Para ferias turísticas, fiestas regionales, festivales, mercados y expos: prepará tu stand, vendé mejor, registrá tus ventas y medí si te conviene volver.</p>
             <a className="kf-btn kf-btn--coral" href="#checklist">Empezar por el checklist →</a>

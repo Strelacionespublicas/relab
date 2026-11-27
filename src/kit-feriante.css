@@ -684,3 +684,23 @@ button.kf-cl-head { width: 100%; margin: 0; border: none; cursor: pointer; text-
 .kf-cl-add input { flex: 1 1 220px; min-width: 0; height: 42px; padding: 0 12px; border: 1.5px solid var(--st-celeste-700); border-radius: 8px; font-family: var(--font-body); font-size: 16px; outline: none; }
 .kf-cl-add .kf-btn[disabled] { opacity: .5; cursor: not-allowed; }
 .kf-cl-cancel { font-size: 13.5px; padding: 8px 4px; }
+
+/* ---- Costo y precio (src/kit/costo.jsx); reutiliza las piezas de Mi sueldo (.ms-*) ---- */
+.cp-sel select { height: 36px; max-width: 220px; padding: 0 10px; border: 1px solid var(--st-neutral-300); border-radius: 999px; background: #fff; font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--st-petroleo); }
+.cp-ins { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+.cp-ins-row { display: grid; grid-template-columns: 1.6fr 1fr .8fr .8fr auto; gap: 8px; align-items: center; }
+.cp-ins-row input { width: 100%; min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--st-neutral-300); border-radius: 10px; font: inherit; font-size: 15px; }
+.cp-ins-row .kf-input-wrap input { padding-left: 24px; }
+.cp-ins-row input[aria-invalid] { border-color: var(--st-danger); }
+.cp-ins-msg { grid-column: 1 / -1; font-size: 12.5px; color: var(--st-celeste-700); }
+.cp-ins-head { margin-bottom: -6px; }
+.cp-ins-head span { font-size: 12.5px; font-weight: 700; color: var(--st-neutral-600); }
+.cp-add { margin: 0 0 14px; }
+.cp-help { margin: 4px 0 12px; font-size: 13px; line-height: 1.5; color: var(--st-neutral-600); }
+.cp .ms-out { margin-top: 4px; margin-bottom: 12px; }
+.cp-act { margin-top: 4px; }
+@media (max-width: 640px) {
+  .cp-ins-row { grid-template-columns: 1fr 1fr 1fr auto; }
+  .cp-ins-n { grid-column: 1 / -1; }
+  .cp-ins-head .cp-ins-n { display: none; }
+}

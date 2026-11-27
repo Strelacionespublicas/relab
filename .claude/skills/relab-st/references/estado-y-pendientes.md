@@ -1,7 +1,8 @@
 # Estado y pendientes (actualizado: noviembre de 2026)
 
 ## Publicado
-- Kit del feriante gratis (8 herramientas), con las correcciones de importes, guardado y sincronización, "Tu sueldo" en el ROI, el checklist plegable con tareas propias y "Mi sueldo y rentabilidad" (publicado y verificado por Stella en el celular).
+- Auditoría financiera (noviembre 2026), Fase 1 publicada: horas sin duplicar, comisión fija por venta PRO, tu sueldo en la Calculadora y veredicto del ROI. Fase 2: herramienta Costo y precio. Pendientes Fase 3 (un solo sueldo deseado, nombres claros para los tres "margen", retirado real y plata a acreditar en los sobres, valor del stock) y Fase 4 (tabla de escenarios, "−$0", prueba intermitente de pro-store).
+- Kit del feriante gratis (9 herramientas), con las correcciones de importes, guardado y sincronización, "Tu sueldo" en el ROI, el checklist plegable con tareas propias y "Mi sueldo y rentabilidad" (publicado y verificado por Stella en el celular).
 - Kit Feriante PRO: Resumen (con Tu sueldo y Primeros pasos), Mis ferias, Mis productos (Importar Excel, favoritos), Ventas PRO (buscador, variantes, aviso de comisión) y Stock.
 - Landing `/pro` (gratis 12 meses con Google), códigos de campaña, y el panel `/admin` con registros, contactos y el link "Panel" desde el Kit.
 - Aviso de versión nueva y el nombre "Kit del feriante" con bajada turística.

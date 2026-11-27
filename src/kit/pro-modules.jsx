@@ -61,7 +61,7 @@ const SYNC_TEXT = {
   sesion: 'Tu sesión venció: ingresá de nuevo para subir los cambios.', error: 'Hubo un problema al guardar. Tus datos siguen en este dispositivo.',
 };
 
-export function ProSection({ id, user, access, pro, medios, onLogin }) {
+export function ProSection({ id, user, access, pro, medios, costos = [], onLogin }) {
   const { store, snap, data } = pro;
   if (!user) {
     return (
@@ -87,7 +87,7 @@ export function ProSection({ id, user, access, pro, medios, onLogin }) {
     );
   }
   const canEdit = activo && snap?.status !== 'solo-lectura';
-  const props = { store, data, canEdit, medios };
+  const props = { store, data, canEdit, medios, costos };
   return (
     <>
       {!canEdit && (
@@ -388,7 +388,7 @@ function Ferias({ store, data, canEdit }) {
 }
 
 // ---- Mis productos ----
-function Productos({ store, data, canEdit }) {
+function Productos({ store, data, canEdit, costos = [] }) {
   const [form, setForm] = useState(null);
   const [err, setErr] = useState('');
   const [importar, setImportar] = useState(false);
@@ -414,6 +414,19 @@ function Productos({ store, data, canEdit }) {
     return (
       <form className="kf-card kf-pro-form" onSubmit={guardar}>
         <h3 className="kf-card-title">{form.nuevo ? 'Nuevo producto' : 'Editar producto'}</h3>
+        {costos.length > 0 && (
+          <label className="kf-field"><span>Traer de Costo y precio <small>(opcional)</small></span>
+            <select value="" onChange={e => {
+              const c = costos.find(x => x.id === e.target.value);
+              // Va el costo de producción por unidad (no el integral): los gastos de feria se cargan en cada feria.
+              if (c) setForm(f => ({ ...f, nombre: f.nombre.trim() ? f.nombre : c.nombre, costo: txt(Math.round(c.costo * 100) / 100), precio: txt(Math.round(c.precio)) }));
+            }}>
+              <option value="">Elegí un producto calculado…</option>
+              {costos.map(c => <option key={c.id} value={c.id}>{c.nombre} · costo {fmt(c.costo)} · precio {fmt(c.precio)}</option>)}
+            </select>
+            <small>Completa el costo de producción y el precio que calculaste.</small>
+          </label>
+        )}
         <div className="kf-pro-grid">
           <label className="kf-field"><span>Nombre</span><input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Poncho de telar" maxLength={80} autoFocus /></label>
           <label className="kf-field"><span>Categoría</span><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} placeholder="Textiles" maxLength={40} list="kf-cats" /><datalist id="kf-cats">{cats.map(c => <option key={c} value={c} />)}</datalist></label>
