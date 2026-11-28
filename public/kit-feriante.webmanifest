@@ -1,0 +1,22 @@
+{
+  "id": "/kit-feriante/",
+  "name": "Kit del feriante",
+  "short_name": "Kit feriante",
+  "description": "Checklist, costo y precio, calculadora, ventas, ROI y tu sueldo para ferias turísticas, fiestas regionales, mercados y expos. Gratis y funciona sin señal.",
+  "lang": "es-AR",
+  "start_url": "/kit-feriante/",
+  "scope": "/kit-feriante/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#012C3D",
+  "background_color": "#F7F8F3",
+  "icons": [
+    { "src": "/icons/kit-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/kit-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/kit-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ventas del día", "short_name": "Ventas", "url": "/kit-feriante/#tracker", "icons": [{ "src": "/icons/kit-192.png", "sizes": "192x192" }] },
+    { "name": "Costo y precio", "short_name": "Costo y precio", "url": "/kit-feriante/#costo", "icons": [{ "src": "/icons/kit-192.png", "sizes": "192x192" }] }
+  ]
+}

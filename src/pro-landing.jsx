@@ -35,6 +35,7 @@ const FAQ = [
   ['¿Qué pasa cuando terminan los 12 meses?', 'No se borra nada. Tus ferias, productos y ventas quedan guardados y los podés ver y descargar. Te vamos a avisar antes con las opciones para seguir.'],
   ['¿Quién ve mis ventas?', 'Nadie más que vos. Lo que cargás se guarda cifrado y no lo leemos ni lo usamos para nada más que mostrártelo a vos.'],
   ['¿Funciona sin señal?', 'Sí. Si en la feria no hay señal, las ventas quedan en el celular y se suben solas cuando vuelve.'],
+  ['¿Se puede instalar como app?', 'Sí. Abrí el kit en el celular y tocá “Instalar” (Android) o Compartir → “Agregar a inicio” (iPhone). Queda con su ícono y abre aunque no haya señal.'],
   ['¿Y las herramientas gratis?', 'Siguen gratis y abiertas, como siempre: checklist, calculadora, cobros, pitch, visitantes, ventas del día y ROI.'],
 ];
 

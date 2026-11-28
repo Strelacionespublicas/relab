@@ -30,6 +30,12 @@
 - `pro-modules.jsx`: pantallas PRO. Resumen (con Tu sueldo y Primeros pasos), Mis ferias, Mis productos (con Importar y favoritos), Ventas PRO (buscador, variantes, aviso de comisión), Stock, papelera y exportar.
 - `src/lib/version.js`: aviso "Hay una versión nueva · Actualizar". Compara el id de build con `/version.json`, pedido sin caché.
 
+## Apps instalables (PWA)
+- TextoRedes y el Kit del feriante se instalan como app. Manifiestos: `public/textoenredes.webmanifest` (scope `/`, no tocar: hay gente con la app instalada) y `public/kit-feriante.webmanifest` (scope `/kit-feriante/`, accesos directos a `#tracker` y `#costo`). Íconos del kit: `public/icons/kit-*.png` (petróleo, logo ST y "Kit" en coral).
+- `src/lib/install.js` (`setupInstall`): captura `beforeinstallprompt` y registra `/sw.js` (solo en producción). Lo llaman `src/main.jsx` y `src/kit-feriante.jsx`.
+- `src/InstallBanner.jsx`: aviso con props (nombre, título, texto, ícono, clave de "no mostrar más", `iosNote`). En el kit va arriba de la portada; en iPhone, sin cuenta y con datos, pide "Guardar en mi cuenta" antes de instalar (la app instalada no comparte los datos de Safari).
+- `public/sw.js` (caché `relab-vN`: subir N si cambia la lógica): páginas primero de la red y, sin señal, la última copia o la portada de su app; `/assets/` e `/icons/` primero de la caché; `/api` nunca se guarda. Al instalarse guarda las portadas de las dos apps con sus archivos, así abren sin señal desde la primera visita.
+
 ## Tablas (migraciones)
 | Migración | Tablas |
 |---|---|

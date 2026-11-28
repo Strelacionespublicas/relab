@@ -704,3 +704,5 @@ button.kf-cl-head { width: 100%; margin: 0; border: none; cursor: pointer; text-
   .cp-ins-n { grid-column: 1 / -1; }
   .cp-ins-head .cp-ins-n { display: none; }
 }
+.kf-install { padding-top: 12px; padding-bottom: 12px; }
+.kf-install:empty { display: none; }

@@ -35,6 +35,8 @@
 - Las pruebas de navegador que cambian datos tienen que **dejar el estado listo al empezar** (borrar sus filas de prueba), para no depender del orden en que se corren.
 - En Vitest, no nombrar `it` a una variable auxiliar dentro de un `describe`: tapa el `it` de Vitest y las pruebas no corren ("No test found in suite").
 
+- App instalable: con `wrangler pages dev dist` y Playwright, `Page.getAppManifest` y `Page.getInstallabilityErrors` por CDP, `navigator.serviceWorker.ready`, y `context.setOffline(true)` para probar que abre sin señal. El aviso de iPhone se ve emulando `devices['iPhone 13']`. Que el ingreso con Google funcione dentro de la app instalada solo se comprueba en un celular real.
+
 ## Problemas conocidos
 - El login con Google **no funciona en las vistas previas** de Cloudflare. Lo de PRO se prueba en local o en producción (oculto para el resto si hace falta).
 - Desde el entorno remoto de Claude no se puede abrir el sitio publicado, porque el proxy lo bloquea. La verificación final la hace Stella en el celular.

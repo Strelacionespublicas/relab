@@ -16,12 +16,14 @@ import { Footer } from './Footer.jsx';
 import LoginModal from './LoginModal.jsx';
 import { api } from './lib/api.js';
 import { calcFeria, calcRoi, csvMonto, fmt, readMonto } from './kit/calc.js';
-import { MAX_PROPIOS, blankCalc, blankProduct, blankRoi, newId } from './kit/state.js';
+import { MAX_PROPIOS, blankCalc, blankProduct, blankRoi, hasData, newId } from './kit/state.js';
 import { createKitSync } from './kit/sync.js';
 import { watchVersion } from './lib/version.js';
 import { CodeModal, PRO_ENABLED, ProBadge, useProAccess } from './kit/pro.jsx';
 import { ProSection, proCounts, useProData } from './kit/pro-modules.jsx';
 import { MiSueldo } from './kit/sueldo.jsx';
+import InstallBanner from './InstallBanner.jsx';
+import { setupInstall } from './lib/install.js';
 import { calcSueldo, sugerencias } from './kit/sueldo-calc.js';
 import { CostoPrecio } from './kit/costo.jsx';
 import { calcCosto } from './kit/costo-calc.js';
@@ -320,7 +322,9 @@ function Kit() {
       <Avisos snap={snap} sync={sync} />
 
       {!sec ? (
-        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} moments={MOMS} sections={SECS} proBanner={PRO_ENABLED && !access.pro?.pro} />
+        <Home status={status} pct={pct} st={st} saveLine={saveLine} open={open} moments={MOMS} sections={SECS} proBanner={PRO_ENABLED && !access.pro?.pro}
+          install={<InstallBanner name="Kit del feriante" title="Instalá el kit en tu celular" text="Abrilo desde tu pantalla de inicio. Funciona sin señal." icon="/icons/kit-192.png" storageKey="kit_install_dismissed"
+            iosNote={!user && hasData(st) ? 'Antes, tocá “Guardar en mi cuenta” para no perder lo que ya cargaste.' : null} />} />
       ) : (
         <>
           <div className="kf-sub">
@@ -429,11 +433,12 @@ function Avisos({ snap, sync }) {
   return items.length ? <div className="kf-aviso">{items}</div> : null;
 }
 
-function Home({ status, pct, st, saveLine, open, moments, sections, proBanner }) {
+function Home({ status, pct, st, saveLine, open, moments, sections, proBanner, install }) {
   const hoy = dayKey(Date.now());
   const hoyTotal = st.ventas.filter(v => dayKey(v.ts) === hoy).reduce((a, v) => a + v.monto, 0);
   return (
     <>
+      {install && <div className="kf-wrap kf-install">{install}</div>}
       <section className="kf-hero">
         <div className="kf-wrap kf-hero-in">
           <div>
@@ -961,5 +966,6 @@ function Roi({ roi, ventas, set, openTab }) {
   );
 }
 
+setupInstall();
 watchVersion();
 createRoot(document.getElementById('root')).render(<Kit />);
